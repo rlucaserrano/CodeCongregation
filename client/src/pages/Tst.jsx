@@ -35,4 +35,4 @@ function Tst() {
   );
 }
 
-export default Tst1;
+export default Tst;
