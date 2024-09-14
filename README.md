@@ -20,18 +20,23 @@ Frontend and Backend Communicate through HTTP request
 Set-Up Instructions frontend:
 
 run command :
+
     npx create-vite
 
 select framework: React
 select variant: JavaScript
 
 run commands:
+
     cd client
 
     npm install [ to install dependencies]
 
     npm install axios
         fetch API requests to servers
+
+    npm install react-router-dom  
+        so we can create multiple webpages  
 
 
 
@@ -41,6 +46,7 @@ start front-end application by running command:
 
 Set-up Instructions backend:
 commands: 
+
     mkdir server 
         to make server directory
 
@@ -63,5 +69,9 @@ run application:
     python3 main.py
 
 
+Notes to self:
+    App.jsx
+        where I am routing the web pages
+    
 
 

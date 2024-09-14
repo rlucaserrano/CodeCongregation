@@ -14,9 +14,9 @@ def dev2():
     return jsonify(
         {
             "dev2": [
-            'helloWorld',
-            'helloWorld2',
-            'helloWorld3'
+            'helloworld',
+            'helloworld2',
+            'helloworld3'
             ]
         }
     )
