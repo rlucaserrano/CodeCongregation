@@ -72,6 +72,18 @@ run application:
 Notes to self:
     App.jsx
         where I am routing the web pages
+
+
+Implementing Google Oauth2
+Resource Used: 
+ 
+created OAuth client created
+
+npm install @react-oauth/google@latest
+
+
+
+
     
 
 

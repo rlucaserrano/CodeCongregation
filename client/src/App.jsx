@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import Home from './pages/Home';
 import About from './pages/About';
 import Tst from './pages/Tst'; 
@@ -11,18 +12,20 @@ import Header from './components/Header';
 
 function App() {
   return (
-    <Router>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/tst" element={<Tst />} />
-        <Route path="/calendar" element={<Calendar />} />
-        <Route path="/social" element={<Social />} />
-        <Route path="/tutorial" element={<Tutorial />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
-    </Router>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+      <Router>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/tst" element={<Tst />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/social" element={<Social />} />
+          <Route path="/tutorial" element={<Tutorial />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
   );
 }
 
