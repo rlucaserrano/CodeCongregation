@@ -2,8 +2,8 @@ version: 2.1
 
 jobs:
   build:
-    machine:
-      image: ubuntu-2004:202010-01  # Use a Ubuntu 20.04 image
+    docker:
+      - image: cimg/python:3.8-node  # Includes Python 3.8 and Node.js
     working_directory: ~/project
 
     steps:
@@ -14,46 +14,17 @@ jobs:
           name: Install Python dependencies
           command: |
             cd server
-            sudo apt-get update
-            sudo apt-get install -y python3-pip python3-venv
-            python3 -m venv venv
+            python -m venv venv
             source venv/bin/activate
             pip install --upgrade pip
             if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Install Node.js for the React frontend
+      # Install Node.js dependencies for the React frontend
       - run:
-          name: Install Node.js
-          command: |
-            # Install Node.js 14.x
-            curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-
-      # Install Node.js dependencies
-      - run:
-        name: Install Node.js
-        command: |
-          # Install Node.js 14.x
-          curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-          sudo apt-get install -y nodejs
-          #Verify installation
-          node -v
-          npm -v
-
-      # Run backend tests
-      - run:
-          name: Run Flask backend tests
-          command: |
-            cd server
-            source venv/bin/activate
-            if [ -d tests ]; then python -m unittest discover -s tests; fi
-
-      # Run frontend tests
-      - run:
-          name: Run React frontend tests
+          name: Install Node.js dependencies
           command: |
             cd client
-            npm test -- --watchAll=false
+            npm install
 
       # Build the React frontend
       - run:
@@ -61,6 +32,21 @@ jobs:
           command: |
             cd client
             npm run build
+
+      # (Optional) Run backend tests
+      - run:
+          name: Run Flask backend tests
+          command: |
+            cd server
+            source venv/bin/activate
+            if [ -d tests ]; then python -m unittest discover -s tests; fi
+
+      # (Optional) Run frontend tests
+      - run:
+          name: Run React frontend tests
+          command: |
+            cd client
+            npm test -- --watchAll=false
 
 workflows:
   build_and_test:
