@@ -2,13 +2,8 @@ version: 2.1
 
 jobs:
   build:
-    docker:
-      - image: cimg/python:3.8
-        environment:
-          FLASK_ENV: development
-      - image: cimg/node:14.17
-        environment:
-          NODE_ENV: development
+    machine:
+      image: ubuntu-2004:202010-01  # Use a Ubuntu 20.04 image
     working_directory: ~/project
 
     steps:
@@ -19,31 +14,48 @@ jobs:
           name: Install Python dependencies
           command: |
             cd server
+            sudo apt-get update
+            sudo apt-get install -y python3-pip python3-venv
+            python3 -m venv venv
+            source venv/bin/activate
             pip install --upgrade pip
             if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # Install Node.js dependencies for the React frontend
+      # Install Node.js for the React frontend
       - run:
-          name: Install Node.js dependencies
+          name: Install Node.js
           command: |
-            cd client
-            npm install
+            # Install Node.js 14.x
+            curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+            sudo apt-get install -y nodejs
 
-      # Run backend tests (if any)
+      # Install Node.js dependencies
+      - run:
+        name: Install Node.js
+        command: |
+          # Install Node.js 14.x
+          curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+          sudo apt-get install -y nodejs
+          #Verify installation
+          node -v
+          npm -v
+
+      # Run backend tests
       - run:
           name: Run Flask backend tests
           command: |
             cd server
+            source venv/bin/activate
             if [ -d tests ]; then python -m unittest discover -s tests; fi
 
-      # Run frontend tests (if any)
+      # Run frontend tests
       - run:
           name: Run React frontend tests
           command: |
             cd client
             npm test -- --watchAll=false
 
-      # Build the React frontend (optional)
+      # Build the React frontend
       - run:
           name: Build React frontend
           command: |

@@ -79,7 +79,18 @@ Resource Used:
  
 created OAuth client created
 
-npm install @react-oauth/google@latest
+    npm install @react-oauth/google@latest
+    create server/.env + client/.env
+    go onto the google cloud console --> copy the client ID + client secret
+
+    client/.env
+    VITE_GOOGLE_CLIENT_ID= <Paste_CLIENT_ID_>
+
+    server/.env
+    GOOGLE_CLIENT_ID=<Paste_CLIENT_ID_>
+    GOOGLE_SECRET_KEY=<Paste_SECRET_KEY>
+
+
 
 
 
