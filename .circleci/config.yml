@@ -3,18 +3,54 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/node:latest  # Use an appropriate image
+      - image: cimg/python:3.8
+        environment:
+          FLASK_ENV: development
+      - image: cimg/node:14.17
+        environment:
+          NODE_ENV: development
+    working_directory: ~/project
+
     steps:
       - checkout
+
+      # Install Python dependencies for the Flask backend
       - run:
-          name: Install Dependencies
-          command: npm install
+          name: Install Python dependencies
+          command: |
+            cd server
+            pip install --upgrade pip
+            if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Install Node.js dependencies for the React frontend
       - run:
-          name: Run Tests
-          command: npm test
+          name: Install Node.js dependencies
+          command: |
+            cd client
+            npm install
+
+      # Run backend tests (if any)
+      - run:
+          name: Run Flask backend tests
+          command: |
+            cd server
+            if [ -d tests ]; then python -m unittest discover -s tests; fi
+
+      # Run frontend tests (if any)
+      - run:
+          name: Run React frontend tests
+          command: |
+            cd client
+            npm test -- --watchAll=false
+
+      # Build the React frontend (optional)
+      - run:
+          name: Build React frontend
+          command: |
+            cd client
+            npm run build
 
 workflows:
-  version: 2
   build_and_test:
     jobs:
       - build
