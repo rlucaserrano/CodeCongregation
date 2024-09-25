@@ -1,4 +1,5 @@
 import os
+import requests as http_requests
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from google.oauth2 import id_token
@@ -61,5 +62,32 @@ def google_login():
         print(f"An error occurred: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
+@app.route('/api/calendar/events', methods=['GET'])
+def get_calendar_events():
+    token = request.args.get('token')
+    try:
+        # Verify the token
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+
+        # Retrieve the access token
+        access_token = token
+        
+        # Make a request to the Google Calendar API
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        response = http_requests.get('https://www.googleapis.com/calendar/v3/calendars/primary/events', headers=headers)
+
+        if response.status_code == 200:
+            events = response.json().get('items', [])
+            return jsonify(events)
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to fetch events'}), response.status_code
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'Invalid token'}), 400
+    except Exception as e:
+        print(f"An error occurred while fetching calendar events: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+    
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

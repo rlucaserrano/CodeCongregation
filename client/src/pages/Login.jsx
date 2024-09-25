@@ -4,7 +4,7 @@ import { GoogleLogin } from '@react-oauth/google';
 const Login = () => {
     const handleLoginSuccess = (credentialResponse) => {
         console.log('Login Success:', credentialResponse);
-
+    
         fetch('http://localhost:8080/api/auth/google', {
             method: 'POST',
             headers: {
@@ -17,7 +17,8 @@ const Login = () => {
         .then(response => response.json())
         .then(data => {
             console.log('User data:', data);
-            // handle user data or save to your app's state
+            // Store the token for later use
+            localStorage.setItem('google_token', credentialResponse.credential);
         })
         .catch(error => {
             console.error('Error during token verification:', error);
@@ -34,7 +35,8 @@ const Login = () => {
             <GoogleLogin
                 onSuccess={handleLoginSuccess}
                 onError={handleLoginFailure}
-                uxMode="popup" 
+                uxMode="popup"
+                scope="https://www.googleapis.com/auth/calendar"
             />
         </div>
     );

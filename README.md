@@ -91,9 +91,9 @@ created OAuth client created
     GOOGLE_SECRET_KEY=<Paste_SECRET_KEY>
 
 
-
-
-
+Circle CI
+    circleci config validate
+    git add .circleci/config.yml
 
     
 
