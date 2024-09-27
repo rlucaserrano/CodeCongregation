@@ -5,15 +5,44 @@ from flask_cors import CORS
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from dotenv import load_dotenv
+from database import Database
 
 # from .env file
 load_dotenv()
 
+
+# Flask instance
 app = Flask(__name__)
-CORS(app)  # currently allowing all origins
+CORS(app)  # Currently allowing all origins
 
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
+@app.route('/')
+def default():
+    return "Flask API"
+
+# Database Functionality Testing
+@app.route('/users/all', methods=['GET'])
+def GetUsers():
+    users = Database.SearchDatabase(table = "UserTable", columns = ["UserName"])
+    return jsonify(users)
+
+@app.route('/users/addBob', methods=['GET'])
+def AddBob():
+    result = Database.AddToDatabase(table = "UserTable", entry = ["0002", "'Bob123'", "'Bob@gmail.com'", "'Password'", "'Bob'", "'Bob'", "'bio'", "0"])
+    return jsonify(result)
+
+@app.route('/users/removeBob', methods=['GET'])
+def RemoveBob():
+    result = Database.RemoveFromDatabase(table = "UserTable", key = "UserID", value = "0002")
+    return jsonify(result)
+
+@app.route('/users/changeBob', methods=['GET'])
+def ChangeBob():
+    result = Database.ModifyDatabase(table = "UserTable", key = "UserID", value = "0002", changes = [("UserName", "'newUsernameBob'")])
+    return jsonify(result)
+
+ 
 @app.after_request
 def set_cors_headers(response):
     # Set COOP and COEP headers
@@ -88,6 +117,7 @@ def get_calendar_events():
     except Exception as e:
         print(f"An error occurred while fetching calendar events: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 400
-    
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
