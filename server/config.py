@@ -21,3 +21,10 @@ class Config:
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_SECRET_KEY = os.getenv("GOOGLE_SECRET_KEY")
 
+    #Flask app secret key
+    FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
+
+    #  Flask-Session configuration 
+    SESSION_TYPE = 'filesystem'
+    SESSION_PERMANENT = False
+    SESSION_USE_SIGNER = True
