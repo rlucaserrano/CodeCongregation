@@ -104,3 +104,19 @@ ORACLE_HOST=oracle.cise.ufl.edu
 ORACLE_PORT=1521
 ORACLE_SID=orcl
 
+Session Set-up
+    cd server
+    pip install Flask-Session
+
+ Create + Generate Flask Secret Key
+    open a new terminal
+run commands:
+    python3
+    import os
+    import base64
+    secret_key = base64.b64encode(os.urandom(24)).decode('utf-8')
+    print(secret_key)
+
+add to .env file : FLASK_SECRET_KEY=ADD
+
+

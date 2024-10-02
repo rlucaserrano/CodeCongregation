@@ -9,6 +9,7 @@ import Social from './pages/Social';
 import Tutorial from './pages/Tutorial'; 
 import Login from './pages/Login'; 
 import Header from './components/Header';
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/social" element={<Social />} />
           <Route path="/tutorial" element={<Tutorial />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </Router>
     </GoogleOAuthProvider>
