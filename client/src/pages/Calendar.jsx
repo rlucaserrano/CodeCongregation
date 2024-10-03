@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import Button from '@mui/material/Button';
+import moment from 'moment'
+import '../assets/arrange.css';
 
-function Calendar() {
+function Cal() {
     const [events, setEvents] = useState([]);
 
     useEffect(() => {
@@ -23,16 +27,29 @@ function Calendar() {
         fetchEvents();
     }, []);
 
+    const localizer = momentLocalizer(moment)
+
     return (
-        <div>
-            <h2>Calendar Page</h2>
-            <ul>
-                {events.map(event => (
-                    <li key={event.id}>{event.summary}</li>
-                ))}
-            </ul>
-        </div>
+        <html>
+            <div>
+                <h2>Calendar Page</h2>
+                <ul>
+                    {/*events.map(event => (
+                        <li key={event.id}>{event.summary}</li>
+                    ))*/}
+                </ul>
+                <div>
+                    <Button>Use Google Calendar</Button>
+                    <Button color='warning'>Make Calendar Public</Button>
+                    <Button sx={{color:'#000'}}>Add Task +</Button>
+                    <Button sx={{color:'#000'}}>Add New Calendar +</Button>
+                </div>
+            </div>
+            <table>
+                <Calendar localizer={localizer} events={events} startAccessor="start" endAccessor="end" style={{height: 1000, width: 2000}}/>
+            </table>
+        </html>
     );
 }
 
-export default Calendar;
+export default Cal;
