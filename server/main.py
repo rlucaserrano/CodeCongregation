@@ -6,6 +6,11 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 from dotenv import load_dotenv
 from database import Database
+from users import Users
+
+# Educational sources used to setup main.py
+# 1. https://www.theserverside.com/blog/Coffee-Talk-Java-News-Stories-and-Opinions/HTTP-methods
+# 2. https://www.oxitsolutions.co.uk/blog/http-status-code-cheat-sheet-infographic
 
 # from .env file
 load_dotenv()
@@ -21,27 +26,14 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 def default():
     return "Flask API"
 
-# Database Functionality Testing
-@app.route('/users/all', methods=['GET'])
-def GetUsers():
-    users = Database.SearchDatabase(table = "UserTable", columns = ["UserName"])
-    return jsonify(users)
+#### Actual database routes ####
 
-@app.route('/users/addBob', methods=['GET'])
-def AddBob():
-    result = Database.AddToDatabase(table = "UserTable", entry = ["0002", "'Bob123'", "'Bob@gmail.com'", "'Password'", "'Bob'", "'Bob'", "'bio'", "0"])
-    return jsonify(result)
+@app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"])
+def AccessUserTable():
 
-@app.route('/users/removeBob', methods=['GET'])
-def RemoveBob():
-    result = Database.RemoveFromDatabase(table = "UserTable", key = "UserID", value = "0002")
-    return jsonify(result)
-
-@app.route('/users/changeBob', methods=['GET'])
-def ChangeBob():
-    result = Database.ModifyDatabase(table = "UserTable", key = "UserID", value = "0002", changes = [("UserName", "'newUsernameBob'")])
-    return jsonify(result)
-
+    # Constucts user object to assign parameters and calls methods function, returns json data.
+    user = Users(request.json)
+    return (user.Methods(request.method))
  
 @app.after_request
 def set_cors_headers(response):

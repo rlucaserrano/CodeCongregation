@@ -85,9 +85,10 @@ class Database:
         # Attempts to insert entry into table. Returns result.
         try:
             Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
-            return(f"Success! Entry added to {table}.")
+            return(True)
         except Exception as e:
-            return(f"Error! Entry not added to {table}.")
+            errorMessage = str(e)
+            return(False)
     
     # Removes entry from database table.
     @staticmethod
@@ -95,9 +96,9 @@ class Database:
         # Attempts to remove entry from table. Returns result.
         try:
             Database.AlterQuery(F"DELETE FROM {table} WHERE {key} = '{value}'")
-            return(f"Success! Entry removed from {table}.")
+            return(True)
         except Exception as e:
-            return(f"Error! Entry not removed from {table}.")
+            return(False)
 
     # Modifies existing entry in database table
     @staticmethod
@@ -107,13 +108,13 @@ class Database:
         for c in changes:
             changesString = changesString + c[0] + " = " + c[1] + ", "
         changesString = changesString[:-2]
-
+        print(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
         # Attempts to update entry into table. Returns result.
         try:
             Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
-            return(f"Success! Entry updated in {table}.")
+            return(True)
         except Exception as e:
-            return(f"Error! Entry not updated in {table}.")
+            return(False)
 
         
         
