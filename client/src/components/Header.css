@@ -1,3 +1,5 @@
+/* Header.css */
+
 nav {
     background-color: #f8f8f8;
     padding: 10px;
@@ -8,7 +10,7 @@ nav {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     display: flex;
-    justify-content: space-between; /* Ensures space between left and right nav */
+    justify-content: space-between;
     align-items: center;
 }
 
@@ -22,11 +24,13 @@ ul {
 
 .left-nav {
     display: flex;
-    gap: 10px; /* Left navigation links */
+    gap: 10px;
 }
 
 .right-nav {
-    margin-left: auto; /* Pushes the login link to the right */
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
 }
 
 li {
@@ -42,7 +46,12 @@ li a:hover {
     color: #007BFF;
 }
 
-/* Add padding to the body or main content to prevent it from being hidden behind the fixed header */
-body {
-    padding-top: 50px;
+.profile-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+}
+
+.login-icon {
+    padding: 5px 10px;
 }
