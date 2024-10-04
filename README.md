@@ -120,3 +120,7 @@ run commands:
 add to .env file : FLASK_SECRET_KEY=ADD
 
 
+Setting up google calendars
+in server dir
+run command:
+    pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client

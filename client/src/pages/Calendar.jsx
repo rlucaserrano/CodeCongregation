@@ -5,33 +5,31 @@ function Calendar() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        // fetch events from the server
-        const fetchEvents = async () => {
-            try {
-                const token = localStorage.getItem('google_access_token'); // retrieve token stored during login
-                if (!token) {
-                    setError('Google token not found. Please login again.');
-                    setLoading(false);
-                    return;
-                }
-
-                const response = await fetch(`http://localhost:8080/api/calendar/events?token=${token}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch events from Google Calendar');
-                }
-
-                const data = await response.json();
-                
-                setEvents(data);
+    const fetchEvents = async () => {
+        try {
+            const token = localStorage.getItem('google_access_token');
+            if (!token) {
+                setError('Google token not found. Please login again.');
                 setLoading(false);
-            } catch (error) {
-                console.error('Error fetching events:', error);
-                setError('Error fetching events. Please try again.');
-                setLoading(false);
+                return;
             }
-        };
 
+            const response = await fetch(`http://localhost:8080/api/calendar/events?token=${token}`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch events from Google Calendar');
+            }
+
+            const data = await response.json();
+            setEvents(data);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching events:', error);
+            setError('Error fetching events. Please try again.');
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchEvents();
     }, []);
 

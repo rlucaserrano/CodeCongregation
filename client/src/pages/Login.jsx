@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 
 const Login = () => {
@@ -6,27 +6,38 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [loginError, setLoginError] = useState('');
 
-    // Handle Google login success
+    useEffect(() => {
+        const userId = localStorage.getItem('user_id');
+        if (userId) {
+            window.location.href = '/dashboard';  // Redirect to dashboard if user is already logged in
+        }
+    }, []);
+
     const handleGoogleLoginSuccess = (credentialResponse) => {
-        fetch('http://localhost:8080/api/auth/google', {
+        fetch('http://localhost:8080/api/users/auth/google', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include',  // Ensures cookies are sent for session management
             body: JSON.stringify({
                 token: credentialResponse.credential,  // Send the Google credential token
             }),
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.status === 'success') {
-                // Store user details in localStorage
                 localStorage.setItem('user_id', data.user_id);
                 localStorage.setItem('user_email', data.email);
                 localStorage.setItem('user_name', data.name);
-
-                window.location.href = '/dashboard';  // Redirect after login
+                localStorage.setItem('google_access_token', credentialResponse.credential); // Store the access token
+    
+                window.location.href = '/dashboard';
             } else {
                 setLoginError(data.message);
             }
@@ -37,7 +48,6 @@ const Login = () => {
         });
     };
 
-    // Handle form submission for username/password login
     const handleLogin = async (e) => {
         e.preventDefault();
 
@@ -46,6 +56,7 @@ const Login = () => {
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',  // Manage session cookies for username/password login
             body: JSON.stringify({
                 username,
                 password,
@@ -56,7 +67,7 @@ const Login = () => {
         if (data.status === 'success') {
             localStorage.setItem('user_id', data.user_id);
             localStorage.setItem('user_name', data.user_name);
-            window.location.href = '/dashboard';  // Redirect to dashboard
+            window.location.href = '/dashboard';
         } else {
             setLoginError(data.message);
         }
@@ -65,7 +76,7 @@ const Login = () => {
     return (
         <div>
             <h2>Login</h2>
-            
+
             {/* Google Login */}
             <GoogleLogin
                 onSuccess={handleGoogleLoginSuccess}
@@ -73,7 +84,7 @@ const Login = () => {
                 uxMode="popup"
                 scope="https://www.googleapis.com/auth/calendar"
             />
-            
+
             <h3>Or login with username and password</h3>
             <form onSubmit={handleLogin}>
                 <label>
