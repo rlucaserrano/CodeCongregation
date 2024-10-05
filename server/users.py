@@ -9,7 +9,7 @@ class Users:
         self.UserID = data.get("UserID", None)
         self.UserName = data.get("UserName", None)
         self.Email = data.get("Email", None)
-        self.Password = data.get("Password", None)
+        self.HashedPassword = data.get("HashedPassword", None)
         self.FirstName = data.get("FirstName", "EMPTY")
         self.LastName = data.get("LastName", "EMPTY")
         self.Bio = data.get("Bio", "EMPTY")
@@ -18,27 +18,31 @@ class Users:
     def Methods(self, method):
         
         # Internal function calls.
-        if method == "GET":
-            return self.GetUser()
-        elif method == "POST":
-            return self.AddUser()
-        elif method == "DELETE":
-            return self.DeleteUser()
-        elif method == "PATCH":
-            return self.UpdateUser()
-        elif method == "HEAD":
-            return self.CheckForUser()
-        elif method == "OPTIONS":
-            # Retrieves viable methods
-            return jsonify({"Options": "GET, POST, DELETE, HEAD, OPTIONS"}), 200
-        else:
+        try:
+            if method == "GET":
+                return self.GetUser()
+            elif method == "POST":
+                return self.AddUser()
+            elif method == "DELETE":
+                return self.DeleteUser()
+            elif method == "PATCH":
+                return self.UpdateUser()
+            elif method == "HEAD":
+                return self.CheckForUser()
+            elif method == "OPTIONS":
+                # Retrieves viable methods
+                return jsonify({"Options": "GET, POST, DELETE, HEAD, OPTIONS"}), 200
+            else:
+                # Catchall error response
+                return jsonify({"ERROR": "Invalid method selection"}), 405
+        except:
             # Catchall error response
-            return jsonify({"ERROR": "Invalid method selection"}), 405
+                return jsonify({"ERROR": "Invalid method selection"}), 405
     
     def GetUser(self):
 
-        if self.Password != None or self.FirstName != "EMPTY" or self.LastName != "EMPTY" or self.Bio != "EMPTY":
-            return jsonify({"ERROR": "GET method does not accept parameters for Password, FirstName, LastName, or Bio"}), 400
+        if self.HashedPassword != None or self.FirstName != "EMPTY" or self.LastName != "EMPTY" or self.Bio != "EMPTY":
+            return jsonify({"ERROR": "GET method does not accept parameters for HashedPassword, FirstName, LastName, or Bio"}), 400
         rowString = "" # Creates rowString for use by query constructor.
         alreadyAdded = False;
         if self.UserID != None:
@@ -69,8 +73,8 @@ class Users:
 
     def AddUser(self):
         
-        if (self.UserID == None) or (self.UserName == None) or (self.Email == None) or (self.Password == None) or (self.Admin == None):
-            return jsonify({"ERROR": "POST method requires UserID, UserName, Email, Password, Admin parameters"}), 400
+        if (self.UserID == None) or (self.UserName == None) or (self.Email == None) or (self.HashedPassword == None) or (self.Admin == None):
+            return jsonify({"ERROR": "POST method requires UserID, UserName, Email, HashedPassword, Admin parameters"}), 400
         elif len(Database.SearchDatabase(table="UserTable", rows=f"UserID = '{self.UserID}'")) > 0:
             return jsonify({"ERROR": "UserID already in use"}), 409
         elif len(Database.SearchDatabase(table="UserTable", rows=f"UserName = '{self.UserName}'")) > 0:
@@ -90,15 +94,15 @@ class Users:
                 self.Bio = f"'{self.Bio}'"
             else:
                 self.Bio = "NULL"
-            result = Database.AddToDatabase(table = "UserTable", entry = [f"{self.UserID}", f"'{self.UserName}'", f"'{self.Email}'", f"'{self.Password}'", self.FirstName, self.LastName, self.Bio, f"{self.Admin}"])
+            result = Database.AddToDatabase(table = "UserTable", entry = [f"{self.UserID}", f"'{self.UserName}'", f"'{self.Email}'", f"'{self.HashedPassword}'", self.FirstName, self.LastName, self.Bio, f"{self.Admin}"])
             if result == True:
                 return jsonify({"SUCCESS": "User added"}), 200
             else:
                 return jsonify({"ERROR": "Program encountered an unknown issue"}), 406
     
     def DeleteUser(self):
-        if self.UserName != None or self.Email != None or self.Password != None or self.FirstName != "EMPTY" or self.LastName != "EMPTY" or self.Bio != "EMPTY" or self.Admin != None:
-            return jsonify({"ERROR": "DELETE method does not accept UserName, Email, Password, FirstName, LastName, Bio, or Admin parameters"}), 400
+        if self.UserName != None or self.Email != None or self.HashedPassword != None or self.FirstName != "EMPTY" or self.LastName != "EMPTY" or self.Bio != "EMPTY" or self.Admin != None:
+            return jsonify({"ERROR": "DELETE method does not accept UserName, Email, HashedPassword, FirstName, LastName, Bio, or Admin parameters"}), 400
         if self.UserID ==  None:
             return jsonify({"ERROR": "DELETE method requires UserID parameter"}), 400
         elif len(Database.SearchDatabase(table="UserTable", rows=f"UserID = '{self.UserID}'")) <= 0:
@@ -120,8 +124,8 @@ class Users:
             if len(Database.SearchDatabase(table="UserTable", rows=f"Email = '{self.Email}'")) > 0:
                 return jsonify({"ERROR": "Email already in use"}), 409
             changes.append(("Email", f"'{self.Email}'"))
-        if self.Password != None:
-            changes.append(("Password", f"'{self.Password}'")) 
+        if self.HashedPassword != None:
+            changes.append(("HashedPassword", f"'{self.HashedPassword}'")) 
         if self.Admin != None:
             changes.append(("Admin", f"'{self.Admin}'"))
         if self.FirstName != "EMPTY":
@@ -147,8 +151,8 @@ class Users:
 
 
     def CheckForUser(self):
-        if self.UserName != None or self.Email != None or self.Password != None or self.FirstName != "EMPTY" or self.LastName != "EMPTY" or self.Bio != "EMPTY" or self.Admin != None:
-            return jsonify({"ERROR": "Head method does not accept UserName, Email, Password, FirstName, LastName, Bio, or Admin parameters"}), 400
+        if self.UserName != None or self.Email != None or self.HashedPassword != None or self.FirstName != "EMPTY" or self.LastName != "EMPTY" or self.Bio != "EMPTY" or self.Admin != None:
+            return jsonify({"ERROR": "Head method does not accept UserName, Email, HashedPassword, FirstName, LastName, Bio, or Admin parameters"}), 400
         if self.UserID ==  None:
             return jsonify({"ERROR": "Head method requires UserID parameter"}), 400
         elif len(Database.SearchDatabase(table="UserTable", rows=f"UserID = '{self.UserID}'")) <= 0:
