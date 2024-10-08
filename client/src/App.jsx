@@ -8,6 +8,7 @@ import Social from './pages/Social';
 import Login from './pages/Login';
 import Account from './pages/Account'
 import Chapters from './pages/Chapters'
+import Create from './pages/NewAccount';
 import Header from './components/Header';
 import theme from './theme';
 import { ThemeProvider } from '@mui/material/styles';
@@ -26,6 +27,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/account" element={<Account />} />
           <Route path="/chapters" element={<Chapters />} />
+          <Route path="/create" element={<Create/>} />
         </Routes>
         </ThemeProvider>
       </Router>
