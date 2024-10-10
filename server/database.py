@@ -5,6 +5,8 @@ from config import Config
 # 1. https://python-oracledb.readthedocs.io/en/latest/api_manual/cursor.html#
 # 2. https://python-oracledb.readthedocs.io/en/latest/user_guide/sql_execution.html
 
+# TODO: Create functions to check for SQL injection for user-supplied text, e.g. Bio, Name
+
 class Database:
         
     #========== Called internally in database.py ==========#
@@ -53,7 +55,7 @@ class Database:
 
     # Searches database
     @staticmethod 
-    def SearchDatabase(table, columns=None, rows=None):
+    def SearchDatabase(table, columns=None, rows=None, order=None, distinct=None):
         
         # Generates columns to be searched.
         columnString = ""
@@ -70,8 +72,16 @@ class Database:
         else:
             rowString = ""
         
+        distinctString = ""
+        if distinct is not None:
+            distinctString = "DISTINCT "
+
+        orderString = ""
+        if order is not None:
+            orderString = f" ORDER BY {order[0]} {order[1]}"
+        
         # Returns result from internal function
-        return Database.SelectQuery(f"SELECT {columnString} FROM {table}{rowString}")
+        return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
 
     # Inserts entry into database table.
     @staticmethod
@@ -108,7 +118,6 @@ class Database:
         for c in changes:
             changesString = changesString + c[0] + " = " + c[1] + ", "
         changesString = changesString[:-2]
-        print(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
         # Attempts to update entry into table. Returns result.
         try:
             Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")

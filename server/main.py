@@ -7,6 +7,7 @@ from google.auth.transport import requests
 from dotenv import load_dotenv
 from database import Database
 from users import Users
+from educationalresources import EducationalResources
 
 # Educational sources used to setup main.py
 # 1. https://www.theserverside.com/blog/Coffee-Talk-Java-News-Stories-and-Opinions/HTTP-methods
@@ -26,14 +27,21 @@ GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 def default():
     return "Flask API"
 
-#### Actual database routes ####
+#### Database Routes ####
 
 @app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"])
 def AccessUserTable():
 
-    # Constucts user object to assign parameters and calls methods function, returns json data.
+    # Accesses UserTable from database
     user = Users(request.json)
     return (user.Methods(request.method))
+
+@app.route('/educationalresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
+def AccessEducationalResources():
+
+    # Accesses EducationalResources from database
+    resources = EducationalResources(request.json)
+    return (resources.Methods(request.method))
  
 @app.after_request
 def set_cors_headers(response):
