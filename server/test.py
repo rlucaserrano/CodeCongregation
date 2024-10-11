@@ -1,7 +1,7 @@
 import json
 from main import app
 
-userTests = False
+userTests = True
 educationalResourcesTests = True
 
 if (userTests ==  True):
