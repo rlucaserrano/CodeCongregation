@@ -1,8 +1,8 @@
 import json
 from main import app
 
-userTests = True
-educationalResourcesTests = False
+userTests = False
+educationalResourcesTests = True
 
 if (userTests ==  True):
   # Add Test (Success)
@@ -204,7 +204,7 @@ if educationalResourcesTests:
                             data=json.dumps({
                               "valResourceID": "20",
                               "valResourceName": "TestResource",
-                              "valWebsiteURL": "www.test.org",
+                              "valWebsiteURL": "https://www.test.org",
                               "valResourceCategory": "FakeCategory",
                               "valResourceDescription": "Test",
                               "valPublished": "0",

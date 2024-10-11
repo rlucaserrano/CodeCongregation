@@ -34,6 +34,7 @@ def AccessUserTable():
 
     # Accesses UserTable from database
     user = Users(request.json)
+    user.Process()
     return (user.Methods(request.method))
 
 @app.route('/educationalresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
@@ -41,6 +42,7 @@ def AccessEducationalResources():
 
     # Accesses EducationalResources from database
     resources = EducationalResources(request.json)
+    resources.Process()
     return (resources.Methods(request.method))
  
 @app.after_request

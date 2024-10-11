@@ -1,5 +1,6 @@
 from flask import jsonify
 from database import Database
+from proc_and_sec import ProcAndSec
 
 class EducationalResources:
 
@@ -44,6 +45,35 @@ class EducationalResources:
             # Catchall error response
             return jsonify({"ERROR": "Invalid method selection"}), 405
     
+    def Process(self):
+        if self.valResourceID is not None:
+            if not ProcAndSec.CheckValidString(self.valResourceID):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valResourceName is not None:
+            if not ProcAndSec.CheckValidString(self.valResourceName):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valResourceCategory is not None:
+            if not ProcAndSec.CheckValidString(self.valResourceCategory):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valResourceDescription is not None:
+            if not ProcAndSec.CheckValidString(self.valResourceDescription):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valPublished is not None:
+            if not ProcAndSec.CheckValidString(self.valPublished):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valDateAdded is not None:
+            if not ProcAndSec.CheckValidString(self.valDateAdded):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valVotes is not None:
+            if not ProcAndSec.CheckValidString(self.valVotes):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.order is not None:
+            if not ProcAndSec.CheckValidString(self.order):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.distinct is not None:
+            if not ProcAndSec.CheckValidString(self.distinct):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+
     def GetResource(self):
 
         if self.valResourceDescription is not None or self.valDateAdded is not None:
@@ -122,6 +152,9 @@ class EducationalResources:
                 self.valResourceDescription = f"'{self.valResourceDescription}'"
             else:
                 self.valResourceDescription = "NULL"
+            # Checks for valid url format
+            if not ProcAndSec.CheckWebsiteURLFormat(self.valWebsiteURL):
+                return jsonify({"ERROR": "Invalid Website URL format"}), 409
             result = Database.AddToDatabase(table = "EducationalResources", entry = [f"{self.valResourceID}", f"'{self.valResourceName}'", f"'{self.valWebsiteURL}'", f"'{self.valResourceCategory}'", self.valResourceDescription, f"{self.valPublished}", f"{self.valDateAdded}", f"{self.valVotes}"])
             if result == True:
                 return jsonify({"SUCCESS": "Resource added"}), 200

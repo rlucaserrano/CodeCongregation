@@ -59,6 +59,32 @@ class Users:
             # Catchall error response
                 return jsonify({"ERROR": "Invalid method selection"}), 405
     
+    def Process(self):
+        if self.valUserID is not None:
+            if not ProcAndSec.CheckValidString(self.valUserID):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valUserName is not None:
+            if not ProcAndSec.CheckValidString(self.valUserName):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valFirstName is not None:
+            if not ProcAndSec.CheckValidString(self.valFirstName):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valLastName is not None:
+            if not ProcAndSec.CheckValidString(self.valLastName):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valBio is not None:
+            if not ProcAndSec.CheckValidString(self.valBio):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valAdmin is not None:
+            if not ProcAndSec.CheckValidString(self.valAdmin):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.order is not None:
+            if not ProcAndSec.CheckValidString(self.order):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.distinct is not None:
+            if not ProcAndSec.CheckValidString(self.distinct):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+
 
     def GetUser(self):
 
@@ -134,6 +160,9 @@ class Users:
                 self.valBio = f"'{self.valBio}'"
             else:
                 self.valBio = "NULL"
+            # Checks for valid email format
+            if not ProcAndSec.CheckEmailFormat(self.valEmail):
+                return jsonify({"ERROR": "Invalid Email format"}), 409
             # Hashes password
             self.valHashedPassword = ProcAndSec.HashAndSalt(self.valHashedPassword)
             result = Database.AddToDatabase(table = "UserTable", entry = [f"{self.valUserID}", f"'{self.valUserName}'", f"'{self.valEmail}'", f"'{self.valHashedPassword}'", self.valFirstName, self.valLastName, self.valBio, f"{self.valAdmin}"])
