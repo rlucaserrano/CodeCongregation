@@ -79,7 +79,7 @@ class Database:
         orderString = ""
         if order is not None:
             orderString = f" ORDER BY {order[0]} {order[1]}"
-        
+        print(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
         # Returns result from internal function
         return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
 

@@ -220,7 +220,7 @@ if educationalResourcesTests:
       response = client.get('/educationalresources', 
                             data=json.dumps({
                             "valResourceID": "20", 
-                            "order": ["Votes", "DESC"] 
+                            "Order": ["Votes", "DESC"] 
                             }),
                             content_type='application/json')
 
@@ -236,23 +236,13 @@ if educationalResourcesTests:
 
   print(response.get_json())
 
-  # Get Test
+ # Get Test
   with app.test_client() as client:
       response = client.get('/educationalresources', 
                             data=json.dumps({
-                            "valResourceID": "20", 
-                            "order": ["Votes", "DESC"] 
-                            }),
-                            content_type='application/json')
-
-  print(response.get_json())
-
-  # Get Test
-  with app.test_client() as client:
-      response = client.get('/educationalresources', 
-                            data=json.dumps({
-                            "order": ["Votes", "DESC"],
+                            "Order": ["Votes", "DESC"],
                             "colResourceCategory": "Any text",
+                            "colVotes": "Any Text",
                             "Distinct": "Any Value" 
                             }),
                             content_type='application/json')

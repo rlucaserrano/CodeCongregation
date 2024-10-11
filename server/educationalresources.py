@@ -68,7 +68,9 @@ class EducationalResources:
             if not ProcAndSec.CheckValidString(self.valVotes):
                 return jsonify({"ERROR": "Invalid characters in string"}), 409
         if self.order is not None:
-            if not ProcAndSec.CheckValidString(self.order):
+            if not ProcAndSec.CheckValidString(self.order[0]):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+            if not ProcAndSec.CheckValidString(self.order[1]):
                 return jsonify({"ERROR": "Invalid characters in string"}), 409
         if self.distinct is not None:
             if not ProcAndSec.CheckValidString(self.distinct):
