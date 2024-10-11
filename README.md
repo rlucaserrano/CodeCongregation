@@ -97,10 +97,12 @@ Circle CI
 
 
 Oracle Database - add to .env file 
-    
-ORACLE_USER=ADD
-ORACLE_PASSWORD=ADD
-ORACLE_HOST=oracle.cise.ufl.edu
-ORACLE_PORT=1521
-ORACLE_SID=orcl
+    ORACLE_USER=ADD
+    ORACLE_PASSWORD=ADD
+    ORACLE_HOST=oracle.cise.ufl.edu
+    ORACLE_PORT=1521
+    ORACLE_SID=orcl
 
+Automatic Email - add to .env file
+    EMAIL_ADDRESS=codecongregation@gmail.com
+    EMAIL_PASSWORD= CheckDiscord
