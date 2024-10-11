@@ -21,3 +21,8 @@ class Config:
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
     GOOGLE_SECRET_KEY = os.getenv("GOOGLE_SECRET_KEY")
 
+    # GMAIL
+    EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
+    EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+
+

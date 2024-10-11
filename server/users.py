@@ -1,5 +1,7 @@
 from flask import jsonify
 from database import Database
+from google_email import Email
+from proc_and_sec import ProcAndSec
 
 class Users:
 
@@ -32,7 +34,15 @@ class Users:
             if method == "GET":
                 return self.GetUser()
             elif method == "POST":
-                return self.AddUser()
+                result = self.AddUser()
+                # FIXME Sends Welcom Email. Remove second condition once testing is complete.
+                if result[1] == 200 and self.valEmail == "codecongregation@gmail.com":
+                    self.valFirstName = self.valFirstName[1:-1]
+                    emailObject = Email()
+                    emailMessage = emailObject.ConstructEmail(name=self.valFirstName, emailType=1)
+                    emailObject.SendEmail(email=emailMessage, userEmail=self.valEmail)
+                    emailObject.CloseConnection
+                return result
             elif method == "DELETE":
                 return self.DeleteUser()
             elif method == "PATCH":
@@ -49,6 +59,7 @@ class Users:
             # Catchall error response
                 return jsonify({"ERROR": "Invalid method selection"}), 405
     
+
     def GetUser(self):
 
         if self.valHashedPassword is not None or self.valFirstName is not None or self.valLastName is not None or self.valBio is not None:
@@ -123,6 +134,8 @@ class Users:
                 self.valBio = f"'{self.valBio}'"
             else:
                 self.valBio = "NULL"
+            # Hashes password
+            self.valHashedPassword = ProcAndSec.HashAndSalt(self.valHashedPassword)
             result = Database.AddToDatabase(table = "UserTable", entry = [f"{self.valUserID}", f"'{self.valUserName}'", f"'{self.valEmail}'", f"'{self.valHashedPassword}'", self.valFirstName, self.valLastName, self.valBio, f"{self.valAdmin}"])
             if result == True:
                 return jsonify({"SUCCESS": "User added"}), 200

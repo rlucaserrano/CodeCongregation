@@ -2,7 +2,7 @@ import json
 from main import app
 
 userTests = True
-educationalResourcesTests = True
+educationalResourcesTests = False
 
 if (userTests ==  True):
   # Add Test (Success)
@@ -11,11 +11,11 @@ if (userTests ==  True):
                             data=json.dumps({
                               "valUserID": "1",
                               "valUserName": "GatorFan1",
-                              "valEmail": "Fake1@Gmail.com",
+                              "valEmail": "codecongregation@gmail.com",
                               "valHashedPassword": "FakePassword1",
                               "valAdmin": "0",
-                              "valFirstName": "First",
-                              "valLastName": "Last",
+                              "valFirstName": "Swamp",
+                              "valLastName": "Scripter",
                               "valBio": "Bio"
 
                             }),
@@ -66,7 +66,7 @@ if (userTests ==  True):
                             data=json.dumps({
                               "valUserID": "2",
                               "valUserName": "GatorFan2",
-                              "valEmail": "Fake1@Gmail.com",
+                              "valEmail": "codecongregation@gmail.com",
                               "valHashedPassword": "FakePassword1",
                               "valAdmin": "0"
                             }),
@@ -258,5 +258,3 @@ if educationalResourcesTests:
                             content_type='application/json')
 
   print(response.get_json())
-
-
