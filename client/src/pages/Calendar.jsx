@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import Button from '@mui/material/Button';
+import moment from 'moment'
+import '../assets/arrange.css';
 
-function Calendar() {
+function Cal() {
     const [events, setEvents] = useState([]);
 
     useEffect(() => {
@@ -23,16 +30,60 @@ function Calendar() {
         fetchEvents();
     }, []);
 
+    const localizer = momentLocalizer(moment)
+
+    const [openT, setOpenT] = React.useState(false);
+
+    const handleClickOpenT = () => {
+        setOpenT(true);
+    };
+
+    const handleCloseT = () => {
+        setOpenT(false);
+    };
+
+    const [openN, setOpenN] = React.useState(false);
+
+    const handleClickOpenN = () => {
+        setOpenN(true);
+    };
+
+    const handleCloseN = () => {
+        setOpenN(false);
+    };
+
     return (
-        <div>
-            <h2>Calendar Page</h2>
-            <ul>
-                {events.map(event => (
-                    <li key={event.id}>{event.summary}</li>
-                ))}
-            </ul>
-        </div>
+        <html>
+            <div>
+                <h2>Calendar Page</h2>
+                <ul>
+                    {/*events.map(event => (
+                        <li key={event.id}>{event.summary}</li>
+                    ))*/}
+                </ul>
+                <div>
+                    <Button>Use Google Calendar</Button>
+                    <Button color='warning'>Make Calendar Public</Button>
+                    <Button sx={{color:'#000'}} onClick={handleClickOpenT}>Add Task +</Button>
+                    <Dialog open={openT} onClose={handleCloseT}>
+                        <DialogTitle>Add a new task:</DialogTitle>
+                        <TextField id="TaskTime" type="datetime-local" defaultValue = ""/>
+                        <TextField id="TaskDesc" label="Input task" defaultValue = ""/>
+                        <Button variant='contained' onClick={handleCloseT} style={{textTransform: 'none'}}>Done</Button>
+                    </Dialog>
+                    <Button sx={{color:'#000'}} onClick={handleClickOpenN}>Add New Calendar +</Button>
+                    <Dialog open={openN} onClose={handleCloseN}>
+                        <DialogTitle>Create a new calendar:</DialogTitle>
+                        <TextField id="CalName" label="Input Calendar Name:" defaultValue = ""/>
+                        <Button variant='contained' onClick={handleCloseN} style={{textTransform: 'none'}}>Done</Button>
+                    </Dialog>
+                </div>
+            </div>
+            <div>
+                <Calendar localizer={localizer} events={events} startAccessor="start" endAccessor="end" views={['month', 'day', 'agenda']}/>
+            </div>
+        </html>
     );
 }
 
-export default Calendar;
+export default Cal;

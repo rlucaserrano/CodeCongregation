@@ -3,8 +3,10 @@ google-auth==2.34.0
 pyasn1==0.6.1
 pyasn1_modules==0.4.1
 rsa==4.9
+oracledb==2.4.1
 Flask==3.0.3
 Flask-Cors==5.0.0
 Flask-SQLAlchemy==3.1.1
 greenlet==3.1.0
 gunicorn==23.0.0
+
