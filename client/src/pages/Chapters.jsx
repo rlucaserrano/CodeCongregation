@@ -2,13 +2,35 @@ import React from 'react';
 import Accordion from '@mui/material/Accordion';
 import AccordionDetails from '@mui/material/AccordionDetails';
 import AccordionSummary from '@mui/material/AccordionSummary';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
 import { Link } from "react-router-dom";
 
+
+
 function Chapters() {
+  async function handleResGet()
+    {
+        await fetch('http://localhost:8080/res', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'GET'
+        })
+        .then(function(res){console.log(res)})
+        .catch(function(res){console.log(res)})
+        console.log("Here")
+    }
   return (
     <html>
-      <header>
-        <h1>Chapters Page</h1>
+      <header onLoad={handleResGet()}>
+        <h1>Tutorials</h1>
       <p>Select a Chapter and a Lesson:</p>
       </header>
     <div>
@@ -40,6 +62,16 @@ function Chapters() {
           Chapter 2
           </AccordionSummary>
           <AccordionDetails>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Icon</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell align='right'>Link</TableCell>
+                  <TableCell align='right'>Votes</TableCell>
+                </TableRow>
+              </TableHead>
+            </Table>
           </AccordionDetails>
         </Accordion>
         <Accordion sx={{width: '100%'}}>
