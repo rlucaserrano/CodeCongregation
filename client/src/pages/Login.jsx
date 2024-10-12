@@ -44,17 +44,6 @@ const Login = () => {
         window.location.href = '/'
     }
 
-    function handleNew(e)
-    {
-        e.preventDefault()
-        const form = e.target;
-        const formData = new FormData(form);
-        const formJson = Object.fromEntries(formData.entries());
-        console.log('User: ' + formJson.UsernameN)
-        console.log('Pass: ' + formJson.PasswordN)
-        window.location.href = '/'
-    }
-
     function handleGuest(e)
     {
         e.preventDefault()
