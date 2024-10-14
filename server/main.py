@@ -80,8 +80,8 @@ def getRes():
     connection = oracledb.connect(user=DBUSER, password=DBPASS, dsn=f'{DBHOST}:{DBPORT}/{DBSID}') #Uncomment this when using VPN
     cursor = connection.cursor()
     cursor.execute('''SELECT RESOURCENAME, WEBSITEURL, RESOURCECATEGORY, VOTES FROM MGOLAN.EDUCATIONALRESOURCES''')
-    print(cursor.fetchall())
     toReturn = cursor.fetchall();
+    print(toReturn)
     cursor.close()
     connection.close()
     return toReturn

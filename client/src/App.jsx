@@ -7,7 +7,7 @@ import Calendar from './pages/Calendar';
 import Social from './pages/Social'; 
 import Login from './pages/Login';
 import Account from './pages/Account'
-import Chapters from './pages/Chapters'
+import Resources from './pages/Resources'
 import Create from './pages/NewAccount';
 import Header from './components/Header';
 import theme from './theme';
@@ -26,7 +26,7 @@ function App() {
           <Route path="/social" element={<Social />} />
           <Route path="/login" element={<Login />} />
           <Route path="/account" element={<Account />} />
-          <Route path="/chapters" element={<Chapters />} />
+          <Route path="/resources" element={<Resources />} />
           <Route path="/create" element={<Create/>} />
         </Routes>
         </ThemeProvider>
