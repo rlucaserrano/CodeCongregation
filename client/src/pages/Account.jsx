@@ -68,7 +68,7 @@ function Account() {
   return (
     <html>
       <header>
-      <h1>Account Page</h1>
+      <h1>Account</h1>
       </header>
     <body> {/*Yes this is necessary*/}
         <div>
@@ -77,8 +77,9 @@ function Account() {
                 <Avatar id="Pic" sx={{ bgcolor: blue[900], width: 100, height: 100}} variant="square">B</Avatar>
                 <TextField required id="Username" label="Username" defaultValue = ""/>
                 <TextField required id="Password" label="Password" type="password" defaultValue = ""/>
+                <TextField id="First" label="First Name" defaultValue = ""/>
+                <TextField id="Last" label="Last Name" defaultValue = ""/>
                 <TextField required id="Email" label="Email" type="email" defaultValue = ""/>
-                <TextField id="Phone" label="Phone Number" type="tel" defaultValue = ""/>
                 <TextField id="Bio" label="Bio" multiline="true" rows={5} defaultValue = ""/>
                 <Button variant='outlined' type='submit'>Save</Button>
               </lft>
