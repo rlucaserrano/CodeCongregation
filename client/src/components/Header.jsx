@@ -7,7 +7,6 @@ function Header() {
   return (
     <nav>
         <Button variant='contained' component = {Link} to={"/"}>Home</Button>
-        <Button variant='contained' component = {Link} to={"/tst"}>Test</Button>
         <Button variant='contained' component = {Link} to={"/resources"}>Resources</Button>
         <Button variant='contained' component = {Link} to={"/social"}>Social</Button>
         <Button variant='contained' component = {Link} to={"/calendar"}>Calendar</Button>

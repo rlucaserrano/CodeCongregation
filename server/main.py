@@ -17,12 +17,6 @@ from educationalresources import EducationalResources
 # from .env file
 load_dotenv()
 
-#Sucessful connection to Database (using VPN). Try creating a new user to send to DB.
-DBUSER = os.getenv('ORACLE_USER')
-DBPASS = os.getenv('ORACLE_PASSWORD')
-DBHOST = os.getenv('ORACLE_HOST')
-DBPORT = os.getenv('ORACLE_PORT')
-DBSID = os.getenv('ORACLE_SID')
 
 # Flask instance
 app = Flask(__name__)
@@ -49,16 +43,14 @@ def AccessEducationalResources():
     # Accesses EducationalResources from database
     resources = EducationalResources(request.json)
     resources.Process()
-    print(resources)
     return (resources.Methods(request.method))
 
-#Quick Tests of Database connection, to be deleted later
 @app.route('/add', methods=["POST"])
 def addUser():
-    connection = oracledb.connect(user=DBUSER, password=DBPASS, dsn=f'{DBHOST}:{DBPORT}/{DBSID}') #Uncomment this when using VPN
-    test = request.json.get('data')
+    connection = Database.GetConnection()
+    addNew = request.json.get('data')
     cursor = connection.cursor()
-    cursor.execute('''INSERT INTO MGOLAN.USERTABLE(USERID,USERNAME,HASHEDPASSWORD,EMAIL,ADMIN) VALUES(:0,:1,:2,:3,:4)''', test)
+    cursor.execute('''INSERT INTO MGOLAN.USERTABLE(USERID,USERNAME,HASHEDPASSWORD,EMAIL,ADMIN) VALUES(:0,:1,:2,:3,:4)''', addNew)
     connection.commit()
     cursor.close()
     connection.close()
@@ -66,10 +58,10 @@ def addUser():
 
 @app.route('/log', methods=["POST"])
 def findUser():
-    connection = oracledb.connect(user=DBUSER, password=DBPASS, dsn=f'{DBHOST}:{DBPORT}/{DBSID}') #Uncomment this when using VPN
-    test = request.json.get('data')
+    connection = Database.GetConnection()
+    verify = request.json.get('data')
     cursor = connection.cursor()
-    cursor.execute('''SELECT * FROM MGOLAN.USERTABLE(USERNAME,HASHEDPASSWORD) VALUES(:0,:1)''', test)
+    cursor.execute('''SELECT * FROM MGOLAN.USERTABLE(USERNAME,HASHEDPASSWORD) VALUES(:0,:1)''', verify)
     connection.commit()
     cursor.close()
     connection.close()
@@ -77,11 +69,10 @@ def findUser():
 
 @app.route('/res', methods=["GET"])
 def getRes():
-    connection = oracledb.connect(user=DBUSER, password=DBPASS, dsn=f'{DBHOST}:{DBPORT}/{DBSID}') #Uncomment this when using VPN
+    connection = Database.GetConnection()
     cursor = connection.cursor()
     cursor.execute('''SELECT RESOURCENAME, WEBSITEURL, RESOURCECATEGORY, VOTES FROM MGOLAN.EDUCATIONALRESOURCES''')
     toReturn = cursor.fetchall();
-    print(toReturn)
     cursor.close()
     connection.close()
     return toReturn
