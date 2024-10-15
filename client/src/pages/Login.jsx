@@ -77,6 +77,7 @@ const Login = () => {
                 onSuccess={handleLoginSuccess}
                 onError={handleLoginFailure}
                 uxMode="popup" 
+                scope="https://www.googleapis.com/auth/calendar"
             />
             <log>
             <TextField required id="Username" label="Username" defaultValue = ""/>
