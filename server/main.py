@@ -1,5 +1,6 @@
 import os
 import requests as http_requests
+import oracledb
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from google.oauth2 import id_token
@@ -31,7 +32,6 @@ def default():
 
 @app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"])
 def AccessUserTable():
-
     # Accesses UserTable from database
     user = Users(request.json)
     user.Process()
@@ -39,11 +39,42 @@ def AccessUserTable():
 
 @app.route('/educationalresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessEducationalResources():
-
     # Accesses EducationalResources from database
     resources = EducationalResources(request.json)
     resources.Process()
     return (resources.Methods(request.method))
+
+@app.route('/add', methods=["POST"])
+def addUser():
+    connection = Database.GetConnection()
+    addNew = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('''INSERT INTO MGOLAN.USERTABLE(USERID,USERNAME,HASHEDPASSWORD,EMAIL,ADMIN) VALUES(:0,:1,:2,:3,:4)''', addNew)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/log', methods=["POST"])
+def findUser():
+    connection = Database.GetConnection()
+    verify = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('''SELECT * FROM MGOLAN.USERTABLE(USERNAME,HASHEDPASSWORD) VALUES(:0,:1)''', verify)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/res', methods=["GET"])
+def getRes():
+    connection = Database.GetConnection()
+    cursor = connection.cursor()
+    cursor.execute('''SELECT RESOURCENAME, WEBSITEURL, RESOURCECATEGORY, VOTES FROM MGOLAN.EDUCATIONALRESOURCES''')
+    toReturn = cursor.fetchall();
+    cursor.close()
+    connection.close()
+    return toReturn
  
 @app.after_request
 def set_cors_headers(response):

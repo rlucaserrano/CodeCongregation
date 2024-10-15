@@ -8,6 +8,9 @@ nav {
     width: 100%; /* Makes the header span the full width of the page */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Adds a subtle shadow */
     z-index: 1000; /* Ensures the header stays on top of other elements */
+    display: flex;
+    justify-content: center;
+    gap: 20px;
 }
 
 ul {

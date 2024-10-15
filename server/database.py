@@ -117,6 +117,7 @@ class Database:
         for c in changes:
             changesString = changesString + c[0] + " = " + c[1] + ", "
         changesString = changesString[:-2]
+
         # Attempts to update entry into table. Returns result.
         try:
             Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
@@ -125,8 +126,5 @@ class Database:
             return(False)
 
         
-        
-
-
         
 

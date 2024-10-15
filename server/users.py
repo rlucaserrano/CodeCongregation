@@ -87,7 +87,6 @@ class Users:
             if not ProcAndSec.CheckValidString(self.distinct):
                 return jsonify({"ERROR": "Invalid characters in string"}), 409
 
-
     def GetUser(self):
 
         if self.valHashedPassword is not None or self.valFirstName is not None or self.valLastName is not None or self.valBio is not None:
@@ -162,6 +161,7 @@ class Users:
                 self.valBio = f"'{self.valBio}'"
             else:
                 self.valBio = "NULL"
+
             # Checks for valid email format
             if not ProcAndSec.CheckEmailFormat(self.valEmail):
                 return jsonify({"ERROR": "Invalid Email format"}), 409
