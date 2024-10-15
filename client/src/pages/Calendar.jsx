@@ -59,7 +59,7 @@ function Cal() {
                 <ul>
                     {/*events.map(event => (
                         <li key={event.id}>{event.summary}</li>
-                    ))*/}
+                    ))*/ /*Google Calendar was temporarily commented out while working on the regular calendar*/}
                 </ul>
                 <div>
                     <Button>Use Google Calendar</Button>
