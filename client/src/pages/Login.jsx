@@ -33,25 +33,28 @@ const Login = () => {
         console.log('Login Failed');
     };
 
-    function handleSubmit(e)
+    async function handleSubmit(e)
     {
         e.preventDefault()
         const form = e.target;
-        const formData = new FormData(form);
-        const formJson = Object.fromEntries(formData.entries());
-        console.log('User: ' + formJson.Username)
-        console.log('Pass: ' + formJson.Password)
-        window.location.href = '/'
-    }
-
-    function handleNew(e)
-    {
-        e.preventDefault()
-        const form = e.target;
-        const formData = new FormData(form);
-        const formJson = Object.fromEntries(formData.entries());
-        console.log('User: ' + formJson.UsernameN)
-        console.log('Pass: ' + formJson.PasswordN)
+        console.log(form.Username.value + ' ' + form.Password.value)
+        const formData = new FormData();
+        formData.append("0", form.Username.value)
+        formData.append("1", form.Password.value)
+        const formJson = Object.fromEntries(formData);
+        console.log(formJson)
+        await fetch('http://localhost:8080/log', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        .then(function(res){console.log(res)})
+        .catch(function(res){console.log(res)})
         window.location.href = '/'
     }
 

@@ -24,7 +24,7 @@ function Social() {
 
   return (
     <div>
-      <h1>Social Page</h1>
+      <h1>Social</h1>
       <TextField label="Filter by user or group" style={{width: '100%'}}></TextField>
       <table style={{maxWidth: '100%'}}>
         <Grid2 style={{display: 'flex', flexDirection: 'column', padding: '12px'}}>

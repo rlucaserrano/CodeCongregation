@@ -55,7 +55,7 @@ function Cal() {
     return (
         <html>
             <div>
-                <h2>Calendar Page</h2>
+                <h1>Calendar</h1>
                 <ul>
                     {/*events.map(event => (
                         <li key={event.id}>{event.summary}</li>
