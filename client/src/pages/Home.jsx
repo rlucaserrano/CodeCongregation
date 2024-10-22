@@ -7,7 +7,8 @@ function Home() {
   return (
     <Box component="section" sx={{p: 2, border: "2px solid blue", width: '45%', backgroundColor: 'cyan'}} margin='auto'>
       <h1>Welcome to CoderCongregation!</h1>
-      <h2>CoderCongregation is the Virtual Study Group Environment that allows you to study and practice programming skills with friends!</h2>
+      <h2>CoderCongregation is the Virtual Study Group Environment that allows you to study and practice programming skills with 
+      <h1 style={{color:"yellow"}}>FRIENDS!</h1></h2>
     </Box>
   );
 }

@@ -1,98 +1,12 @@
-/*import React, { useEffect, useState } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import TextField from '@mui/material/TextField';
+import React, { useState } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
-import Button from '@mui/material/Button';
-import moment from 'moment'
-import '../assets/arrange.css';
-
-function Cal() {
-    const [events, setEvents] = useState([]);
-
-    useEffect(() => {
-        // Fetch events from the server
-        const fetchEvents = async () => {
-            try {
-                const token = localStorage.getItem('google_token'); // Retrieve the token stored during login
-                if (!token) {
-                    console.error('Google token not found');
-                    return;
-                }
-                const response = await fetch(`http://localhost:8080/api/calendar/events?token=${token}`);
-                const data = await response.json();
-                setEvents(data);
-            } catch (error) {
-                console.error('Error fetching events:', error);
-            }
-        };
-
-        fetchEvents();
-    }, []);
-
-    const localizer = momentLocalizer(moment)
-
-    const [openT, setOpenT] = React.useState(false);
-
-    const handleClickOpenT = () => {
-        setOpenT(true);
-    };
-
-    const handleCloseT = () => {
-        setOpenT(false);
-    };
-
-    const [openN, setOpenN] = React.useState(false);
-
-    const handleClickOpenN = () => {
-        setOpenN(true);
-    };
-
-    const handleCloseN = () => {
-        setOpenN(false);
-    };
-
-    return (
-        <html>
-            <div>
-                <h1>Calendar</h1>
-                <ul>
-                    {/*events.map(event => (
-                        <li key={event.id}>{event.summary}</li>
-                    ))}
-                </ul>
-                <div>
-                    <Button>Use Google Calendar</Button>
-                    <Button color='warning'>Make Calendar Public</Button>
-                    <Button sx={{color:'#000'}} onClick={handleClickOpenT}>Add Task +</Button>
-                    <Dialog open={openT} onClose={handleCloseT}>
-                        <DialogTitle>Add a new task:</DialogTitle>
-                        <TextField id="TaskTime" type="datetime-local" defaultValue = ""/>
-                        <TextField id="TaskDesc" label="Input task" defaultValue = ""/>
-                        <Button variant='contained' onClick={handleCloseT} style={{textTransform: 'none'}}>Done</Button>
-                    </Dialog>
-                    <Button sx={{color:'#000'}} onClick={handleClickOpenN}>Add New Calendar +</Button>
-                    <Dialog open={openN} onClose={handleCloseN}>
-                        <DialogTitle>Create a new calendar:</DialogTitle>
-                        <TextField id="CalName" label="Input Calendar Name:" defaultValue = ""/>
-                        <Button variant='contained' onClick={handleCloseN} style={{textTransform: 'none'}}>Done</Button>
-                    </Dialog>
-                </div>
-            </div>
-            <div>
-                <Calendar localizer={localizer} events={events} startAccessor="start" endAccessor="end" views={['month', 'day', 'agenda']}/>
-            </div>
-        </html>
-    );
-}
-export default Cal;
-*/
-import { useState } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Container, Paper, Typography, Button, Switch, Grid2 } from "@mui/material";
 import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
+import TextField from '@mui/material/TextField';
 import "../assets/arrange.css"; // Ensure this file exists
 
 const localizer = momentLocalizer(moment);
@@ -138,15 +52,32 @@ const CalendarPage = () => {
     return { minTime, maxTime };
   };
 
+  const [openT, setOpenT] = React.useState(false);
+
+    const handleClickOpenT = () => {
+        setOpenT(true);
+    };
+
+    const handleCloseT = () => {
+        setOpenT(false);
+    };
+
+    const [openN, setOpenN] = React.useState(false);
+
+    const handleClickOpenN = () => {
+        setOpenN(true);
+    };
+
+    const handleCloseN = () => {
+        setOpenN(false);
+    };
+
   // Set min and max time for calendar based on events when slider is on
   const { minTime, maxTime } = showOnlyScheduled ? getMinAndMaxTimes(events) : { minTime: new Date(0, 0, 0, 0, 0), maxTime: new Date(0, 0, 0, 23, 59) };
 
   return (
     <Container>
-      <Typography variant="h4" gutterBottom>
-        My Calendar
-      </Typography>
-
+      <h1> Calendar </h1>
       {/* Controls */}
       <Grid2 container spacing={2} alignItems="center" justifyContent="space-between">
         {/* Left Side Controls */}
@@ -156,14 +87,21 @@ const CalendarPage = () => {
           </Button>
         </Grid2>
         <Grid2 item>
-          <Button variant="contained" color="secondary">
-            Add Task
-          </Button>
+                    <Button sx={{color:'#000'}} onClick={handleClickOpenT} variant="contained" color="secondary">Add Task</Button>
+                    <Dialog open={openT} onClose={handleCloseT}>
+                        <DialogTitle>Add a new task:</DialogTitle>
+                        <TextField id="TaskTime" type="datetime-local" defaultValue = ""/>
+                        <TextField id="TaskDesc" label="Input task" defaultValue = ""/>
+                        <Button variant='contained' onClick={handleCloseT} style={{textTransform: 'none'}}>Done</Button>
+                    </Dialog>
         </Grid2>
         <Grid2 item>
-          <Button variant="contained" color="secondary">
-            Add New Calendar
-          </Button>
+        <Button sx={{color:'#000'}} onClick={handleClickOpenN} variant="contained" color="secondary">Add New Calendar</Button>
+                    <Dialog open={openN} onClose={handleCloseN}>
+                        <DialogTitle>Create a new calendar:</DialogTitle>
+                        <TextField id="CalName" label="Input Calendar Name:" defaultValue = ""/>
+                        <Button variant='contained' onClick={handleCloseN} style={{textTransform: 'none'}}>Done</Button>
+                    </Dialog>
         </Grid2>
         <Grid2 item>
           <Button variant="outlined" color="default">
@@ -191,7 +129,7 @@ const CalendarPage = () => {
           events={events}
           startAccessor="start"
           endAccessor="end"
-          defaultView="week"
+          defaultView="month"
           date={currentDate}
           onNavigate={(date) => setCurrentDate(date)} // Keep track of date when navigating inside the calendar
           style={{ height: 500 }}
@@ -204,6 +142,3 @@ const CalendarPage = () => {
 };
 
 export default CalendarPage;
-
-
-

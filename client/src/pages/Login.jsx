@@ -37,13 +37,11 @@ const Login = () => {
     {
         e.preventDefault()
         const form = e.target;
-        console.log(form.Username.value + ' ' + form.Password.value)
         const formData = new FormData();
         formData.append("0", form.Username.value)
         formData.append("1", form.Password.value)
         const formJson = Object.fromEntries(formData);
-        console.log(formJson)
-        await fetch('http://localhost:8080/log', {
+        let data = await fetch('http://localhost:8080/log', {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
@@ -53,8 +51,6 @@ const Login = () => {
                 data: formJson
             })
         })
-        .then(function(res){console.log(res)})
-        .catch(function(res){console.log(res)})
         window.location.href = '/'
     }
 
@@ -71,18 +67,16 @@ const Login = () => {
     }
 
     return (
-        <form method='post' onSubmit={handleSubmit} style={{border: '2px solid black'}}>
+        <form method='post' onSubmit={handleSubmit} style={{border: '2px solid black', minWidth: 250, width: 250}}>
             <h2>Login</h2>
             <GoogleLogin
                 onSuccess={handleLoginSuccess}
                 onError={handleLoginFailure}
                 uxMode="popup" 
             />
-            <log>
-            <TextField required id="Username" label="Username" defaultValue = ""/>
-            <TextField required id="Password" label="Password" type="password" defaultValue = ""/>
-            </log>
-            <div>
+            <div style={{display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center'}}>
+            <TextField style={{minWidth: 225, width: 225}} required id="Username" label="Username" defaultValue = ""/>
+            <TextField style={{minWidth: 225, width: 225}} required id="Password" label="Password" type="password" defaultValue = ""/>
             <Button variant='contained' type='submit'>Sign In</Button>
             </div>
             <div>
