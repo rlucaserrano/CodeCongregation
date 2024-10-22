@@ -26,7 +26,6 @@ CORS(app)  # Currently allowing all origins
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
 secret = 'testSecret'
-token = ''
 
 @app.route('/')
 def default():
@@ -60,21 +59,17 @@ def addUser():
     connection.close()
     return ""
 
-@app.route('/info', methods=["GET"])
+@app.route('/info', methods=["POST"])
 def info():
-    if (token == ''):
+    token = request.data
+    if (token.decode("utf-8") == ''):
         print("Token is empty")
-        return json.dumps(token)
-    print("Token is: " + token)
+        return json.dumps({})
+    print("Token is: ", token)
     print('============')
     data = json.dumps(jwt.decode(token,key=secret,algorithms=['HS256']))
     print(data)
     return data
-
-@app.route('/out', methods=["GET"])
-def out():
-    global token; token = '';
-    return ""
 
 @app.route('/log', methods=["POST"])
 def findUser():
@@ -95,11 +90,12 @@ def findUser():
             'admin': results[0][7]
         }
         print(data)
-        global token; token = jwt.encode(payload=data, key=secret) #This should set the global varibale.
+        print('============')
+        token = jwt.encode(payload=data, key=secret)
         print(token)
         cursor.close()
         connection.close()
-        return ""
+        return token
     else:
         cursor.close()
         connection.close()
