@@ -8,6 +8,11 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
+import BuildIcon from '@mui/icons-material/Build'; //Practice Questions
+import SchoolIcon from '@mui/icons-material/School'; //Tutorials
+import VisibilityIcon from '@mui/icons-material/Visibility'; //Visualization Materials
+import BookIcon from '@mui/icons-material/Book'; //Computer Science Theory
+import LocalLibraryIcon from '@mui/icons-material/LocalLibrary'; //Misc/Other
 
 function Resources() {
 
@@ -31,6 +36,27 @@ function Resources() {
   useEffect(() => {
     handleResGet()
   }, [])
+
+  function handleImage(e)
+  {
+    if (e == 'Practice Questions')
+    {
+      return <BuildIcon/>;
+    }
+    else if (e == 'Tutorials')
+    {
+      return <SchoolIcon/>;
+    }
+    else if (e == 'Visualization Materials')
+    {
+      return <VisibilityIcon/>;
+    }
+    else if (e == 'Computer Science Theory')
+    {
+      return <BookIcon/>;
+    }
+    return <LocalLibraryIcon/>;
+  }
   
   if (safe == true)
   {

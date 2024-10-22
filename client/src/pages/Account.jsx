@@ -19,16 +19,19 @@ function Account() {
   const [data, setData] = useState()
   async function handleInfGet()
   {
+    let token = localStorage.getItem('token')
+    console.log("Check token: " + token)
     let data = await fetch('http://localhost:8080/info', {
         headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Accept': 'text/html',
+            'Content-Type': 'text/html'
           },
-        method: 'GET'
+        method: 'POST',
+        body: token
     })
     let info = await data.json();
     setData(info)
-    setSafe(true)  
+    setSafe(true)
   }
 
   useEffect(() => {
@@ -87,13 +90,7 @@ function Account() {
 
   async function handleLogout()
   {
-    await fetch('http://localhost:8080/out', {
-        headers: {
-            'Accept': 'html/text',
-            'Content-Type': 'html/text'
-          },
-        method: 'GET'
-    })
+    localStorage.setItem("token", '')
     window.location.href = '/'
   }
 

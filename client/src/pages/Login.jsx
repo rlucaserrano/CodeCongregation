@@ -51,6 +51,8 @@ const Login = () => {
                 data: formJson
             })
         })
+        let token = await data.text()
+        localStorage.setItem("token", token)
         window.location.href = '/'
     }
 
