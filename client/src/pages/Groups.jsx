@@ -2,7 +2,7 @@ import React from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
-function Create() {
+function Groups(){
 
     async function handleSubmit(e)
     {
@@ -39,7 +39,7 @@ function Create() {
 
     return (
         <form method='post' onSubmit={handleSubmit} style={{border: '2px solid black', minWidth: 250, width: 250}}>
-            <h2>Create a new account</h2>
+            <h2>Create a new group</h2>
             <div style={{display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center'}}>
                 <TextField style={{minWidth: 225, width: 225}} required id="Username" label="Username" defaultValue = ""/>
                 <TextField style={{minWidth: 225, width: 225}} required id="Password" label="Password" type="password" defaultValue = ""/>
@@ -54,4 +54,4 @@ function Create() {
     );
 };
 
-export default Create;
+export default Groups;

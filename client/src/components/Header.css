@@ -1,6 +1,6 @@
 /* src/components/Header.css */
 nav {
-    background-color: #f8f8f8;
+    background-color: #aaaaaa;
     padding: 10px;
     position: fixed; /* Fixes the header to the top of the page */
     top: 0;

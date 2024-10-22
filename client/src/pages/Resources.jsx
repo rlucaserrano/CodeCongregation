@@ -37,10 +37,55 @@ function Resources() {
     return (
       <html>
         <header>
-          <h1>Resources</h1>
-        <p>Select a type of educational resource to Study:</p>
+          <h1>Resources (TBD)</h1>
+          <p>Here you will find frequently shared resources. Websites and other materials for you and your friends to study and practice with.</p>
+          <h2>Legend:</h2>
+          <Table style={{display: 'flex', flexDirection: 'column', height: 20}}>
+            <p><SchoolIcon/>Tutorials</p>
+            <p><BuildIcon/> Practice Questions</p>
+            <p><VisibilityIcon/> Visualizations</p>
+            <p><BookIcon/> Computer Science Theory</p>
+            <p><LocalLibraryIcon/> Other</p>
+          </Table>
+        <h3>Currently displaying resources for: *Group Name*</h3>
+        <p>Select a type of educational resource to study:</p>
         </header>
       <div>
+          <Accordion sx={{width: '100%'}}>
+            <AccordionSummary expandIcon={'v'}>
+            Tutorials
+            </AccordionSummary>
+            <AccordionDetails>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Resource Icon</TableCell>
+                    <TableCell>Resource Name</TableCell>
+                    <TableCell align='right'>Resource Link</TableCell>
+                    <TableCell align='right'>Votes</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>{handleImage(res[4][2])}</TableCell>
+                    <TableCell>{res[4][0]}</TableCell>
+                    <TableCell align='right'><a href={res[4][1]} target='_blank'>{res[4][1]}</a></TableCell>
+                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[4][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>{handleImage(res[5][2])}</TableCell>
+                    <TableCell>{res[5][0]}</TableCell>
+                    <TableCell align='right'><a href={res[5][1]} target='_blank'>{res[5][1]}</a></TableCell>
+                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[5][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>{handleImage(res[6][2])}</TableCell>
+                    <TableCell>{res[6][0]}</TableCell>
+                    <TableCell align='right'><a href={res[6][1]} target='_blank'>{res[6][1]}</a></TableCell>
+                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[6][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
+                  </TableRow>
+                </TableHead>
+              </Table>
+            </AccordionDetails>
+          </Accordion>
           <Accordion sx={{width: '100%'}}>
             <AccordionSummary expandIcon={'v'}>
             Practice Questions
@@ -49,9 +94,9 @@ function Resources() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Icon</TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
+                    <TableCell>Resource Icon</TableCell>
+                    <TableCell>Resource Name</TableCell>
+                    <TableCell align='right'>Resource Link</TableCell>
                     <TableCell align='right'>Votes</TableCell>
                   </TableRow>
                   <TableRow>
@@ -84,50 +129,15 @@ function Resources() {
           </Accordion>
           <Accordion sx={{width: '100%'}}>
             <AccordionSummary expandIcon={'v'}>
-            Tutorials
-            </AccordionSummary>
-            <AccordionDetails>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Icon</TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
-                    <TableCell align='right'>Votes</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[4][2]}</TableCell>
-                    <TableCell>{res[4][0]}</TableCell>
-                    <TableCell align='right'><a href={res[4][1]} target='_blank'>{res[4][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[4][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[5][2]}</TableCell>
-                    <TableCell>{res[5][0]}</TableCell>
-                    <TableCell align='right'><a href={res[5][1]} target='_blank'>{res[5][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[5][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[6][2]}</TableCell>
-                    <TableCell>{res[6][0]}</TableCell>
-                    <TableCell align='right'><a href={res[6][1]} target='_blank'>{res[6][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[6][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                  </TableRow>
-                </TableHead>
-              </Table>
-            </AccordionDetails>
-          </Accordion>
-          <Accordion sx={{width: '100%'}}>
-            <AccordionSummary expandIcon={'v'}>
             Visualizations
             </AccordionSummary>
             <AccordionDetails>
             <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Icon</TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
+                    <TableCell>Resource Icon</TableCell>
+                    <TableCell>Resource Name</TableCell>
+                    <TableCell align='right'>Resource Link</TableCell>
                     <TableCell align='right'>Votes</TableCell>
                   </TableRow>
                   <TableRow>
@@ -154,9 +164,9 @@ function Resources() {
             <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Icon</TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
+                    <TableCell>Resource Icon</TableCell>
+                    <TableCell>Resource Name</TableCell>
+                    <TableCell align='right'>Resource Link</TableCell>
                     <TableCell align='right'>Votes</TableCell>
                   </TableRow>
                   <TableRow>
