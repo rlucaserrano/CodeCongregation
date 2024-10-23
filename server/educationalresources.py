@@ -208,4 +208,3 @@ class EducationalResources:
                 return jsonify({"SUCCESS": "Resource modified"}), 200
             else:
                 return jsonify({"ERROR": "Program encountered an unknown issue"}), 406
-

@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-from flask import Flask, request, make_response
-from flask_cors import CORS
-from config import Config
-from users import users_bp
-from calendars import calendars_bp  #calendars blueprint
-=======
 import os
 import jwt
 import json
@@ -24,31 +17,14 @@ from educationalresources import EducationalResources
 
 # from .env file
 load_dotenv()
->>>>>>> 9b1143f5c09ac00b1c44227f2cb84a060ed544b2
 
 
 # Flask instance
 app = Flask(__name__)
-<<<<<<< HEAD
-app.secret_key = Config.FLASK_SECRET_KEY
-=======
 CORS(app)  # Currently allowing all origins
->>>>>>> 9b1143f5c09ac00b1c44227f2cb84a060ed544b2
 
-#fixing cors error
-CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
+GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
-<<<<<<< HEAD
-# register blueprints
-app.register_blueprint(users_bp, url_prefix='/api/users')
-app.register_blueprint(calendars_bp, url_prefix='/api/calendar')  # register calendar routes
-
-@app.route('/')
-def home():
-    return "Flask API Root"
-
-#  custom CORS headers
-=======
 secret = 'testSecret'
 
 @app.route('/')
@@ -135,29 +111,25 @@ def getRes():
     connection.close()
     return toReturn
  
->>>>>>> 9b1143f5c09ac00b1c44227f2cb84a060ed544b2
 @app.after_request
 def set_cors_headers(response):
+    # Set COOP and COEP headers
     response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
     response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
-    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
     return response
 
-@app.before_request
-def handle_options():
-    if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response, 200
+@app.route("/api/dev2", methods=['GET'])
+def dev2():
+    return jsonify(
+        {
+            "dev2": [
+                'helloworld',
+                'helloworld2',
+                'helloworld3'
+            ]
+        }
+    )
 
-<<<<<<< HEAD
-=======
 @app.route('/api/auth/google', methods=['POST'])
 def google_login():
     token = request.json.get('token')
@@ -215,6 +187,5 @@ def get_calendar_events():
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
 
->>>>>>> 9b1143f5c09ac00b1c44227f2cb84a060ed544b2
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

@@ -6,49 +6,6 @@ from config import Config
 # 2. https://python-oracledb.readthedocs.io/en/latest/user_guide/sql_execution.html
 
 class Database:
-<<<<<<< HEAD
-    
-    @staticmethod
-    def get_connection():
-        return oracledb.connect(user=Config.ORACLE_USER, password=Config.ORACLE_PASSWORD, dsn=f"{Config.ORACLE_HOST}:{Config.ORACLE_PORT}/{Config.ORACLE_SID}")
-
-    @staticmethod
-    def select_query(query, params=None):
-        connection = Database.get_connection()
-        cursor = connection.cursor()
-        cursor.execute(query, params or ())
-        results = cursor.fetchall()
-        cursor.close()
-        connection.close()
-        return results
-
-    @staticmethod
-    def alter_query(query, params=None):
-        connection = Database.get_connection()
-        cursor = connection.cursor()
-        cursor.execute(query, params or ())
-        connection.commit()
-        cursor.close()
-        connection.close()
-
-    
-    @staticmethod
-    def insert(table, values):
-        placeholders = ', '.join([':1'] * len(values))
-        query = f"INSERT INTO {table} VALUES ({placeholders})"
-        Database.alter_query(query, values)
-
-    @staticmethod
-    def update(table, set_values, condition):
-        set_clause = ', '.join([f"{key} = :{i+1}" for i, key in enumerate(set_values.keys())])
-        query = f"UPDATE {table} SET {set_clause} WHERE {condition}"
-        Database.alter_query(query, list(set_values.values()))
-
-    @staticmethod
-    def delete(table, condition):
-        query = f"DELETE FROM {table} WHERE {condition}"
-        Database.alter_query(query)
-=======
         
     #========== Called internally in database.py ==========#
 
@@ -159,8 +116,4 @@ class Database:
         except Exception as e:
             return(False)
 
-        
-        
-
-
->>>>>>> 9b1143f5c09ac00b1c44227f2cb84a060ed544b2
+      
