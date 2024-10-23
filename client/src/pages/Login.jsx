@@ -1,9 +1,13 @@
 import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
+import { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 
 const Login = () => {
+
+    const [err, setErr] = useState("")
+
     const handleLoginSuccess = (credentialResponse) => {
         console.log('Login Success:', credentialResponse);
         fetch('http://localhost:8080/api/auth/google', {
@@ -52,8 +56,15 @@ const Login = () => {
             })
         })
         let token = await data.text()
-        localStorage.setItem("token", token)
-        window.location.href = '/'
+        if (token.length == 0)
+        {
+            setErr("Invalid Credentials")
+        }
+        else
+        {
+            localStorage.setItem("token", token)
+            window.location.href = '/'
+        }
     }
 
     function handleGuest(e)
@@ -81,11 +92,12 @@ const Login = () => {
             <TextField style={{minWidth: 225, width: 225}} required id="Password" label="Password" type="password" defaultValue = ""/>
             <Button variant='contained' type='submit'>Sign In</Button>
             </div>
-            <div>
+            <p style={{color:"white", backgroundColor:"red"}}>{err}</p>
             <p>Don't have an account yet?</p>
-            <Button style={{textTransform: 'none'}} onClick={handleNew}>Create an Account</Button>
-            </div>
+            <div style={{display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center'}}>
+            <Button variant='outlined' onClick={handleNew}>Create an Account</Button>
             <Button variant='contained' onClick={handleGuest}>Continue as Guest</Button>
+            </div>
         </form>
     );
 };
