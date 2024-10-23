@@ -1,5 +1,7 @@
 from flask import jsonify
 from database import Database
+from google_email import Email
+from proc_and_sec import ProcAndSec
 
 class Users:
 
@@ -32,7 +34,15 @@ class Users:
             if method == "GET":
                 return self.GetUser()
             elif method == "POST":
-                return self.AddUser()
+                result = self.AddUser()
+                # FIXME Sends Welcom Email. Remove second condition once testing is complete.
+                if result[1] == 200 and self.valEmail == "codecongregation@gmail.com":
+                    self.valFirstName = self.valFirstName[1:-1]
+                    emailObject = Email()
+                    emailMessage = emailObject.ConstructEmail(name=self.valFirstName, emailType=1)
+                    emailObject.SendEmail(email=emailMessage, userEmail=self.valEmail)
+                    emailObject.CloseConnection
+                return result
             elif method == "DELETE":
                 return self.DeleteUser()
             elif method == "PATCH":
@@ -49,6 +59,34 @@ class Users:
             # Catchall error response
                 return jsonify({"ERROR": "Invalid method selection"}), 405
     
+    def Process(self):
+        if self.valUserID is not None:
+            if not ProcAndSec.CheckValidString(self.valUserID):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valUserName is not None:
+            if not ProcAndSec.CheckValidString(self.valUserName):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valFirstName is not None:
+            if not ProcAndSec.CheckValidString(self.valFirstName):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valLastName is not None:
+            if not ProcAndSec.CheckValidString(self.valLastName):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valBio is not None:
+            if not ProcAndSec.CheckValidString(self.valBio):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.valAdmin is not None:
+            if not ProcAndSec.CheckValidString(self.valAdmin):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.order is not None:
+            if not ProcAndSec.CheckValidString(self.order[0]):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+            if not ProcAndSec.CheckValidString(self.order[1]):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+        if self.distinct is not None:
+            if not ProcAndSec.CheckValidString(self.distinct):
+                return jsonify({"ERROR": "Invalid characters in string"}), 409
+
     def GetUser(self):
 
         if self.valHashedPassword is not None or self.valFirstName is not None or self.valLastName is not None or self.valBio is not None:
@@ -123,6 +161,12 @@ class Users:
                 self.valBio = f"'{self.valBio}'"
             else:
                 self.valBio = "NULL"
+
+            # Checks for valid email format
+            if not ProcAndSec.CheckEmailFormat(self.valEmail):
+                return jsonify({"ERROR": "Invalid Email format"}), 409
+            # Hashes password
+            self.valHashedPassword = ProcAndSec.HashAndSalt(self.valHashedPassword)
             result = Database.AddToDatabase(table = "UserTable", entry = [f"{self.valUserID}", f"'{self.valUserName}'", f"'{self.valEmail}'", f"'{self.valHashedPassword}'", self.valFirstName, self.valLastName, self.valBio, f"{self.valAdmin}"])
             if result == True:
                 return jsonify({"SUCCESS": "User added"}), 200

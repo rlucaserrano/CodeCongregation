@@ -167,13 +167,13 @@ function Resources() {
                     <TableCell align='right'>Votes</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{res[7][2]}</TableCell>
+                    <TableCell>{handleImage(res[7][2])}</TableCell>
                     <TableCell>{res[7][0]}</TableCell>
                     <TableCell align='right'><a href={res[7][1]} target='_blank'>{res[7][1]}</a></TableCell>
                     <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[7][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{res[8][2]}</TableCell>
+                    <TableCell>{handleImage(res[8][2])}</TableCell>
                     <TableCell>{res[8][0]}</TableCell>
                     <TableCell align='right'><a href={res[8][1]} target='_blank'>{res[8][1]}</a></TableCell>
                     <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[8][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
@@ -196,13 +196,13 @@ function Resources() {
                     <TableCell align='right'>Votes</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{res[9][2]}</TableCell>
+                    <TableCell>{handleImage(res[9][2])}</TableCell>
                     <TableCell>{res[9][0]}</TableCell>
                     <TableCell align='right'><a href={res[9][1]} target='_blank'>{res[9][1]}</a></TableCell>
                     <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[9][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell>{res[10][2]}</TableCell>
+                    <TableCell>{handleImage(res[10][2])}</TableCell>
                     <TableCell>{res[10][0]}</TableCell>
                     <TableCell align='right'><a href={res[10][1]} target='_blank'>{res[10][1]}</a></TableCell>
                     <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[10][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>

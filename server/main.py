@@ -31,18 +31,17 @@ secret = 'testSecret'
 def default():
     return "Flask API"
 
-#### Actual database routes ####
+#### Database Routes ####
 
 @app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"])
 def AccessUserTable():
-
-    # Constucts user object to assign parameters and calls methods function, returns json data.
+    # Accesses UserTable from database
     user = Users(request.json)
+    user.Process()
     return (user.Methods(request.method))
 
 @app.route('/educationalresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessEducationalResources():
-
     # Accesses EducationalResources from database
     resources = EducationalResources(request.json)
     resources.Process()
