@@ -1,6 +1,7 @@
 import os
+import jwt
+import json
 import requests as http_requests
-import oracledb
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from google.oauth2 import id_token
@@ -23,6 +24,8 @@ app = Flask(__name__)
 CORS(app)  # Currently allowing all origins
 
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+
+secret = 'testSecret'
 
 @app.route('/')
 def default():
@@ -55,16 +58,58 @@ def addUser():
     connection.close()
     return ""
 
-@app.route('/log', methods=["POST"])
-def findUser():
+@app.route('/addgroup', methods=["POST"])
+def addGroup():
     connection = Database.GetConnection()
-    verify = request.json.get('data')
-    cursor = connection.cursor()
-    cursor.execute('''SELECT * FROM MGOLAN.USERTABLE(USERNAME,HASHEDPASSWORD) VALUES(:0,:1)''', verify)
+    addNew = request.json.get('data')
+    cursor = connection.cursor() #Currently resulting in an error, awaiting Friday's merge first
+    cursor.execute('''INSERT INTO MGOLAN.STUDYGROUP(GROUPID,GROUPNAME,GROUPCALENDARID,PERMANENCE) VALUES(:0,:1,:2,:3)''', addNew)
     connection.commit()
     cursor.close()
     connection.close()
     return ""
+
+@app.route('/info', methods=["POST"])
+def info():
+    token = request.data
+    if (token.decode("utf-8") == ''):
+        print("Token is empty")
+        return json.dumps({})
+    print("Token is: ", token)
+    print('============')
+    data = json.dumps(jwt.decode(token,key=secret,algorithms=['HS256']))
+    print(data)
+    return data
+
+@app.route('/log', methods=["POST"])
+def findUser():
+    connection = Database.GetConnection()
+    verify = list(request.json.get('data').values())
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE (USERNAME = \''+ verify[0] +'\' AND HASHEDPASSWORD = \'' + verify[1] + '\')') #Had to be done slightly differently
+    results = cursor.fetchall()
+    if (len(results) == 1):
+        data = {
+            'id': results[0][0],
+            'user': results[0][1],
+            'mail': results[0][2],
+            'pass': results[0][3],
+            'first': results[0][4],
+            'last': results[0][5],
+            'bio': results[0][6],
+            'admin': results[0][7]
+        }
+        print(data)
+        print('============')
+        token = jwt.encode(payload=data, key=secret)
+        print(token)
+        cursor.close()
+        connection.close()
+        return token
+    else:
+        cursor.close()
+        connection.close()
+        return ""
 
 @app.route('/res', methods=["GET"])
 def getRes():
