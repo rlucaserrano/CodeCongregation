@@ -1,45 +1,24 @@
-/* Header.css */
-
+/* src/components/Header.css */
 nav {
     background-color: #aaaaaa;
     padding: 10px;
-    position: fixed;
+    position: fixed; /* Fixes the header to the top of the page */
     top: 0;
     left: 0;
-<<<<<<< HEAD
-    width: 100%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-=======
     width: 100%; /* Makes the header span the full width of the page */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Optional: Adds a subtle shadow */
     z-index: 1000; /* Ensures the header stays on top of other elements */
     display: flex;
     justify-content: center;
     gap: 20px;
->>>>>>> 9b1143f5c09ac00b1c44227f2cb84a060ed544b2
 }
 
 ul {
     list-style-type: none;
-    margin: 0;
-    padding: 0;
     display: flex;
     gap: 10px;
-}
-
-.left-nav {
-    display: flex;
-    gap: 10px;
-}
-
-.right-nav {
-    display: flex;
-    gap: 10px;
-    margin-left: auto;
+    margin: 0; /* Removes default margin */
+    padding: 0; /* Removes default padding */
 }
 
 li {
@@ -55,12 +34,7 @@ li a:hover {
     color: #007BFF;
 }
 
-.profile-icon {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-}
-
-.login-icon {
-    padding: 5px 10px;
+/* Add padding to the body or main content to prevent it from being hidden behind the fixed header */
+body {
+    padding-top: 50px; /* Adjust this value based on the header's height */
 }
