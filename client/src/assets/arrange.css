@@ -1,70 +1,63 @@
-lft {
+.lft {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    float: left;
-    height: auto;
-    width: 30%;
+    width: 25%;
     gap: 20px;
-    margin-right: 200px;
+    margin-right: 20px; 
 }
 
-cen {
+.cen {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    /**No Float**/
-    height: auto;
-    width: 30%;
-    gap: 20px;
     align-items: center;
+    width: 50%;
+    gap: 20px;
 }
 
-rgt {
+.rgt {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    float: right;
-    height: auto;
-    width: 30%;
+    width: 25%;
     gap: 20px;
-    margin-left: 200px;
+    margin-left: 20px; 
 }
 
-top {
-    position: top;
+.top {
     width: 100%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 1000;
+    display: flex;
     justify-content: center;
+    padding: 10px; 
 }
 
 body {
     display: flex;
+    flex-direction: column;
+    margin: 0; 
+    padding: 0; 
+    height: 100vh; /* 
 }
 
-log {
+.log {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
-    height: auto;
     gap: 10px;
     margin: 10px;
+    width: 100%; 
 }
 
 table {
-    vertical-align: middle;
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
     flex-direction: row;
-    flex-shrink: 0;
+    gap: 10px;
+    width: 100%; /*  */
 }
 
-soc {
-    vertical-align: middle;
+.soc {
     display: flex;
-    flex-wrap: nowrap;
     justify-content: center;
     flex-direction: column;
+    gap: 10px;
 }

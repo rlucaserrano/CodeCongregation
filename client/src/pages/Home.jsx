@@ -1,14 +1,20 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Box } from '@mui/material';
-import '../App.css';
+import React from 'react';
+import { Box, Typography } from '@mui/material';
+import '../components/Home.css';
 
 function Home() {
   return (
-    <Box component="section" sx={{p: 2, border: "2px solid blue", width: '45%', backgroundColor: 'cyan'}} margin='auto'>
-      <h1>Welcome to CoderCongregation!</h1>
-      <h2>CoderCongregation is the Virtual Study Group Environment that allows you to study and practice programming skills with 
-      <h1 style={{color:"yellow"}}>FRIENDS!</h1></h2>
+    <Box className="home-container">
+      <Typography variant="h3" className="home-title">
+        Welcome to CoderCongregation!
+      </Typography>
+      <Typography variant="h5" className="home-subtitle">
+        CoderCongregation is the Virtual Study Group Environment that allows you to study and practice programming skills with
+        <Typography component="span" variant="h4" className="highlight">
+          {' '}
+          FRIENDS!
+        </Typography>
+      </Typography>
     </Box>
   );
 }

@@ -1,0 +1,36 @@
+.groups-container {
+    display: flex;
+    justify-content: center; 
+    align-items: flex-start; 
+    padding-top: 60px; 
+    min-height: calc(100vh - 100px); 
+    background-color: #f0f4ff; 
+}
+
+.groups-form {
+    background-color: #ffffff; 
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px; 
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; 
+}
+
+.submit-button {
+    background-color: #556cd6; 
+    color: #ffffff;
+}
+
+.cancel-button {
+    background-color: #ff3b30; 
+    color: #ffffff;
+}

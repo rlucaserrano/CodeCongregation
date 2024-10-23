@@ -1,0 +1,27 @@
+.home-container {
+    padding: 32px;
+    border-radius: 16px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(145deg, #f0f4ff, #d9e6fd);
+    width: 90%;
+    max-width: 800px;
+    margin: 40px auto;
+    text-align: center;
+  }
+  
+  .home-title {
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #2d3748;
+  }
+  
+  .home-subtitle {
+    margin-bottom: 24px;
+    color: #4a5568;
+  }
+  
+  .highlight {
+    color: #ffd700;
+    font-weight: bold;
+  }
+  
