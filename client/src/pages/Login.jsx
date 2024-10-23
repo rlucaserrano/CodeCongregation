@@ -1,92 +1,103 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import '../components/Login.css';
 
 const Login = () => {
+    const [showExtraOptions, setShowExtraOptions] = useState(false);
+
     const handleLoginSuccess = (credentialResponse) => {
-        console.log('Login Success:', credentialResponse);
         fetch('http://localhost:8080/api/auth/google', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                token: credentialResponse.credential,
-            }),
+            body: JSON.stringify({ token: credentialResponse.credential }),
         })
         .then(response => response.json())
         .then(data => {
-            console.log('User data:', data);
-            // Store the token for later use
-            localStorage.setItem('google_token', credentialResponse.credential);
-            localStorage.setItem('info', data)
-            localStorage.setItem('in', true)
-            console.log('Token?: ', localStorage.getItem('google_token'))
+            if (data.status === 'success') {
+                localStorage.setItem('google_token', credentialResponse.credential);
+                localStorage.setItem('info', JSON.stringify(data.user_info));
+                window.location.href = '/';
+            } else if (data.status === 'incomplete') {
+                localStorage.setItem('user_id', data.user_id);
+                window.location.href = '/complete-profile';  // Redirect to complete profile page
+            } else {
+                console.error('Google login error:', data.message);
+            }
         })
-        .catch(error => {
-            console.error('Error during token verification:', error);
-        });
+        .catch(error => console.error('Error during Google login:', error));
     };
 
-    const handleLoginFailure = () => {
-        console.log('Login Failed');
-    };
-
-    async function handleSubmit(e)
-    {
-        e.preventDefault()
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         const form = e.target;
-        const formData = new FormData();
-        formData.append("0", form.Username.value)
-        formData.append("1", form.Password.value)
-        const formJson = Object.fromEntries(formData);
-        let data = await fetch('http://localhost:8080/log', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
-        let token = await data.text()
-        localStorage.setItem("token", token)
-        window.location.href = '/'
-    }
+        const formData = new FormData(form);
+        const formJson = Object.fromEntries(formData.entries());
 
-    function handleGuest(e)
-    {
-        e.preventDefault()
-        window.location.href = '/'
-    }
+        try {
+            const response = await fetch('http://localhost:8080/log', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ data: formJson }),
+            });
 
-    function handleNew(e)
-    {
-        e.preventDefault()
-        window.location.href = '/create'
-    }
+            if (response.ok) {
+                const token = await response.text();
+                localStorage.setItem('token', token);
+                window.location.href = '/';
+            } else {
+                console.error('Login failed');
+            }
+        } catch (error) {
+            console.error('Error during login:', error);
+        }
+    };
+
+    const handleGuest = (e) => {
+        e.preventDefault();
+        window.location.href = '/';
+    };
+
+    const handleNew = (e) => {
+        e.preventDefault();
+        window.location.href = '/create';
+    };
 
     return (
-        <form method='post' onSubmit={handleSubmit} style={{border: '2px solid black', minWidth: 250, width: 250}}>
-            <h2>Login</h2>
-            <GoogleLogin
-                onSuccess={handleLoginSuccess}
-                onError={handleLoginFailure}
-                uxMode="popup" 
-            />
-            <div style={{display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center'}}>
-            <TextField style={{minWidth: 225, width: 225}} required id="Username" label="Username" defaultValue = ""/>
-            <TextField style={{minWidth: 225, width: 225}} required id="Password" label="Password" type="password" defaultValue = ""/>
-            <Button variant='contained' type='submit'>Sign In</Button>
+        <Box className="login-container">
+            <Typography variant="h4" align="center" gutterBottom>Login</Typography>
+            <Box component="form" onSubmit={handleSubmit} className="login-form">
+                <TextField required label="Username" name="Username" fullWidth />
+                <TextField required label="Password" name="Password" type="password" fullWidth />
+                <Button variant='contained' type='submit'>Sign In</Button>
+            </Box>
+            <div className="google-login">
+                <GoogleLogin
+                    onSuccess={handleLoginSuccess}
+                    onError={() => console.log('Google login failed')}
+                    uxMode="popup"
+                />
             </div>
-            <div>
-            <p>Don't have an account yet?</p>
-            <Button style={{textTransform: 'none'}} onClick={handleNew}>Create an Account</Button>
-            </div>
-            <Button variant='contained' onClick={handleGuest}>Continue as Guest</Button>
-        </form>
+            <Box className="login-actions">
+                <Typography 
+                    className="toggle-text" 
+                    onClick={() => setShowExtraOptions(!showExtraOptions)}
+                >
+                    Don't have an account yet?
+                </Typography>
+                <div className={showExtraOptions ? 'show' : 'hidden-buttons'}>
+                    <Button onClick={handleNew} sx={{ textTransform: 'none' }}>Create an Account</Button>
+                    <Button variant='outlined' onClick={handleGuest}>Continue as Guest</Button>
+                </div>
+            </Box>
+        </Box>
     );
 };
 

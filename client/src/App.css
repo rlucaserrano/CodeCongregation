@@ -1,51 +1,114 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-body {
-  margin: 0;
+.account-page {
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: #eeeeee;
+  height: 100vh; 
+}
+
+.sidebar {
+  background-color: #f4f4f4;
+  padding: 10px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  align-items: flex-start;
+}
+
+.sidebar.open {
+  width: 200px; /* fixed width when open */
+}
+
+.sidebar.collapsed {
+  width: 60px; /* width when collapsed */
+}
+
+.hamburger-button {
+  margin-bottom: 20px;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  width: 100%; /* Take full width of the sidebar */
+}
+
+.menu-list li {
+  padding: 10px;
+  cursor: pointer;
+  width: 100%; /* Make each list item full width */
+  transition: background-color 0.2s ease;
+}
+
+.menu-list li:hover {
+  background-color: #e0e0e0;
+}
+
+.content {
+  flex-grow: 1;
+  padding: 20px;
+  background-color: #f0f4ff;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: stretch; 
+}
+
+.account-header {
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  align-self: flex-end; /* Align to the right */
+}
+
+.settings-view, .friends-view {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 200px;
+}
+
+.account-form {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  align-items: flex-start;
+}
+
+.friends-view .add-friend-section {
+  flex: 0 0 300px;
+  background-color: #ffffff;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.friends-view .friend-list-section {
+  flex-grow: 1;
+  background-color: #ffffff;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+.change-picture {
+  background-color: #3f51b5;
+  color: #fff;
+}
+
+.save-button, .add-friend-button {
+  background-color: #3f51b5;
+  color: #fff;
+}
+
+.logout-button {
+  margin-top: 20px;
+  align-self: center; /* center-align in the form */
+  background-color: #ff3b30; /* match error color */
 }
