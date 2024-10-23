@@ -19,6 +19,7 @@ class Config:
 
     # Google 
     GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+<<<<<<< HEAD
     GOOGLE_SECRET_KEY = os.getenv("GOOGLE_SECRET_KEY")
 
     #Flask app secret key
@@ -28,3 +29,6 @@ class Config:
     SESSION_TYPE = 'filesystem'
     SESSION_PERMANENT = False
     SESSION_USE_SIGNER = True
+=======
+    GOOGLE_SECRET_KEY = os.getenv("GOOGLE_SECRET_KEY")
+>>>>>>> 9b1143f5c09ac00b1c44227f2cb84a060ed544b2
