@@ -1,8 +1,8 @@
-# CodeCongregation
+# CoderCongregation
 UF Fall 2024 Senior Project
 Test
 
-# CodeCongregation
+# CoderCongregation
 UF Fall 2024 Senior Project
 
 # Technologies Used
