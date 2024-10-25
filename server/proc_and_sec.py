@@ -14,39 +14,38 @@ class ProcAndSec:
 
     @staticmethod
     def HashAndSalt(password):
-        # converts password into byte array
+        
+        # Converts password into byte array
         bytePassword = password.encode("utf-8") 
   
-        # generates secure salt
+        # Generates secure salt
         salt = bcrypt.gensalt() 
         
-        # creates hashed byte password
+        # Creates hashed byte password
         hashedPassword = bcrypt.hashpw(bytePassword, salt)
 
-        # returns string version
+        # Returns string version
         return hashedPassword.decode("utf-8")
 
     @staticmethod
-    def VerifyPassword(plain_password, hashed_password):
-        # converts password into byte array
-        byte_password = plain_password.encode("utf-8")
-        byte_hashed_password = hashed_password.encode("utf-8")
-        return bcrypt.checkpw(byte_password, byte_hashed_password)
-
-    @staticmethod
     def CheckEmailFormat(email):
+        
         # RegEx was taken and modified from COP4020 course materials. Credit to original authors.
         template = r"^[A-Za-z0-9._-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}$"
         return re.match(template, email)
     
     @staticmethod
     def CheckWebsiteURLFormat(url):
+        
         # RegEx taken directly from source #3.
         template = "((http|https)://)(www.)?[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)"
         return re.match(template, url)
 
     @staticmethod
     def CheckValidString(string):
+        
         # Valid strings currently restricted to these characters
         template = r"^[A-Za-z0-9?!$.,@_\- ]+$"
         return re.match(template, string)
+
+

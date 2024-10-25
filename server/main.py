@@ -1,6 +1,7 @@
 import os
 import jwt
 import json
+import requests as http_requests
 from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS
 from google.oauth2 import id_token
@@ -9,250 +10,192 @@ from dotenv import load_dotenv
 from database import Database
 from users import Users
 from educationalresources import EducationalResources
-from proc_and_sec import ProcAndSec
 
-# Load environment variables
+# Educational sources used to setup main.py
+# 1. https://www.theserverside.com/blog/Coffee-Talk-Java-News-Stories-and-Opinions/HTTP-methods
+# 2. https://www.oxitsolutions.co.uk/blog/http-status-code-cheat-sheet-infographic
+
+# from .env file
 load_dotenv()
+
 
 # Flask instance
 app = Flask(__name__)
-
-# CORS Configuration to allow all origins and methods
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app)  # Currently allowing all origins
 
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
-secret = os.getenv('FLASK_SECRET_KEY')
+
+secret = 'testSecret'
 
 @app.route('/')
 def default():
     return "Flask API"
 
-# Access the user table with various methods
+#### Database Routes ####
+
 @app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"])
 def AccessUserTable():
-    if request.method == 'OPTIONS':
-        # Respond to preflight request with appropriate CORS headers
-        response = make_response()
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response, 204  # Use 204 No Content for OPTIONS requests
-
+    # Accesses UserTable from database
     user = Users(request.json)
-    return user.Methods(request.method)
+    user.Process()
+    return (user.Methods(request.method))
 
-# Access the educational resources
 @app.route('/educationalresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessEducationalResources():
-    if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response, 204
-
+    # Accesses EducationalResources from database
     resources = EducationalResources(request.json)
     resources.Process()
-    return resources.Methods(request.method)
+    return (resources.Methods(request.method))
 
-import random
-from flask import request, jsonify, make_response
-from database import Database
-from proc_and_sec import ProcAndSec
-
-@app.route('/add', methods=["POST", "OPTIONS"])
+@app.route('/add', methods=["POST"])
 def addUser():
-    if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response, 204
-
+    connection = Database.GetConnection()
     addNew = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('''INSERT INTO MGOLAN.USERTABLE(USERID,USERNAME,HASHEDPASSWORD,EMAIL,ADMIN) VALUES(:0,:1,:2,:3,:4)''', addNew)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
 
-    try:
-        # Auto-generate USERID using a random number within the valid range.
-        user_id = random.randint(1, 10**18)  # Adjust the range if needed for uniqueness.
-        username = addNew.get('2')  # USERNAME
-        email = addNew.get('3')  # EMAIL
-        hashed_password = addNew.get('4')  # HASHEDPASSWORD, should be hashed before sending.
-        first_name = addNew.get('5', None)  # FIRSTNAME (Optional)
-        last_name = addNew.get('6', None)  # LASTNAME (Optional)
-        bio = addNew.get('7', None)  # BIO (Optional)
-        admin = int(addNew.get('8', 0))  # ADMIN, convert to integer, default to 0 if not provided.
+@app.route('/addgroup', methods=["POST"])
+def addGroup():
+    connection = Database.GetConnection()
+    addNew = request.json.get('data')
+    cursor = connection.cursor() #Currently resulting in an error, awaiting Friday's merge first
+    cursor.execute('''INSERT INTO MGOLAN.STUDYGROUP(GROUPID,GROUPNAME,GROUPCALENDARID,PERMANENCE) VALUES(:0,:1,:2,:3)''', addNew)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
 
-        # Ensure required fields are provided.
-        if not all([username, email, hashed_password]):
-            return jsonify({"ERROR": "Missing required fields: Username, Email, and Password"}), 400
+@app.route('/info', methods=["POST"])
+def info():
+    token = request.data
+    if (token.decode("utf-8") == ''):
+        print("Token is empty")
+        return json.dumps({})
+    print("Token is: ", token)
+    print('============')
+    data = json.dumps(jwt.decode(token,key=secret,algorithms=['HS256']))
+    print(data)
+    return data
 
-        # Construct the SQL statement with placeholders.
-        sql = '''
-            INSERT INTO MGOLAN.USERTABLE (
-                USERID, USERNAME, EMAIL, HASHEDPASSWORD, FIRSTNAME, LASTNAME, BIO, ADMIN
-            ) VALUES (:1, :2, :3, :4, :5, :6, :7, :8)
-        '''
-
-        # Prepare the values list based on column ID order.
-        values = [
-            user_id,          # :1 - USERID (auto-generated)
-            username,         # :2 - USERNAME
-            email,            # :3 - EMAIL
-            hashed_password,  # :4 - HASHEDPASSWORD
-            first_name,       # :5 - FIRSTNAME (or NULL)
-            last_name,        # :6 - LASTNAME (or NULL)
-            bio,              # :7 - BIO (or NULL)
-            admin             # :8 - ADMIN (defaults to 0 for regular users)
-        ]
-
-        # Connect to the database and execute the query.
-        connection = Database.GetConnection()
-        cursor = connection.cursor()
-        cursor.execute(sql, values)
-        connection.commit()
+@app.route('/log', methods=["POST"])
+def findUser():
+    connection = Database.GetConnection()
+    verify = list(request.json.get('data').values())
+    cursor = connection.cursor()
+    cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE (USERNAME = \''+ verify[0] +'\' AND HASHEDPASSWORD = \'' + verify[1] + '\')') #Had to be done slightly differently
+    results = cursor.fetchall()
+    if (len(results) == 1):
+        data = {
+            'id': results[0][0],
+            'user': results[0][1],
+            'mail': results[0][2],
+            'pass': results[0][3],
+            'first': results[0][4],
+            'last': results[0][5],
+            'bio': results[0][6],
+            'admin': results[0][7]
+        }
+        print(data)
+        print('============')
+        token = jwt.encode(payload=data, key=secret)
+        print(token)
         cursor.close()
         connection.close()
-        return jsonify({"status": "User created successfully", "user_id": user_id}), 201
+        return token
+    else:
+        cursor.close()
+        connection.close()
+        return ""
 
-    except ValueError as ve:
-        print(f"ValueError during user creation: {ve}")
-        return jsonify({"ERROR": "Invalid input type. ADMIN must be a number."}), 400
-    except Exception as e:
-        print(f"Error during user creation: {e}")
-        return jsonify({"ERROR": str(e)}), 500
+@app.route('/res', methods=["GET"])
+def getRes():
+    connection = Database.GetConnection()
+    cursor = connection.cursor()
+    cursor.execute('''SELECT RESOURCENAME, WEBSITEURL, RESOURCECATEGORY, VOTES FROM MGOLAN.EDUCATIONALRESOURCES''')
+    toReturn = cursor.fetchall();
+    cursor.close()
+    connection.close()
+    return toReturn
+ 
+@app.after_request
+def set_cors_headers(response):
+    # Set COOP and COEP headers
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    return response
 
+@app.route("/api/dev2", methods=['GET'])
+def dev2():
+    return jsonify(
+        {
+            "dev2": [
+                'helloworld',
+                'helloworld2',
+                'helloworld3'
+            ]
+        }
+    )
 
-    except ValueError as ve:
-        print(f"ValueError during user creation: {ve}")
-        return jsonify({"ERROR": "Invalid input type. USERID and ADMIN must be numbers."}), 400
-    except Exception as e:
-        print(f"Error during user creation: {e}")
-        return jsonify({"ERROR": str(e)}), 500
-
-# Retrieve user information
-@app.route('/info', methods=["POST", "OPTIONS"])
-def info():
-    if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response, 204
-
-    token = request.data
-    if not token:
-        return jsonify({"error": "Token is empty"}), 401
-
-    try:
-        data = jwt.decode(token, key=secret, algorithms=['HS256'])
-        return jsonify(data), 200
-    except jwt.ExpiredSignatureError:
-        return jsonify({"error": "Token has expired"}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({"error": "Invalid token"}), 401
-
-# Find user and authenticate
-@app.route('/log', methods=["POST", "OPTIONS"])
-def findUser():
-    if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response, 204
-
-    try:
-        data = request.json.get('data', {})
-        username = data.get('Username')
-        password = data.get('Password')
-
-        if not username or not password:
-            return jsonify({"error": "Username and password are required."}), 400
-
-        connection = Database.GetConnection()
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE USERNAME = :1', [username])
-        user_data = cursor.fetchone()
-
-        if user_data:
-            user_id, db_username, db_email, db_password, *_ = user_data
-            # Check password using the hash function (assume ProcAndSec.HashAndSalt hashes the password for comparison)
-            if ProcAndSec.HashAndSalt(password) == db_password:
-                # Generate a token
-                token = jwt.encode({
-                    'id': user_id,
-                    'user': db_username,
-                    'mail': db_email
-                }, key=secret, algorithm='HS256')
-                cursor.close()
-                connection.close()
-                return token
-            else:
-                return jsonify({"error": "Invalid username or password."}), 401
-        else:
-            return jsonify({"error": "User not found."}), 404
-
-    except Exception as e:
-        print(f"Error during login: {e}")
-        return jsonify({"error": "An error occurred during login."}), 500
-# Google OAuth2 login route with account linking
-@app.route('/api/auth/google', methods=['POST', 'OPTIONS'])
+@app.route('/api/auth/google', methods=['POST'])
 def google_login():
-    if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-        return response, 204
-
     token = request.json.get('token')
     try:
+        # verify token with Google's OAuth2 library
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('Wrong issuer.')
 
+        # the token is verified -->   retrieve user information
         user_id = idinfo['sub']
         email = idinfo['email']
         name = idinfo.get('name')
 
-        connection = Database.GetConnection()
-        cursor = connection.cursor()
-        cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE EMAIL = :1', [email])
-        user_data = cursor.fetchone()
-
-        if user_data:
-            cursor.execute(
-                'UPDATE MGOLAN.USERTABLE SET USERID = :1 WHERE EMAIL = :2', 
-                [user_id, email]
-            )
-        else:
-            cursor.execute(
-                '''INSERT INTO MGOLAN.USERTABLE (USERID, EMAIL, USERNAME, HASHEDPASSWORD, ADMIN) 
-                   VALUES (:1, :2, :3, :4, :5)''', 
-                [user_id, email, name, '', 0]
-            )
-
-        connection.commit()
-        cursor.close()
-        connection.close()
-
+        # save user information in database or session
+        # return the user information to the frontend
         response = jsonify({'status': 'success', 'user_id': user_id, 'email': email, 'name': name})
-        response.set_cookie('session_id', user_id, samesite='Strict')
+        # set a cookie with SameSite attribute
+        response.set_cookie('session_id', user_id, samesite='Strict')  # example cookie[replace]
         return response
     except ValueError:
+        # invalid token
         return jsonify({'status': 'error', 'message': 'Invalid token'}), 400
     except Exception as e:
+        # handle other exceptions
         print(f"An error occurred: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
-# Set CORS headers after each request
-@app.after_request
-def set_cors_headers(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
-    return response
+@app.route('/api/calendar/events', methods=['GET'])
+def get_calendar_events():
+    token = request.args.get('token')
+    try:
+        # Verify the token
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+
+        # Retrieve the access token
+        access_token = token
+        
+        # Make a request to the Google Calendar API
+        headers = {
+            'Authorization': f'Bearer {access_token}'
+        }
+        response = http_requests.get('https://www.googleapis.com/calendar/v3/calendars/primary/events', headers=headers)
+
+        if response.status_code == 200:
+            events = response.json().get('items', [])
+            return jsonify(events)
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to fetch events'}), response.status_code
+    except ValueError:
+        return jsonify({'status': 'error', 'message': 'Invalid token'}), 400
+    except Exception as e:
+        print(f"An error occurred while fetching calendar events: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=8080)
