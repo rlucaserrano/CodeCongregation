@@ -1,160 +1,250 @@
 import json
 from main import app
 
-# Add Test (Success)
-with app.test_client() as client:
-    response = client.post('/users', 
-                          data=json.dumps({
-                            "UserID": "1",
-                            "UserName": "GatorFan1",
-                            "Email": "Fake1@Gmail.com",
-                            "HashedPassword": "FakePassword1",
-                            "Admin": "0",
-                            "FirstName": "First",
-                            "LastName": "Last",
-                            "Bio": "Bio"
+userTests = True
+educationalResourcesTests = True
 
-                          }),
-                          content_type='application/json')
+if (userTests ==  True):
+  # Add Test (Success)
+  with app.test_client() as client:
+      response = client.post('/users', 
+                            data=json.dumps({
+                              "valUserID": "1",
+                              "valUserName": "GatorFan1",
+                              "valEmail": "codecongregation@gmail.com",
+                              "valHashedPassword": "FakePassword1",
+                              "valAdmin": "0",
+                              "valFirstName": "Swamp",
+                              "valLastName": "Scripter",
+                              "valBio": "Bio"
 
-print(response.get_json())
+                            }),
+                            content_type='application/json')
 
-# Add Test (Failure 1)
-with app.test_client() as client:
-    response = client.post('/users', 
-                          data=json.dumps({
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Add Test (Failure 1)
+  with app.test_client() as client:
+      response = client.post('/users', 
+                            data=json.dumps({
+                            }),
+                            content_type='application/json')
 
-# Add Test (Failure 2)
-with app.test_client() as client:
-    response = client.post('/users', 
-                          data=json.dumps({
-                            "UserID": "1",
-                            "UserName": "GatorFan1",
-                            "Email": "Fake1@Gmail.com",
-                            "HashedPassword": "FakePassword1",
-                            "Admin": "0"
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Add Test (Failure 2)
+  with app.test_client() as client:
+      response = client.post('/users', 
+                            data=json.dumps({
+                              "valUserID": "1",
+                              "valUserName": "GatorFan1",
+                              "valEmail": "Fake1@Gmail.com",
+                              "valHashedPassword": "FakePassword1",
+                              "valAdmin": "0"
+                            }),
+                            content_type='application/json')
 
-# Add Test (Failure 3)
-with app.test_client() as client:
-    response = client.post('/users', 
-                          data=json.dumps({
-                            "UserID": "2",
-                            "UserName": "GatorFan1",
-                            "Email": "Fake1@Gmail.com",
-                            "HashedPassword": "FakePassword1",
-                            "Admin": "0"
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Add Test (Failure 3)
+  with app.test_client() as client:
+      response = client.post('/users', 
+                            data=json.dumps({
+                              "valUserID": "2",
+                              "valUserName": "GatorFan1",
+                              "valEmail": "Fake1@Gmail.com",
+                              "valHashedPassword": "FakePassword1",
+                              "valAdmin": "0"
+                            }),
+                            content_type='application/json')
 
-# Add Test (Failure 4)
-with app.test_client() as client:
-    response = client.post('/users', 
-                          data=json.dumps({
-                            "UserID": "2",
-                            "UserName": "GatorFan2",
-                            "Email": "Fake1@Gmail.com",
-                            "HashedPassword": "FakePassword1",
-                            "Admin": "0"
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Add Test (Failure 4)
+  with app.test_client() as client:
+      response = client.post('/users', 
+                            data=json.dumps({
+                              "valUserID": "2",
+                              "valUserName": "GatorFan2",
+                              "valEmail": "codecongregation@gmail.com",
+                              "valHashedPassword": "FakePassword1",
+                              "valAdmin": "0"
+                            }),
+                            content_type='application/json')
 
-# Get Test
-with app.test_client() as client:
-    response = client.get('/users', 
-                          data=json.dumps({
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Get Test (All columns)
+  with app.test_client() as client:
+      response = client.get('/users', 
+                            data=json.dumps({
+                            }),
+                            content_type='application/json')
 
-# Modify Test (Failure - Nothing to modify)
-with app.test_client() as client:
-    response = client.patch('/users', 
-                          data=json.dumps({
-                            "UserID": "1",
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Get Test (UserNames)
+  with app.test_client() as client:
+      response = client.get('/users', 
+                            data=json.dumps({
+                              "valUserId": "1",
+                              "colUserName": "Type anything you want"
+                            }),
+                            content_type='application/json')
 
-# Get Test
-with app.test_client() as client:
-    response = client.get('/users', 
-                          data=json.dumps({
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Get Test (UserName and Email)
+  with app.test_client() as client:
+      response = client.get('/users', 
+                            data=json.dumps({
+                              "valUserId": "1",
+                              "colUserName": "Type anything you want",
+                              "colEmail": "Yep Anything. Just replace val with col"
+                            }),
+                            content_type='application/json')
 
-# Modify Test (Success)
-with app.test_client() as client:
-    response = client.patch('/users', 
-                          data=json.dumps({
-                            "UserID": "1",
-                            "HashedPassword": "FakePassword1!",
-                            "Admin": "1",
-                            "Bio": "Now we have a bio!"
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Modify Test (Failure - Nothing to modify)
+  with app.test_client() as client:
+      response = client.patch('/users', 
+                            data=json.dumps({
+                              "valUserID": "1",
+                            }),
+                            content_type='application/json')
 
-# Get Test
-with app.test_client() as client:
-    response = client.get('/users', 
-                          data=json.dumps({
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Get Test
+  with app.test_client() as client:
+      response = client.get('/users', 
+                            data=json.dumps({
+                            }),
+                            content_type='application/json')
 
-# Head Test
-with app.test_client() as client:
-    response = client.head('/users', 
-                          data=json.dumps({
-                            "UserID": "1",
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.status_code)
+  # Modify Test (Success)
+  with app.test_client() as client:
+      response = client.patch('/users', 
+                            data=json.dumps({
+                              "valUserID": "1",
+                              "valHashedPassword": "FakePassword1!",
+                              "valAdmin": "1",
+                              "valBio": "Now we have a bio!"
+                            }),
+                            content_type='application/json')
 
-# Delete Test
-with app.test_client() as client:
-    response = client.delete('/users', 
-                          data=json.dumps({
-                            "UserID": "1",
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.get_json())
+  # Get Test
+  with app.test_client() as client:
+      response = client.get('/users', 
+                            data=json.dumps({
+                            }),
+                            content_type='application/json')
 
-# Head Test
-with app.test_client() as client:
-    response = client.head('/users', 
-                          data=json.dumps({
-                            "UserID": "1",
-                          }),
-                          content_type='application/json')
+  print(response.get_json())
 
-print(response.status_code)
+  # Head Test
+  with app.test_client() as client:
+      response = client.head('/users', 
+                            data=json.dumps({
+                              "valUserID": "1",
+                            }),
+                            content_type='application/json')
 
-# Get Test
-with app.test_client() as client:
-    response = client.get('/users', 
-                          data=json.dumps({
-                          }),
-                          content_type='application/json')
+  print(response.status_code)
 
-print(response.get_json())
+  # Delete Test
+  with app.test_client() as client:
+      response = client.delete('/users', 
+                            data=json.dumps({
+                              "valUserID": "1",
+                            }),
+                            content_type='application/json')
+
+  print(response.get_json())
+
+  # Head Test
+  with app.test_client() as client:
+      response = client.head('/users', 
+                            data=json.dumps({
+                              "valUserID": "1",
+                            }),
+                            content_type='application/json')
+
+  print(response.status_code)
+
+  # Get Test
+  with app.test_client() as client:
+      response = client.get('/users', 
+                            data=json.dumps({
+                            }),
+                            content_type='application/json')
+
+  print(response.get_json())
+
+if educationalResourcesTests:
+
+  # Get Test
+  with app.test_client() as client:
+      response = client.get('/educationalresources', 
+                            data=json.dumps({
+                              "valResourceID": "20"
+                            }),
+                            content_type='application/json')
+
+  print(response.get_json())
+
+  # Add Test 
+  with app.test_client() as client:
+      response = client.post('/educationalresources', 
+                            data=json.dumps({
+                              "valResourceID": "20",
+                              "valResourceName": "TestResource",
+                              "valWebsiteURL": "https://www.test.org",
+                              "valResourceCategory": "FakeCategory",
+                              "valResourceDescription": "Test",
+                              "valPublished": "0",
+                              "valDateAdded": "SYSDATE",
+                              "valVotes": "2"
+                            }),
+                            content_type='application/json')
+
+  print(response.get_json())
+
+  # Get Test
+  with app.test_client() as client:
+      response = client.get('/educationalresources', 
+                            data=json.dumps({
+                            "valResourceID": "20", 
+                            "Order": ["Votes", "DESC"] 
+                            }),
+                            content_type='application/json')
+
+  print(response.get_json())
+
+  # Delete Test
+  with app.test_client() as client:
+      response = client.delete('/educationalresources', 
+                            data=json.dumps({
+                              "valResourceID": "20",
+                            }),
+                            content_type='application/json')
+
+  print(response.get_json())
+
+ # Get Test
+  with app.test_client() as client:
+      response = client.get('/educationalresources', 
+                            data=json.dumps({
+                            "Order": ["Votes", "DESC"],
+                            "colResourceCategory": "Any text",
+                            "colVotes": "Any Text",
+                            "Distinct": "Any Value" 
+                            }),
+                            content_type='application/json')
+
+  print(response.get_json())

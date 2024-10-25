@@ -1,76 +1,130 @@
 import oracledb
 from config import Config
 
+# Educational sources used to setup database.py 
+# 1. https://python-oracledb.readthedocs.io/en/latest/api_manual/cursor.html#
+# 2. https://python-oracledb.readthedocs.io/en/latest/user_guide/sql_execution.html
+
+# TODO: Create functions to check for SQL injection for user-supplied text, e.g. Bio, Name
+
 class Database:
+        
+    #========== Called internally in database.py ==========#
+
     # Establishes a connection with the database.
     @staticmethod 
     def GetConnection():
-        try:
-            return oracledb.connect(
-                user=Config.ORACLE_USER,
-                password=Config.ORACLE_PASSWORD,
-                dsn=f"{Config.ORACLE_HOST}:{Config.ORACLE_PORT}/{Config.ORACLE_SID}"
-            )
-        except oracledb.DatabaseError as e:
-            print(f"Database connection error: {str(e)}")
-            raise e
+        return oracledb.connect(user=Config.ORACLE_USER, password=Config.ORACLE_PASSWORD, dsn=f"{Config.ORACLE_HOST}:{Config.ORACLE_PORT}/{Config.ORACLE_SID}")
 
-    # Conducts a selection query.
+    # Conducts a selection query
     @staticmethod 
     def SelectQuery(userQuery):
+        # Open connection and establish cursor
         connection = Database.GetConnection()
         cursor = connection.cursor()
+
+        # Excutes user query
         cursor.execute(userQuery)
+
+        # Collect all selected rows
         selectedRows = cursor.fetchall()
+
+        # Close cursor and connection
         cursor.close()
         connection.close()
+
         return selectedRows
 
-    # Alters the database (insert, delete, or modify).
+    # Alters the database (insert, delete, or modify)
     @staticmethod 
     def AlterQuery(userQuery):
+        # Open connection and establish cursor
         connection = Database.GetConnection()
         cursor = connection.cursor()
+
+        # Makes changes to database and commits changes
         cursor.execute(userQuery)
         connection.commit()
+
+
+        # Close cursor and connection
         cursor.close()
         connection.close()
 
-    # Searches the database.
-    @staticmethod 
-    def SearchDatabase(table, columns=None, rows=None):
-        columnString = ", ".join(columns) if columns else "*"
-        rowString = f" WHERE {rows}" if rows else ""
-        return Database.SelectQuery(f"SELECT {columnString} FROM {table}{rowString}")
+    #========== Called by main.py ==========#
 
-    # Inserts an entry into a database table.
+    # Searches database
+    @staticmethod 
+    def SearchDatabase(table, columns=None, rows=None, order=None, distinct=None):
+        
+        # Generates columns to be searched.
+        columnString = ""
+        if columns:
+            for c in columns:
+                columnString = columnString + c + ", "
+            columnString = columnString[:-2]
+        else:
+            columnString = "*"
+        
+        # Generates rows to be searched,
+        if rows:
+            rowString = " WHERE " + rows
+        else:
+            rowString = ""
+        
+        distinctString = ""
+        if distinct is not None:
+            distinctString = "DISTINCT "
+
+        orderString = ""
+        if order is not None:
+            orderString = f" ORDER BY {order[0]} {order[1]}"
+        # Returns result from internal function
+        return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
+
+    # Inserts entry into database table.
     @staticmethod
     def AddToDatabase(table, entry):
-        attributeString = ", ".join(entry)
+        # Creates list of attributes for insert query.
+        attributeString = ""
+        for e in entry:
+            attributeString = attributeString + e + ", "
+        attributeString = attributeString[:-2]
+
+        # Attempts to insert entry into table. Returns result.
         try:
             Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
-            return True
+            return(True)
         except Exception as e:
-            print(f"Error adding to database: {e}")
-            return False
+            errorMessage = str(e)
+            return(False)
     
-    # Removes an entry from a database table.
+    # Removes entry from database table.
     @staticmethod
     def RemoveFromDatabase(table, key, value):
+        # Attempts to remove entry from table. Returns result.
         try:
-            Database.AlterQuery(f"DELETE FROM {table} WHERE {key} = '{value}'")
-            return True
+            Database.AlterQuery(F"DELETE FROM {table} WHERE {key} = '{value}'")
+            return(True)
         except Exception as e:
-            print(f"Error removing from database: {e}")
-            return False
+            return(False)
 
-    # Modifies an existing entry in a database table.
+    # Modifies existing entry in database table
     @staticmethod
     def ModifyDatabase(table, key, value, changes):
-        changesString = ", ".join([f"{col} = {val}" for col, val in changes])
+        # Creates a string of attribute changes.
+        changesString = ""
+        for c in changes:
+            changesString = changesString + c[0] + " = " + c[1] + ", "
+        changesString = changesString[:-2]
+
+        # Attempts to update entry into table. Returns result.
         try:
             Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
-            return True
+            return(True)
         except Exception as e:
-            print(f"Error updating database: {e}")
-            return False
+            return(False)
+
+        
+        
+
