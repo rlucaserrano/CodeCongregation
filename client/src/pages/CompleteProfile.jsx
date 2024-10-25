@@ -1,10 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';  // Make sure you're using react-router for navigation
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
 function CompleteProfile() {
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // Check if the user is a Google user based on the flag in localStorage.
+        const isGoogleUser = localStorage.getItem('isGoogleUser');
+
+        // If the user is not a Google user, redirect them to the account page.
+        if (!isGoogleUser) {
+            navigate('/account');
+        }
+    }, [navigate]);
+
     async function handleSubmit(e) {
         e.preventDefault();
         const form = e.target;
@@ -26,6 +39,8 @@ function CompleteProfile() {
             });
 
             if (response.ok) {
+                // Remove the isGoogleUser flag once profile completion is done.
+                localStorage.removeItem('isGoogleUser');
                 window.location.href = '/account';
             } else {
                 const errorData = await response.json();

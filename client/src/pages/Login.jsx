@@ -7,8 +7,10 @@ import Typography from '@mui/material/Typography';
 import '../components/Login.css';
 
 const Login = () => {
+    const [formError, setFormError] = useState('');
     const [showExtraOptions, setShowExtraOptions] = useState(false);
 
+    // Handle Google OAuth login success
     const handleLoginSuccess = (credentialResponse) => {
         fetch('http://localhost:8080/api/auth/google', {
             method: 'POST',
@@ -20,24 +22,33 @@ const Login = () => {
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
+                // Store the token and user info for further authentication
                 localStorage.setItem('google_token', credentialResponse.credential);
                 localStorage.setItem('info', JSON.stringify(data.user_info));
                 window.location.href = '/';
             } else if (data.status === 'incomplete') {
+                // Store user_id if profile completion is needed
                 localStorage.setItem('user_id', data.user_id);
                 window.location.href = '/complete-profile';  // Redirect to complete profile page
             } else {
+                setFormError(data.message || 'Google login error occurred.');
                 console.error('Google login error:', data.message);
             }
         })
-        .catch(error => console.error('Error during Google login:', error));
+        .catch(error => {
+            setFormError('Error during Google login. Please try again later.');
+            console.error('Error during Google login:', error);
+        });
     };
 
+    // Handle username/password form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setFormError('');  // Clear previous errors
+
         const form = e.target;
-        const formData = new FormData(form);
-        const formJson = Object.fromEntries(formData.entries());
+        const username = form.Username.value;
+        const password = form.Password.value;
 
         try {
             const response = await fetch('http://localhost:8080/log', {
@@ -45,34 +56,39 @@ const Login = () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ data: formJson }),
+                body: JSON.stringify({ data: { Username: username, Password: password } }),
             });
 
             if (response.ok) {
                 const token = await response.text();
-                localStorage.setItem('token', token);
+                localStorage.setItem('token', token);  // Store the JWT token
                 window.location.href = '/';
             } else {
-                console.error('Login failed');
+                const errorData = await response.json();
+                setFormError(errorData.error || 'Login failed. Please try again.');
+                console.error('Login failed:', errorData);
             }
         } catch (error) {
+            setFormError('An error occurred during login. Please try again.');
             console.error('Error during login:', error);
         }
     };
 
-    const handleGuest = (e) => {
-        e.preventDefault();
+    // Handle redirection for guests and new account creation
+    const handleGuest = () => {
         window.location.href = '/';
     };
 
-    const handleNew = (e) => {
-        e.preventDefault();
+    const handleNew = () => {
         window.location.href = '/create';
     };
 
     return (
         <Box className="login-container">
-            <Typography variant="h4" align="center" gutterBottom>Login</Typography>
+            <Typography variant="h4" align="center" gutterBottom>
+                Login
+            </Typography>
+            {formError && <Typography variant="body2" color="error" align="center">{formError}</Typography>}
             <Box component="form" onSubmit={handleSubmit} className="login-form">
                 <TextField required label="Username" name="Username" fullWidth />
                 <TextField required label="Password" name="Password" type="password" fullWidth />
@@ -81,7 +97,7 @@ const Login = () => {
             <div className="google-login">
                 <GoogleLogin
                     onSuccess={handleLoginSuccess}
-                    onError={() => console.log('Google login failed')}
+                    onError={() => setFormError('Google login failed. Please try again.')}
                     uxMode="popup"
                 />
             </div>
