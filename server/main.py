@@ -55,7 +55,11 @@ def AccessEducationalResources():
     resources.Process()
     return resources.Methods(request.method)
 
-# Add a new user
+import random
+from flask import request, jsonify, make_response
+from database import Database
+from proc_and_sec import ProcAndSec
+
 @app.route('/add', methods=["POST", "OPTIONS"])
 def addUser():
     if request.method == 'OPTIONS':
@@ -65,16 +69,65 @@ def addUser():
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
         return response, 204
 
-    connection = Database.GetConnection()
     addNew = request.json.get('data')
-    cursor = connection.cursor()
-    cursor.execute(
-        '''INSERT INTO MGOLAN.USERTABLE (USERID, USERNAME, HASHEDPASSWORD, EMAIL, ADMIN) 
-           VALUES (:0, :1, :2, :3, :4)''', addNew)
-    connection.commit()
-    cursor.close()
-    connection.close()
-    return jsonify({"status": "User created successfully"}), 201
+
+    try:
+        # Auto-generate USERID using a random number within the valid range.
+        user_id = random.randint(1, 10**18)  # Adjust the range if needed for uniqueness.
+        username = addNew.get('2')  # USERNAME
+        email = addNew.get('3')  # EMAIL
+        hashed_password = addNew.get('4')  # HASHEDPASSWORD, should be hashed before sending.
+        first_name = addNew.get('5', None)  # FIRSTNAME (Optional)
+        last_name = addNew.get('6', None)  # LASTNAME (Optional)
+        bio = addNew.get('7', None)  # BIO (Optional)
+        admin = int(addNew.get('8', 0))  # ADMIN, convert to integer, default to 0 if not provided.
+
+        # Ensure required fields are provided.
+        if not all([username, email, hashed_password]):
+            return jsonify({"ERROR": "Missing required fields: Username, Email, and Password"}), 400
+
+        # Construct the SQL statement with placeholders.
+        sql = '''
+            INSERT INTO MGOLAN.USERTABLE (
+                USERID, USERNAME, EMAIL, HASHEDPASSWORD, FIRSTNAME, LASTNAME, BIO, ADMIN
+            ) VALUES (:1, :2, :3, :4, :5, :6, :7, :8)
+        '''
+
+        # Prepare the values list based on column ID order.
+        values = [
+            user_id,          # :1 - USERID (auto-generated)
+            username,         # :2 - USERNAME
+            email,            # :3 - EMAIL
+            hashed_password,  # :4 - HASHEDPASSWORD
+            first_name,       # :5 - FIRSTNAME (or NULL)
+            last_name,        # :6 - LASTNAME (or NULL)
+            bio,              # :7 - BIO (or NULL)
+            admin             # :8 - ADMIN (defaults to 0 for regular users)
+        ]
+
+        # Connect to the database and execute the query.
+        connection = Database.GetConnection()
+        cursor = connection.cursor()
+        cursor.execute(sql, values)
+        connection.commit()
+        cursor.close()
+        connection.close()
+        return jsonify({"status": "User created successfully", "user_id": user_id}), 201
+
+    except ValueError as ve:
+        print(f"ValueError during user creation: {ve}")
+        return jsonify({"ERROR": "Invalid input type. ADMIN must be a number."}), 400
+    except Exception as e:
+        print(f"Error during user creation: {e}")
+        return jsonify({"ERROR": str(e)}), 500
+
+
+    except ValueError as ve:
+        print(f"ValueError during user creation: {ve}")
+        return jsonify({"ERROR": "Invalid input type. USERID and ADMIN must be numbers."}), 400
+    except Exception as e:
+        print(f"Error during user creation: {e}")
+        return jsonify({"ERROR": str(e)}), 500
 
 # Retrieve user information
 @app.route('/info', methods=["POST", "OPTIONS"])
@@ -108,32 +161,40 @@ def findUser():
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
         return response, 204
 
-    connection = Database.GetConnection()
-    verify = list(request.json.get('data').values())
-    cursor = connection.cursor()
-    cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE USERNAME = :1', [verify[0]])
-    results = cursor.fetchone()
+    try:
+        data = request.json.get('data', {})
+        username = data.get('Username')
+        password = data.get('Password')
 
-    if results and ProcAndSec.HashAndSalt(verify[1]) == results[2]:
-        data = {
-            'id': results[0],
-            'user': results[1],
-            'mail': results[3],
-            'pass': results[2],
-            'first': results[4],
-            'last': results[5],
-            'bio': results[6],
-            'admin': results[7]
-        }
-        token = jwt.encode(payload=data, key=secret)
-        cursor.close()
-        connection.close()
-        return token
-    else:
-        cursor.close()
-        connection.close()
-        return jsonify({"error": "Invalid username or password"}), 401
+        if not username or not password:
+            return jsonify({"error": "Username and password are required."}), 400
 
+        connection = Database.GetConnection()
+        cursor = connection.cursor()
+        cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE USERNAME = :1', [username])
+        user_data = cursor.fetchone()
+
+        if user_data:
+            user_id, db_username, db_email, db_password, *_ = user_data
+            # Check password using the hash function (assume ProcAndSec.HashAndSalt hashes the password for comparison)
+            if ProcAndSec.HashAndSalt(password) == db_password:
+                # Generate a token
+                token = jwt.encode({
+                    'id': user_id,
+                    'user': db_username,
+                    'mail': db_email
+                }, key=secret, algorithm='HS256')
+                cursor.close()
+                connection.close()
+                return token
+            else:
+                return jsonify({"error": "Invalid username or password."}), 401
+        else:
+            return jsonify({"error": "User not found."}), 404
+
+    except Exception as e:
+        print(f"Error during login: {e}")
+        return jsonify({"error": "An error occurred during login."}), 500
 # Google OAuth2 login route with account linking
 @app.route('/api/auth/google', methods=['POST', 'OPTIONS'])
 def google_login():
