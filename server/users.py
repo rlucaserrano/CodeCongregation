@@ -2,113 +2,161 @@ from flask import jsonify
 from database import Database
 from proc_and_sec import ProcAndSec
 
-class Users:
 
+class Users:
     def __init__(self, data=None):
-        # Assigns variables with json data (if available) or default values.
-        self.valUserID = data.get("valUserID", None)
-        self.valUserName = data.get("valUserName", None)
-        self.valEmail = data.get("valEmail", None)
-        self.valHashedPassword = data.get("valHashedPassword", None)
-        self.valFirstName = data.get("valFirstName", None)
-        self.valLastName = data.get("valLastName", None)
-        self.valBio = data.get("valBio", None)
-        self.valAdmin = data.get("valAdmin", None)
-        self.colUserID = data.get("colUserID", None)
-        self.colUserName = data.get("colUserName", None)
-        self.colEmail = data.get("colEmail", None)
-        self.colHashedPassword = data.get("colHashedPassword", None)
-        self.colFirstName = data.get("colFirstName", None)
-        self.colLastName = data.get("colLastName", None)
-        self.colBio = data.get("colBio", None)
-        self.colAdmin = data.get("colAdmin", None)
-        self.order = data.get("Order", None)
-        self.distinct = data.get("Distinct", None)
+        # Initialize user attributes based on provided data or set to None
+        self.valUserID = data.get("valUserID") if data else None
+        self.valUserName = data.get("valUserName") if data else None
+        self.valEmail = data.get("valEmail") if data else None
+        self.valHashedPassword = data.get("valHashedPassword") if data else None
+        self.valFirstName = data.get("valFirstName") if data else None
+        self.valLastName = data.get("valLastName") if data else None
+        self.valBio = data.get("valBio") if data else None
+        self.valAdmin = data.get("valAdmin") if data else None
 
     def Methods(self, method):
         try:
             if method == "GET":
-                return self.GetUser()
+                return self.get_user()
             elif method == "POST":
-                return self.AddUser()
+                return self.add_user()
             elif method == "DELETE":
-                return self.DeleteUser()
+                return self.delete_user()
             elif method == "PATCH":
-                return self.UpdateUser()
+                return self.update_user()
             elif method == "HEAD":
-                return self.CheckForUser()
+                return self.check_user_exists()
             elif method == "OPTIONS":
-                return jsonify({"Options": "GET, POST, DELETE, HEAD, OPTIONS"}), 200
+                return jsonify({"Options": "GET, POST, DELETE, PATCH, HEAD, OPTIONS"}), 200
             else:
                 return jsonify({"ERROR": "Invalid method selection"}), 405
         except Exception as e:
             return jsonify({"ERROR": str(e)}), 500
 
-    def GetUser(self):
-        if self.valHashedPassword or self.valFirstName or self.valLastName or self.valBio:
-            return jsonify({"ERROR": "GET method does not accept parameters for HashedPassword, FirstName, LastName, or Bio"}), 400
+    def get_user(self):
+        # Prepare conditions for searching
+        conditions = []
+        if self.valUserID:
+            conditions.append(f"UserID = '{self.valUserID}'")
+        if self.valUserName:
+            conditions.append(f"UserName = '{self.valUserName}'")
+        if self.valEmail:
+            conditions.append(f"Email = '{self.valEmail}'")
 
-        columns = self._build_columns()
-        rowString = self._build_row_string()
-        return jsonify(Database.SearchDatabase(table="UserTable", columns=columns, rows=rowString)), 200
+        # Join conditions into a single query string
+        condition_string = " AND ".join(conditions) if conditions else "1=1"
 
-    def AddUser(self):
+        # Query the database
+        try:
+            result = Database.SearchDatabase("MGOLAN.USERTABLE", rows=condition_string)
+            return jsonify({"data": result}), 200
+        except Exception as e:
+            return jsonify({"ERROR": f"Error fetching user: {e}"}), 500
+
+    def add_user(self):
+        # Check for required fields
         if not all([self.valUserID, self.valUserName, self.valEmail, self.valAdmin]):
-            return jsonify({"ERROR": "POST method requires UserID, UserName, Email, Admin parameters"}), 400
+            return jsonify({"ERROR": "Missing required fields: UserID, UserName, Email, Admin"}), 400
 
+        # Check for duplicates
         if self._is_duplicate("UserID", self.valUserID):
-            return jsonify({"ERROR": "UserID already in use"}), 409
+            return jsonify({"ERROR": "UserID already exists"}), 409
         if self._is_duplicate("UserName", self.valUserName):
-            return jsonify({"ERROR": "UserName already in use"}), 409
+            return jsonify({"ERROR": "UserName already exists"}), 409
         if self._is_duplicate("Email", self.valEmail):
-            return jsonify({"ERROR": "Email already in use"}), 409
+            return jsonify({"ERROR": "Email already exists"}), 409
 
+        # Hash the password
         if self.valHashedPassword:
             self.valHashedPassword = ProcAndSec.HashAndSalt(self.valHashedPassword)
         else:
-            self.valHashedPassword = "NULL"
+            return jsonify({"ERROR": "Password is required"}), 400
 
-        self.valFirstName = f"'{self.valFirstName}'" if self.valFirstName else "NULL"
-        self.valLastName = f"'{self.valLastName}'" if self.valLastName else "NULL"
-        self.valBio = f"'{self.valBio}'" if self.valBio else "NULL"
+        # Handle optional fields
+        first_name = f"'{self.valFirstName}'" if self.valFirstName else "NULL"
+        last_name = f"'{self.valLastName}'" if self.valLastName else "NULL"
+        bio = f"'{self.valBio}'" if self.valBio else "NULL"
 
-        result = Database.AddToDatabase(
-            table="UserTable",
-            entry=[f"{self.valUserID}", f"'{self.valUserName}'", f"'{self.valEmail}'", f"'{self.valHashedPassword}'", self.valFirstName, self.valLastName, self.valBio, f"{self.valAdmin}"]
-        )
-        if result:
-            return jsonify({"SUCCESS": "User added"}), 200
-        return jsonify({"ERROR": "Program encountered an unknown issue"}), 406
+        # Construct the entry for insertion
+        entry = [
+            f"{self.valUserID}",
+            f"'{self.valUserName}'",
+            f"'{self.valEmail}'",
+            f"'{self.valHashedPassword}'",
+            first_name,
+            last_name,
+            bio,
+            f"{self.valAdmin}"
+        ]
 
-    def UpdateUser(self):
+        # Add user to the database
+        try:
+            result = Database.AddToDatabase("MGOLAN.USERTABLE", entry=entry)
+            if result:
+                return jsonify({"SUCCESS": "User added successfully"}), 201
+            return jsonify({"ERROR": "Failed to add user"}), 500
+        except Exception as e:
+            return jsonify({"ERROR": f"Error adding user: {e}"}), 500
+
+    def update_user(self):
         if not self.valUserID:
-            return jsonify({"ERROR": "PATCH method requires UserID parameter"}), 400
+            return jsonify({"ERROR": "UserID is required for updating user data"}), 400
 
-        changes = self._build_changes()
+        # Prepare the changes for the update
+        changes = []
+        if self.valUserName:
+            changes.append(("UserName", f"'{self.valUserName}'"))
+        if self.valEmail:
+            changes.append(("Email", f"'{self.valEmail}'"))
+        if self.valHashedPassword:
+            self.valHashedPassword = ProcAndSec.HashAndSalt(self.valHashedPassword)
+            changes.append(("HashedPassword", f"'{self.valHashedPassword}'"))
+        if self.valFirstName:
+            changes.append(("FirstName", f"'{self.valFirstName}'"))
+        if self.valLastName:
+            changes.append(("LastName", f"'{self.valLastName}'"))
+        if self.valBio:
+            changes.append(("Bio", f"'{self.valBio}'"))
+
         if not changes:
-            return jsonify({"ERROR": "PATCH method requires at least one parameter other than UserID"}), 400
+            return jsonify({"ERROR": "No updates provided"}), 400
 
-        result = Database.ModifyDatabase(
-            table="UserTable",
-            key="UserID",
-            value=self.valUserID,
-            changes=changes
-        )
-        if result:
-            return jsonify({"SUCCESS": "User modified"}), 200
-        return jsonify({"ERROR": "Program encountered an unknown issue"}), 406
+        # Update the database
+        try:
+            result = Database.ModifyDatabase(
+                table="MGOLAN.USERTABLE",
+                key="UserID",
+                value=self.valUserID,
+                changes=changes
+            )
+            if result:
+                return jsonify({"SUCCESS": "User updated successfully"}), 200
+            return jsonify({"ERROR": "Failed to update user"}), 500
+        except Exception as e:
+            return jsonify({"ERROR": f"Error updating user: {e}"}), 500
 
-    def _build_columns(self):
-        columns = ["UserID", "UserName", "Email", "Admin"]
-        if self.colHashedPassword:
-            columns.append("HashedPassword")
-        if self.colFirstName:
-            columns.append("FirstName")
-        if self.colLastName:
-            columns.append("LastName")
-        if self.colBio:
-            columns.append("Bio")
-        return columns
+    def delete_user(self):
+        if not self.valUserID:
+            return jsonify({"ERROR": "UserID is required for deleting a user"}), 400
+
+        try:
+            result = Database.RemoveFromDatabase("MGOLAN.USERTABLE", key="UserID", value=self.valUserID)
+            if result:
+                return jsonify({"SUCCESS": "User deleted successfully"}), 200
+            return jsonify({"ERROR": "Failed to delete user"}), 500
+        except Exception as e:
+            return jsonify({"ERROR": f"Error deleting user: {e}"}), 500
+
+    def check_user_exists(self):
+        if not self.valUserName:
+            return jsonify({"ERROR": "UserName is required to check for user existence"}), 400
+
+        is_duplicate = self._is_duplicate("UserName", self.valUserName)
+        if is_duplicate:
+            return jsonify({"SUCCESS": "User exists"}), 200
+        return jsonify({"ERROR": "User does not exist"}), 404
 
     def _is_duplicate(self, field, value):
-        return len(Database.SearchDatabase(table="UserTable", rows=f"{field} = '{value}'")) > 0
+        # Check if a record with the given field and value exists in the database
+        return len(Database.SearchDatabase("MGOLAN.USERTABLE", rows=f"{field} = '{value}'")) > 0
