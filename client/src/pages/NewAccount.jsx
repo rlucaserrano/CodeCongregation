@@ -1,20 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';  
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+
 function Create() {
+    const [formError, setFormError] = useState('');
+
     async function handleSubmit(e) {
         e.preventDefault();
         const form = e.target;
-        const formData = new FormData();
-        const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-        formData.append('0', id);
-        formData.append('1', form.Username.value);
-        formData.append('2', form.Password.value);
-        formData.append('3', form.Email.value);
-        formData.append('4', 0);
-        const formJson = Object.fromEntries(formData);
+
+        // Capture form values
+        const username = form.Username.value;
+        const password = form.Password.value;
+        const confirmPassword = form.ConfirmPassword.value;
+        const email = form.Email.value;
+        const firstName = form.FirstName.value || null;
+        const lastName = form.LastName.value || null;
+
+        // Simple client-side password confirmation check
+        if (password !== confirmPassword) {
+            setFormError("Passwords do not match.");
+            return;
+        }
+
+        // Clear previous error messages
+        setFormError('');
+
+        // Prepare the data object matching the backend's expected structure
+        const formData = {
+            2: username,
+            3: email,
+            4: password,
+            5: firstName,
+            6: lastName,
+            8: 0  // Example admin flag, adjust if needed.
+        };
 
         try {
             const response = await fetch('http://localhost:8080/add', {
@@ -23,17 +45,22 @@ function Create() {
                     'Content-Type': 'application/json',
                 },
                 method: 'POST',
-                body: JSON.stringify({ data: formJson }),
+                body: JSON.stringify({ data: formData }),
             });
 
             if (response.ok) {
-                localStorage.setItem('user_id', id);
+                const result = await response.json();
+                // Store the user_id provided by the server
+                localStorage.setItem('user_id', result.user_id);
                 window.location.href = '/complete-profile';
             } else {
-                console.error('Error creating account');
+                const errorData = await response.json();
+                console.error('Error creating account:', errorData);
+                setFormError(errorData.ERROR || 'Error creating account');
             }
         } catch (error) {
             console.error('Error: ' + error);
+            setFormError('An unexpected error occurred. Please try again later.');
         }
     }
 
@@ -42,18 +69,28 @@ function Create() {
         window.location.href = '/login';
     }
 
+    function handleGoogleSignUp() {
+        // Redirect to Google OAuth endpoint or handle Google Sign-in logic here
+        window.location.href = 'http://localhost:8080/google-auth';
+    }
+
     return (
         <Box sx={{ maxWidth: 400, margin: 'auto', padding: 4, backgroundColor: 'background.paper', borderRadius: 2, boxShadow: 3 }}>
             <Typography variant="h4" align="center" gutterBottom>Create a New Account</Typography>
+            {formError && <Typography variant="body2" color="error" align="center">{formError}</Typography>}
             <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <TextField required id="Username" label="Username" fullWidth />
                 <TextField required id="Password" label="Password" type="password" fullWidth />
+                <TextField required id="ConfirmPassword" label="Confirm Password" type="password" fullWidth />
                 <TextField required id="Email" label="Email" type="email" fullWidth />
+                <TextField id="FirstName" label="First Name (Optional)" fullWidth />
+                <TextField id="LastName" label="Last Name (Optional)" fullWidth />
                 <Button variant="contained" type="submit">Sign Up</Button>
                 <Button variant="text" color="secondary" onClick={handleCancel}>Cancel</Button>
+                <Button variant="outlined" onClick={handleGoogleSignUp}>Sign up with Google</Button>
             </Box>
         </Box>
     );
-};
+}
 
 export default Create;
