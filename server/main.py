@@ -9,7 +9,9 @@ from google.auth.transport import requests
 from dotenv import load_dotenv
 from database import Database
 from users import Users
-from educationalresources import EducationalResources
+from educational_resources import EducationalResources
+from study_groups import StudyGroups
+from group_resources import GroupResources
 
 # Educational sources used to setup main.py
 # 1. https://www.theserverside.com/blog/Coffee-Talk-Java-News-Stories-and-Opinions/HTTP-methods
@@ -46,6 +48,21 @@ def AccessEducationalResources():
     resources = EducationalResources(request.json)
     resources.Process()
     return (resources.Methods(request.method))
+
+@app.route('/groupresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
+def AccessGroupResources():
+    # Accesses EducationalResources from database
+    resources = GroupResources(request.json)
+    resources.Process()
+    return (resources.Methods(request.method))
+
+@app.route('/studygroups', methods=["POST"])
+def AccessStudyGroups():
+    # Partially implemented. Set up to add groups to debug potential issue
+    groups = StudyGroups(request.json)
+    return (groups.Methods(request.method))
+
+
 
 @app.route('/add', methods=["POST"])
 def addUser():
