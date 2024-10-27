@@ -62,8 +62,19 @@ def addUser():
 def addGroup():
     connection = Database.GetConnection()
     addNew = request.json.get('data')
-    cursor = connection.cursor() #Currently resulting in an error, awaiting Friday's merge first
-    cursor.execute('''INSERT INTO MGOLAN.STUDYGROUP(GROUPID,GROUPNAME,GROUPCALENDARID,PERMANENCE) VALUES(:0,:1,:2,:3)''', addNew)
+    cursor = connection.cursor()
+    cursor.execute('''INSERT INTO MGOLAN.STUDYGROUPS(GROUPID,GROUPNAME,GROUPCALENDARID,PERMANENCE,GROUPBIO) VALUES(:0,:1,:2,:3,:4)''', addNew)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/addmem', methods=["POST"])
+def addMember():
+    connection = Database.GetConnection()
+    addNew = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('''INSERT INTO MGOLAN.GROUPMEMBERS VALUES(:0,:1)''', addNew)
     connection.commit()
     cursor.close()
     connection.close()
