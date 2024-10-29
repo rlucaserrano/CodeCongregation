@@ -80,7 +80,7 @@ class Database:
         if order is not None:
             orderString = f" ORDER BY {order[0]} {order[1]}"
         # Returns result from internal function
-        return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
+        return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM MGOLAN.{table}{rowString}{orderString}")
 
     # Inserts entry into database table.
     @staticmethod
@@ -93,7 +93,7 @@ class Database:
 
         # Attempts to insert entry into table. Returns result.
         try:
-            Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
+            Database.AlterQuery(f"INSERT INTO MGOLAN.{table} VALUES ({attributeString})")
             return(True)
         except Exception as e:
             errorMessage = str(e)
@@ -101,17 +101,21 @@ class Database:
     
     # Removes entry from database table.
     @staticmethod
-    def RemoveFromDatabase(table, key, value):
+    def RemoveFromDatabase(table, key1, value1, key2=None, value2=None):
         # Attempts to remove entry from table. Returns result.
         try:
-            Database.AlterQuery(F"DELETE FROM {table} WHERE {key} = '{value}'")
-            return(True)
+            if key2 is not None and value2 is not None:
+                Database.AlterQuery(F"DELETE FROM MGOLAN.{table} WHERE {key1} = '{value1}' AND {key2} = '{value2}'")
+                return(True)
+            else:
+                Database.AlterQuery(F"DELETE FROM MGOLAN.{table} WHERE {key1} = '{value1}'")
+                return(True)
         except Exception as e:
             return(False)
 
     # Modifies existing entry in database table
     @staticmethod
-    def ModifyDatabase(table, key, value, changes):
+    def ModifyDatabase(table, key1, value1, changes, key2=None, value2=None):
         # Creates a string of attribute changes.
         changesString = ""
         for c in changes:
@@ -120,8 +124,12 @@ class Database:
 
         # Attempts to update entry into table. Returns result.
         try:
-            Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
-            return(True)
+            if key2 is not None and value2 is not None:
+                Database.AlterQuery(f"UPDATE MGOLAN.{table} SET {changesString} WHERE {key1} = '{value1}' AND {key2} = '{value2}'")
+                return(True)
+            else:
+                Database.AlterQuery(f"UPDATE MGOLAN.{table} SET {changesString} WHERE {key1} = '{value1}'")
+                return(True)
         except Exception as e:
             return(False)
 
