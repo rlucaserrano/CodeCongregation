@@ -16,6 +16,11 @@ function Header() {
     setAnchorEl(null);
   };
 
+  const handleGroups = () =>
+  {
+    window.location.href = '/groups'
+  }
+
   return (
     <nav>
       <div className="nav-container">
@@ -27,10 +32,15 @@ function Header() {
             <li><Link to="/resources">Resources</Link></li>
             <li><Link to="/messages">Messages</Link></li>
             <li><Link to="/calendar">Calendar</Link></li>
-            <li><Link to="/groups">Groups</Link></li>
           </ul>
         </div>
         <div className="nav-right">
+          <Avatar 
+            src="/path-to-group-picture.jpg" 
+            alt="Group Profile"
+            onClick={handleGroups}
+            sx={{ width: 30, height: 30 }}
+          />
           <Avatar 
             src="/path-to-profile-picture.jpg" 
             alt="User Profile"
