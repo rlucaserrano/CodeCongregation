@@ -183,7 +183,7 @@ class Users:
         elif len(Database.SearchDatabase(table="UserTable", rows=f"UserID = '{self.valUserID}'")) <= 0:
             return jsonify({"ERROR": "User does not exist"}), 404
         else:
-            Database.RemoveFromDatabase(table="UserTable", key1="UserID", value1=self.valUserID)
+            Database.RemoveFromDatabase("UserTable", "UserID", self.valUserID)
             return jsonify({"SUCCESS": "User deleted"}), 200
 
     def UpdateUser(self):
@@ -220,7 +220,7 @@ class Users:
         if len(changes) <= 0:
              return jsonify({"ERROR": "PATCH method requires at least one parameter other than UserID"}), 400 
         else:
-            result = Database.ModifyDatabase(table = "UserTable", key1 = "UserID", value1 = self.valUserID, changes = changes)
+            result = Database.ModifyDatabase(table = "UserTable", key = "UserID", value = self.valUserID, changes = changes)
             if result == True:
                 return jsonify({"SUCCESS": "User modified"}), 200
             else:

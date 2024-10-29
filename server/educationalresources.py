@@ -173,7 +173,7 @@ class EducationalResources:
         elif len(Database.SearchDatabase(table="EducationalResources", rows=f"ResourceID = '{self.valResourceID}'")) <= 0:
             return jsonify({"ERROR": "Resource does not exist"}), 404
         else:
-            Database.RemoveFromDatabase("EducationalResources", key1="ResourceID", value1=self.valResourceID)
+            Database.RemoveFromDatabase("EducationalResources", "ResourceID", self.valResourceID)
             return jsonify({"SUCCESS": "Resource deleted"}), 200
 
     def UpdateResource(self):
@@ -203,7 +203,7 @@ class EducationalResources:
         if len(changes) <= 0:
              return jsonify({"ERROR": "PATCH method requires at least one parameter other than ResourceID"}), 400 
         else:
-            result = Database.ModifyDatabase(table = "EducationalResources", key1 = "ResourceID", value1 = self.valResourceID, changes = changes)
+            result = Database.ModifyDatabase(table = "EducationalResources", key = "ResourceID", value = self.valResourceID, changes = changes)
             if result == True:
                 return jsonify({"SUCCESS": "Resource modified"}), 200
             else:

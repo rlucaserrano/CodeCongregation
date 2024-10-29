@@ -1,13 +1,10 @@
 import json
 from main import app
 
-userTests = False
-educationalResourcesTests = False
-studyGroupTests = False
-current = False
+userTests = True
+educationalResourcesTests = True
 
-if userTests:
-  
+if (userTests ==  True):
   # Add Test (Success)
   with app.test_client() as client:
       response = client.post('/users', 
@@ -247,34 +244,6 @@ if educationalResourcesTests:
                             "colResourceCategory": "Any text",
                             "colVotes": "Any Text",
                             "Distinct": "Any Value" 
-                            }),
-                            content_type='application/json')
-
-  print(response.get_json())
-
-if studyGroupTests:
-
-  # Add Test (Success)
-  with app.test_client() as client:
-      response = client.post('/studygroups', 
-                            data=json.dumps({
-                              "valGroupID": "1",
-                              "valGroupName": "TestGroup",
-                              "valGroupCalendarID": "1",
-                              "valPermanence": "1",
-                              "valGroupBio": "This is a test study group"
-
-                            }),
-                            content_type='application/json')
-
-  print(response.get_json())
-
-if current:
-  # Delete Test
-  with app.test_client() as client:
-      response = client.delete('/users', 
-                            data=json.dumps({
-                              "valUserID": "1",
                             }),
                             content_type='application/json')
 
