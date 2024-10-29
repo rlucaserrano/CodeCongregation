@@ -74,16 +74,32 @@ def addMember():
     connection = Database.GetConnection()
     addNew = request.json.get('data')
     cursor = connection.cursor()
-    cursor.execute('''INSERT INTO MGOLAN.GROUPMEMBERS VALUES(:0,:1)''', addNew)
+    cursor.execute('''INSERT INTO MGOLAN.GROUPMEMBERS(GROUPID,USERID,GROUPMANAGER) VALUES(:0,:1,:2)''', addNew)
     connection.commit()
     cursor.close()
     connection.close()
     return ""
 
+@app.route('/groups', methods=["POST"])
+def findGroup():
+    connection = Database.GetConnection()
+    user = (request.data).decode("utf-8")
+    cursor = connection.cursor()
+    cursor.execute('SELECT GROUPID FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\')')
+    results = cursor.fetchall()
+    groups = []
+    for i in results:
+        id = str(i[0])
+        cursor.execute('SELECT GROUPNAME, GROUPBIO, GROUPID FROM MGOLAN.STUDYGROUPS WHERE (GROUPID = \'' + id +'\')')
+        groups.append(cursor.fetchall())
+    cursor.close()
+    connection.close()
+    return groups
+
 @app.route('/info', methods=["POST"])
 def info():
     token = request.data
-    if (token.decode("utf-8") == ''):
+    if (token.decode("utf-8") == '' or token.decode("utf-8") == 'null'):
         print("Token is empty")
         return json.dumps({})
     print("Token is: ", token)
