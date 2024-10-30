@@ -124,7 +124,15 @@ class Database:
             return(True)
         except Exception as e:
             return(False)
-
+    @staticmethod
+    def TestConnection():
+        try:
+            connection = Database.GetConnection()
+            print("Database connection successful.")
+            connection.close()
+        except Exception as e:
+            print("Database connection failed:", e)
+            raise e
         
         
 
