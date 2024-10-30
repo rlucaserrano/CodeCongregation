@@ -13,16 +13,16 @@ function Account() {
         const token = localStorage.getItem('token');
         try {
             const response = await fetch('http://localhost:8080/info', {
-                headers: { 'Content-Type': 'application/json' },
                 method: 'POST',
-                body: JSON.stringify({ token }),
+                headers: { 'Content-Type': 'text/plain' },
+                body: token,
             });
             if (response.ok) {
                 const info = await response.json();
-                setData(info);
+                setData(info); // Assuming info includes user details, including UserID
                 setSafe(true);
             } else {
-                console.error('Error fetching user info');
+                console.error('Error fetching user info. Status:', response.status);
             }
         } catch (error) {
             console.error('Error fetching user info:', error);
@@ -33,32 +33,46 @@ function Account() {
         handleInfGet();
     }, []);
 
+    function handleInputChange(e) {
+        const { name, value } = e.target;
+        setData(prevData => ({ ...prevData, [name]: value }));
+    }
+
     async function handleSaveChanges(e) {
         e.preventDefault();
-        const form = e.target;
+
         const updatedData = {
-            valUserID: data.id,
-            valUserName: form.username.value,
-            valHashedPassword: form.password.value,
-            valEmail: form.email.value,
-            valFirstName: form.firstName.value,
-            valLastName: form.lastName.value,
-            valBio: form.bio.value,
+            valUserID: data.id,  
+            valUserName: data.user,
+            valHashedPassword: data.pass,
+            valEmail: data.mail,
+            valFirstName: data.first,
+            valLastName: data.last,
+            valBio: data.bio,
         };
 
         try {
-            const response = await fetch('http://localhost:8080/users', {
+            const response = await fetch('http://localhost:8080/update_user', {
                 method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
                 body: JSON.stringify(updatedData),
             });
+
             if (response.ok) {
-                console.log('User information updated successfully');
+                const result = await response.json();
+                console.log("Update response:", result);
+                alert("User information updated successfully!");
             } else {
-                console.error('Failed to update user information');
+                const errorData = await response.json();
+                console.error('Failed to update user information. Status:', response.status, 'Error:', errorData);
+                alert(errorData.ERROR || 'Failed to update user information');
             }
         } catch (error) {
             console.error('Error during update:', error);
+            alert('An error occurred while updating. Please try again later.');
         }
     }
 
@@ -91,12 +105,12 @@ function Account() {
                             <Button variant="outlined" className="change-picture">Change Picture</Button>
                         </Box>
                         <form className="account-form" onSubmit={handleSaveChanges}>
-                            <TextField label="Username" name="username" defaultValue={data.user} required fullWidth />
-                            <TextField label="Password" name="password" type="password" fullWidth />
-                            <TextField label="Email" name="email" defaultValue={data.mail} required fullWidth />
-                            <TextField label="First Name" name="firstName" defaultValue={data.first} fullWidth />
-                            <TextField label="Last Name" name="lastName" defaultValue={data.last} fullWidth />
-                            <TextField label="Bio" name="bio" defaultValue={data.bio} multiline rows={3} fullWidth />
+                            <TextField label="Username" name="user" value={data.user || ''} onChange={handleInputChange} required fullWidth />
+                            <TextField label="Password" name="pass" value={data.pass || ''} type="password" onChange={handleInputChange} fullWidth />
+                            <TextField label="Email" name="mail" value={data.mail || ''} onChange={handleInputChange} required fullWidth />
+                            <TextField label="First Name" name="first" value={data.first || ''} onChange={handleInputChange} fullWidth />
+                            <TextField label="Last Name" name="last" value={data.last || ''} onChange={handleInputChange} fullWidth />
+                            <TextField label="Bio" name="bio" value={data.bio || ''} onChange={handleInputChange} multiline rows={3} fullWidth />
                             <Button variant="contained" type="submit" className="save-button">Save Changes</Button>
                             <Button variant="contained" color="error" onClick={handleLogout} className="logout-button">
                                 Log Out
@@ -106,7 +120,7 @@ function Account() {
                 )}
                 {view === 'Friends' && (
                     <div className="friends-view">
-                        {/* Your Friends UI code here */}
+                        {/* Friends UI code */}
                     </div>
                 )}
             </div>

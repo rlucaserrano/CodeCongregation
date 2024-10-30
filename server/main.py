@@ -9,7 +9,11 @@ from google.auth.transport import requests
 from dotenv import load_dotenv
 from database import Database
 from users import Users
+from proc_and_sec import ProcAndSec
 from educationalresources import EducationalResources
+from flask import Flask, request, jsonify, make_response, Response
+import bcrypt
+
 
 # Educational sources used to setup main.py
 # 1. https://www.theserverside.com/blog/Coffee-Talk-Java-News-Stories-and-Opinions/HTTP-methods
@@ -21,8 +25,10 @@ load_dotenv()
 
 # Flask instance
 app = Flask(__name__)
-CORS(app)  # Currently allowing all origins
-
+#CORS(app)  # Currently allowing all origins
+#CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+#made an edit here to make sure CORS issue is solved
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True, methods=["GET", "POST", "PATCH", "DELETE","HEAD", "OPTIONS"])
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
 secret = 'testSecret'
@@ -33,12 +39,22 @@ def default():
 
 #### Database Routes ####
 
-@app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "HEAD", "OPTIONS"])
+@app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 def AccessUserTable():
-    # Accesses UserTable from database
+    # handle OPTIONS request for CORS preflight
+    print("HTTP method:", request.method) #debugging 
+    print("Request JSON:", request.json)
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, HEAD, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        return response, 204
+
+    # process user-related requests
     user = Users(request.json)
     user.Process()
-    return (user.Methods(request.method))
+    return user.Methods(request.method)
+
 
 @app.route('/educationalresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessEducationalResources():
@@ -47,16 +63,87 @@ def AccessEducationalResources():
     resources.Process()
     return (resources.Methods(request.method))
 
+    # made changes to increment userID by 1 for simplicity
 @app.route('/add', methods=["POST"])
 def addUser():
     connection = Database.GetConnection()
     addNew = request.json.get('data')
+    
+    # hash password before storing into database
+    addNew['hashedPassword'] = ProcAndSec.HashAndSalt(addNew['hashedPassword'])
+    
     cursor = connection.cursor()
-    cursor.execute('''INSERT INTO MGOLAN.USERTABLE(USERID,USERNAME,HASHEDPASSWORD,EMAIL,ADMIN) VALUES(:0,:1,:2,:3,:4)''', addNew)
+    cursor.execute(
+        '''INSERT INTO MGOLAN.USERTABLE (USERID, USERNAME, HASHEDPASSWORD, EMAIL, ADMIN, FIRSTNAME, LASTNAME)
+           VALUES (user_id_seq.NEXTVAL, :1, :2, :3, :4, :5, :6)''',
+        (addNew['username'], addNew['hashedPassword'], addNew['email'], addNew['admin'], addNew.get('firstName'), addNew.get('lastName'))
+    )
+    
     connection.commit()
     cursor.close()
     connection.close()
-    return ""
+    return jsonify({"SUCCESS": "User added"}), 200
+
+@app.route('/update_user', methods=["PATCH"])
+def update_user():
+    if not request.is_json:
+        return jsonify({"ERROR": "Request must be JSON"}), 400
+
+    data = request.json
+    print("Received PATCH data:", data)  # debugging
+
+    user_id = data.get("valUserID")
+    if user_id is None:
+        return jsonify({"ERROR": "UserID is required for updating user"}), 400
+
+    fields_to_update = []
+    values = []
+
+    if "valUserName" in data:
+        fields_to_update.append("USERNAME = :1")
+        values.append(data["valUserName"])
+    if "valHashedPassword" in data:
+        fields_to_update.append("HASHEDPASSWORD = :2")
+        values.append(data["valHashedPassword"])
+    if "valEmail" in data:
+        fields_to_update.append("EMAIL = :3")
+        values.append(data["valEmail"])
+    if "valFirstName" in data:
+        fields_to_update.append("FIRSTNAME = :4")
+        values.append(data.get("valFirstName"))
+    if "valLastName" in data:
+        fields_to_update.append("LASTNAME = :5")
+        values.append(data.get("valLastName"))
+    if "valBio" in data:
+        fields_to_update.append("BIO = :6")
+        values.append(data.get("valBio"))
+    if "valAdmin" in data:
+        fields_to_update.append("ADMIN = :7")
+        values.append(data.get("valAdmin"))
+
+    
+    if not fields_to_update:
+        return jsonify({"ERROR": "No valid fields provided for update"}), 400
+
+    values.append(user_id)  
+    set_clause = ", ".join(fields_to_update)
+
+    connection = Database.GetConnection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute(
+            f'''UPDATE MGOLAN.USERTABLE SET {set_clause} WHERE USERID = :{len(values)}''',
+            values
+        )
+        connection.commit()
+        return jsonify({"SUCCESS": "User updated successfully"}), 200
+    except Exception as e:
+        print("Error during user update:", e)
+        return jsonify({"ERROR": "Failed to update user"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
 
 @app.route('/addgroup', methods=["POST"])
 def addGroup():
@@ -98,45 +185,97 @@ def findGroup():
 
 @app.route('/info', methods=["POST"])
 def info():
-    token = request.data
-    if (token.decode("utf-8") == '' or token.decode("utf-8") == 'null'):
+    # decode the token received as plain text
+    token = request.data.decode("utf-8")  # read token as plain text
+
+    if not token:
         print("Token is empty")
-        return json.dumps({})
-    print("Token is: ", token)
+        return jsonify({"error": "Token is missing"}), 400
+
+    print("Token is:", token)
     print('============')
-    data = json.dumps(jwt.decode(token,key=secret,algorithms=['HS256']))
-    print(data)
-    return data
+    
+    try:
+        data = jwt.decode(token, key=secret, algorithms=['HS256'])
+        print("Decoded data:", data)
+        return jsonify(data)  # Directly return JSON object as JSON response
+    except jwt.DecodeError:
+        print("Invalid token.")
+        return jsonify({"error": "Invalid token"}), 401
+    except Exception as e:
+        print("An unexpected error occurred:", e)
+        return jsonify({"error": "Server error"}), 500
+
+#this commented out log works for logging in with unhashed passwords
+# @app.route('/log', methods=["POST"])
+# def findUser():
+#     connection = Database.GetConnection()
+#     verify = list(request.json.get('data').values())
+#     cursor = connection.cursor()
+#     cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE (USERNAME = \''+ verify[0] +'\' AND HASHEDPASSWORD = \'' + verify[1] + '\')') #Had to be done slightly differently
+#     results = cursor.fetchall()
+#     if (len(results) == 1):
+#         data = {
+#             'id': results[0][0],
+#             'user': results[0][1],
+#             'mail': results[0][2],
+#             'pass': results[0][3],
+#             'first': results[0][4],
+#             'last': results[0][5],
+#             'bio': results[0][6],
+#             'admin': results[0][7]
+#         }
+#         token = jwt.encode(payload=data, key=secret, algorithm='HS256')
+#         print("Generated token:", token)  # Debugging: Ensure token is generated correctly
+#         cursor.close()
+#         connection.close()
+#         return Response(token, mimetype='text/plain')  # Return token as plain text response
+#     else:
+#         cursor.close()
+#         connection.close()
+#         return jsonify({"error": "Invalid credentials"}), 401
+
 
 @app.route('/log', methods=["POST"])
 def findUser():
     connection = Database.GetConnection()
-    verify = list(request.json.get('data').values())
+    verify = request.json.get('data')
+    username = verify.get("Username")
+    password = verify.get("Password")
+
     cursor = connection.cursor()
-    cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE (USERNAME = \''+ verify[0] +'\' AND HASHEDPASSWORD = \'' + verify[1] + '\')') #Had to be done slightly differently
-    results = cursor.fetchall()
-    if (len(results) == 1):
-        data = {
-            'id': results[0][0],
-            'user': results[0][1],
-            'mail': results[0][2],
-            'pass': results[0][3],
-            'first': results[0][4],
-            'last': results[0][5],
-            'bio': results[0][6],
-            'admin': results[0][7]
-        }
-        print(data)
-        print('============')
-        token = jwt.encode(payload=data, key=secret)
-        print(token)
-        cursor.close()
-        connection.close()
-        return token
+    cursor.execute('SELECT USERID, USERNAME, HASHEDPASSWORD, EMAIL, ADMIN, FIRSTNAME, LASTNAME, BIO FROM MGOLAN.USERTABLE WHERE USERNAME = :1', (username,))
+    result = cursor.fetchone()
+
+    if result:
+        user_id, db_username, db_hashed_password, email, admin, first_name, last_name, bio = result
+        # check if the entered password matches the stored hashed password
+        if bcrypt.checkpw(password.encode('utf-8'), db_hashed_password.encode('utf-8')):
+            # Create a JWT token with user data if the password matches
+            data = {
+                'id': user_id,
+                'user': db_username,
+                'mail': email,
+                'pass': db_hashed_password,  # avoid storing plain passwords
+                'first': first_name,
+                'last': last_name,
+                'bio': bio,
+                'admin': admin
+            }
+            token = jwt.encode(payload=data, key=secret, algorithm='HS256')
+            cursor.close()
+            connection.close()
+            return Response(token, mimetype='text/plain')  # return token as plain text
+        else:
+            # unauthorized if the password does not match
+            cursor.close()
+            connection.close()
+            return jsonify({"error": "Invalid credentials"}), 401
     else:
+        # user not found in the database
         cursor.close()
         connection.close()
-        return ""
+        return jsonify({"error": "User not found"}), 404
 
 @app.route('/res', methods=["GET"])
 def getRes():
@@ -147,13 +286,6 @@ def getRes():
     cursor.close()
     connection.close()
     return toReturn
- 
-@app.after_request
-def set_cors_headers(response):
-    # Set COOP and COEP headers
-    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
-    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
-    return response
 
 @app.route("/api/dev2", methods=['GET'])
 def dev2():
@@ -223,6 +355,23 @@ def get_calendar_events():
         print(f"An error occurred while fetching calendar events: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 400
 
-
+@app.route('/test_db_connection', methods=['GET'])
+def test_db_connection():
+    try:
+        Database.TestConnection()
+        return jsonify({"status": "connected"}), 200
+    except Exception as e:
+        return jsonify({"status": "failed", "error": str(e)}), 500    
+    
+@app.after_request
+def set_cors_headers(response):
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+    return response
+    
 if __name__ == "__main__":
     app.run(debug=True, port=8080)

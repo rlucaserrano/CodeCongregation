@@ -20,6 +20,7 @@ const Login = () => {
             body: JSON.stringify({ token: credentialResponse.credential }),
         })
         .then(response => response.json())
+        /*
         .then(data => {
             if (data.status === 'success') {
                 // Store the token and user info for further authentication
@@ -40,16 +41,36 @@ const Login = () => {
             console.error('Error during Google login:', error);
         });
     };
+    */
+        .then(data => {
+            if (data.status === 'success') {
+                // Store the token and user info for further authentication
+                localStorage.setItem('token', credentialResponse.credential);
+                localStorage.setItem('info', JSON.stringify(data.user_info));
+                window.location.href = '/account';  // Redirect to account page
+            } else if (data.status === 'incomplete') {
+                // Store user_id if profile completion is needed
+                localStorage.setItem('user_id', data.user_id);
+                window.location.href = '/complete-profile';  // Redirect to complete profile page
+            } else {
+                setFormError(data.message || 'Google login error occurred.');
+                console.error('Google login error:', data.message);
+            }
+        })
+        .catch(error => {
+            setFormError('Error during Google login. Please try again later.');
+            console.error('Error during Google login:', error);
+        });
+    };
 
-    // Handle username/password form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');  // Clear previous errors
-
+    
         const form = e.target;
         const username = form.Username.value;
         const password = form.Password.value;
-
+    
         try {
             const response = await fetch('http://localhost:8080/log', {
                 method: 'POST',
@@ -58,11 +79,18 @@ const Login = () => {
                 },
                 body: JSON.stringify({ data: { Username: username, Password: password } }),
             });
-
+    
             if (response.ok) {
                 const token = await response.text();
-                localStorage.setItem('token', token);  // Store the JWT token
-                window.location.href = '/';
+                console.log("Received token from server:", token); // Log the token from the server
+                if (token) {
+                    localStorage.setItem('token', token);  // Store the JWT token
+                    console.log("Stored token in localStorage:", localStorage.getItem('token')); // Verify storage
+                    window.location.href = '/account';     // Redirect to account page
+                } else {
+                    setFormError("Token is empty. Please try again.");
+                    console.error("Empty token received");
+                }
             } else {
                 const errorData = await response.json();
                 setFormError(errorData.error || 'Login failed. Please try again.');
@@ -73,7 +101,6 @@ const Login = () => {
             console.error('Error during login:', error);
         }
     };
-
     // Handle redirection for guests and new account creation
     const handleGuest = () => {
         window.location.href = '/';

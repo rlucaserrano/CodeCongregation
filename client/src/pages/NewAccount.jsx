@@ -28,14 +28,13 @@ function Create() {
         // Clear previous error messages
         setFormError('');
 
-        // Prepare the data object matching the backend's expected structure
         const formData = {
-            2: username,
-            3: email,
-            4: password,
-            5: firstName,
-            6: lastName,
-            8: 0  // Example admin flag, adjust if needed.
+            username: username,
+            email: email,
+            hashedPassword: password,  // assuming you'll hash on the server
+            firstName: firstName,
+            lastName: lastName,
+            admin: 0  // Assuming new users aren't admin by default
         };
 
         try {
