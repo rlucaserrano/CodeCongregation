@@ -13,6 +13,8 @@ function Groups() {
 
     const [groups, setGroups] = useState()
 
+    const [invites, setInvites] = useState()
+
     async function handleID()
     {
         let token = localStorage.getItem('token')
@@ -41,6 +43,16 @@ function Groups() {
             return id[0][2] != localStorage.getItem("groupID")
         }
         setGroups(current)
+        let pending = await fetch('http://localhost:8080/invite', {
+            headers: {
+                'Accept': 'text/html',
+                'Content-Type': 'text/html'
+            },
+            method: 'POST',
+            body: info.id
+        })
+        let rsvp = await pending.json()
+        setInvites(rsvp)
         setSafe(true)
     }
 
@@ -75,6 +87,7 @@ function Groups() {
         groupStart.append("0", id)
         groupStart.append("1", userID)
         groupStart.append("2", 1)
+        groupStart.append("3", 1)
         const groupJson = Object.fromEntries(groupStart);
         await fetch('http://localhost:8080/addmem', {
             headers: {
@@ -100,11 +113,11 @@ function Groups() {
         setOpenC(false);
     };
 
-    function handleNone()
+    /*function handleNone()
     {
-        localStorage.setItem('groupID', null)
+        localStorage.removeItem('groupID')
         window.location.href = '/'
-    }
+    }*/
 
     const handleChoose = (id) => () =>
     {
@@ -118,13 +131,13 @@ function Groups() {
         return (
             <div className="groups-container">
                 <div className="groups-box">
-                    <h2>Your Groups</h2>
+                    <h2 className='title'>Your Groups</h2>
                     {groups.length == 0 ? <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}><b style={{color: 'red'}}>You currently have no groups available</b></div> : 
-                    <List style = {{overflow: 'scroll', height: 200, maxHeight: 200, display: 'flex', flexDirection: 'column'}}>
+                    <List style = {{overflow: 'scroll', height: 600, maxHeight: 600, display: 'flex', flexDirection: 'column'}}>
                         {groups.map((group, index) =>
-                                <Button style={{border: '2px solid black', display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'white', color: 'black'}} key={index} onClick={handleChoose(group[0][2])}>
+                                <div className='groups-select' key={index} onClick={handleChoose(group[0][2])}>
                                     <h2>{group[0][0]}</h2> <p>{group[0][1]}</p>
-                                </Button>
+                                </div>
                         )}
                     </List>}
                     <div className="input-container">
@@ -140,10 +153,21 @@ function Groups() {
                             </div>
                         </form>
                         </Dialog>
-                        <Button variant='contained' onClick={handleNone} className="cancel-button">
+                        {/*<Button variant='contained' onClick={handleNone} className="cancel-button">
                             Proceed Without a Group
-                        </Button>
+                        </Button>*/}
                     </div>
+                </div>
+                <div className="groups-box">
+                    <h2 className='title'>Pending Invites</h2>
+                    {invites.length == 0 ? <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}><b style={{color: 'red'}}>You currently have no pending invites</b></div> : 
+                    <List style = {{overflow: 'scroll', height: 600, maxHeight: 600, display: 'flex', flexDirection: 'column'}}>
+                        {invites.map((group, index) =>
+                                <div className='groups-invite' key={index}>
+                                    <h2>{group[0][0]}</h2> <p>{group[0][1]}</p>
+                                </div>
+                        )}
+                    </List>}
                 </div>
             </div>
         ); 

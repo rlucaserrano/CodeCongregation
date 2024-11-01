@@ -12,11 +12,37 @@
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px; 
+    width: 45%;
+    max-width: 45%; 
     display: flex;
     flex-direction: column;
     gap: 15px;
+    margin-right: 2%;
+    margin-left: 2%;
+}
+
+.title {
+    color: #556cd6;
+    display: flex;
+    justify-content: center;
+}
+
+.groups-select {
+    border: 2px solid black;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    color: black
+}
+
+.groups-invite {
+    border: 2px solid black;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    background-color: lightgoldenrodyellow;
+    color: black
 }
 
 .input-container {
