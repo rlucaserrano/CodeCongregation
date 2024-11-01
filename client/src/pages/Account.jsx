@@ -78,6 +78,7 @@ function Account() {
 
     async function handleLogout() {
         localStorage.removeItem('token');
+        localStorage.removeItem('groupID'); //Also clear the currently selected group.
         window.location.href = '/';
     }
 

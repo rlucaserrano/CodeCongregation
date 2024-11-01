@@ -50,8 +50,8 @@ function Create() {
             if (response.ok) {
                 const result = await response.json();
                 // Store the user_id provided by the server
-                localStorage.setItem('user_id', result.user_id);
-                window.location.href = '/complete-profile';
+                //localStorage.setItem('user_id', result.user_id);
+                window.location.href = '/login'; //Redirect to login page. "add" returns a success message, not ID.
             } else {
                 const errorData = await response.json();
                 console.error('Error creating account:', errorData);

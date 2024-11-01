@@ -75,7 +75,7 @@ def addUser():
     cursor = connection.cursor()
     cursor.execute(
         '''INSERT INTO MGOLAN.USERTABLE (USERID, USERNAME, HASHEDPASSWORD, EMAIL, ADMIN, FIRSTNAME, LASTNAME)
-           VALUES (user_id_seq.NEXTVAL, :1, :2, :3, :4, :5, :6)''',
+           VALUES (ALLIEMONTIAGUE.user_id_seq.NEXTVAL, :1, :2, :3, :4, :5, :6)''',
         (addNew['username'], addNew['hashedPassword'], addNew['email'], addNew['admin'], addNew.get('firstName'), addNew.get('lastName'))
     )
     
@@ -161,7 +161,7 @@ def addMember():
     connection = Database.GetConnection()
     addNew = request.json.get('data')
     cursor = connection.cursor()
-    cursor.execute('''INSERT INTO MGOLAN.GROUPMEMBERS(GROUPID,USERID,GROUPMANAGER) VALUES(:0,:1,:2)''', addNew)
+    cursor.execute('''INSERT INTO MGOLAN.GROUPMEMBERS VALUES(:0,:1,:2,:3)''', addNew)
     connection.commit()
     cursor.close()
     connection.close()
@@ -172,7 +172,7 @@ def findGroup():
     connection = Database.GetConnection()
     user = (request.data).decode("utf-8")
     cursor = connection.cursor()
-    cursor.execute('SELECT GROUPID FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\')')
+    cursor.execute('SELECT GROUPID FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\' AND ACCEPTED = 1)')
     results = cursor.fetchall()
     groups = []
     for i in results:
@@ -181,6 +181,24 @@ def findGroup():
         groups.append(cursor.fetchall())
     cursor.close()
     connection.close()
+    groups.sort()
+    return groups
+
+@app.route('/invite', methods=["POST"])
+def findInvite():
+    connection = Database.GetConnection()
+    user = (request.data).decode("utf-8")
+    cursor = connection.cursor()
+    cursor.execute('SELECT GROUPID FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\' AND ACCEPTED = 0)')
+    results = cursor.fetchall()
+    groups = []
+    for i in results:
+        id = str(i[0])
+        cursor.execute('SELECT GROUPNAME, GROUPBIO, GROUPID FROM MGOLAN.STUDYGROUPS WHERE (GROUPID = \'' + id +'\')')
+        groups.append(cursor.fetchall())
+    cursor.close()
+    connection.close()
+    groups.sort()
     return groups
 
 @app.route('/info', methods=["POST"])

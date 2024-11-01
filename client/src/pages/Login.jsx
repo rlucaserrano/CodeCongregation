@@ -86,7 +86,7 @@ const Login = () => {
                 if (token) {
                     localStorage.setItem('token', token);  // Store the JWT token
                     console.log("Stored token in localStorage:", localStorage.getItem('token')); // Verify storage
-                    window.location.href = '/account';     // Redirect to account page
+                    window.location.href = '/groups';     // Redirect to groups page
                 } else {
                     setFormError("Token is empty. Please try again.");
                     console.error("Empty token received");
