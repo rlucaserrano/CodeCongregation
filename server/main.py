@@ -9,6 +9,7 @@ from google.auth.transport import requests
 from dotenv import load_dotenv
 from database import Database
 from users import Users
+from group_resources import GroupResources
 from proc_and_sec import ProcAndSec
 from educationalresources import EducationalResources
 from flask import Flask, request, jsonify, make_response, Response
@@ -38,6 +39,29 @@ def default():
     return "Flask API"
 
 #### Database Routes ####
+
+@app.route('/groupresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
+def AccessGroupResources():
+    if request.method == "OPTIONS":
+        # Handle the CORS preflight request
+        response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
+        response.status_code = 200
+        return response
+
+    # Accesses EducationalResources from database
+     # Check the content type of the request
+    print("Content-Type:", request.headers.get('Content-Type'))
+
+    # Check the raw data before parsing
+    print("Raw Data:", request.data)
+    data = request.get_json()
+    print("here1.5")
+
+    resources = GroupResources(data)
+    print("here2")
+    resources.Process()
+    print("here3")
+    return (resources.Methods(request.method))
 
 @app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"])
 def AccessUserTable():
