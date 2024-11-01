@@ -51,9 +51,25 @@ def AccessEducationalResources():
 
 @app.route('/groupresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessGroupResources():
+    if request.method == "OPTIONS":
+        # Handle the CORS preflight request
+        response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
+        response.status_code = 200
+        return response
+        
     # Accesses EducationalResources from database
-    resources = GroupResources(request.json)
+     # Check the content type of the request
+    print("Content-Type:", request.headers.get('Content-Type'))
+    
+    # Check the raw data before parsing
+    print("Raw Data:", request.data)
+    data = request.get_json()
+    print("here1.5")
+
+    resources = GroupResources(data)
+    print("here2")
     resources.Process()
+    print("here3")
     return (resources.Methods(request.method))
 
 @app.route('/studygroups', methods=["POST"])

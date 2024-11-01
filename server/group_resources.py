@@ -8,6 +8,11 @@ class GroupResources:
         
         # Assigns variables with json data (if available) or default values.
 
+        if data is None:
+            data = {}
+
+        print("inside1")
+
         # Values for row information. 
         self.valGroupID = data.get("valGroupID", None)
         self.valGroupResourceID = data.get("valResourceGroupID", None)
@@ -33,12 +38,14 @@ class GroupResources:
         # Search characteristics
         self.order = data.get("Order", None)
         self.distinct = data.get("Distinct", None)
+        self.switch = data.get("switch", None)
 
     def Methods(self, method):
         
         # Internal function calls.
 
-        if method == "GET":
+        if self.switch == "GET":
+            print("Are we here")
             return self.GetResource()
         elif method == "POST":
             return self.AddResource()
@@ -46,9 +53,6 @@ class GroupResources:
             return self.DeleteResource()
         elif method == "PATCH":
             return self.UpdateResource()
-        elif method == "OPTIONS":
-            # Retrieves viable methods
-            return jsonify({"Options": "GET, POST, DELETE, OPTIONS"}), 200
         else:
             # Catchall error response
             return jsonify({"ERROR": "Invalid method selection"}), 405
