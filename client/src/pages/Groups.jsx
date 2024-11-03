@@ -113,18 +113,59 @@ function Groups() {
         setOpenC(false);
     };
 
-    /*function handleNone()
-    {
-        localStorage.removeItem('groupID')
-        window.location.href = '/'
-    }*/
-
     const handleChoose = (id) => () =>
     {
         localStorage.setItem('groupID', id)
         window.location.href = '/'
     }
 
+    const handleAccept = (id) => () =>
+    {
+        accept(id)
+    }
+
+    async function accept(group) 
+    {
+        const formData = new FormData();
+        formData.append("0", group)
+        formData.append("1", userID)
+        const formJson = Object.fromEntries(formData);
+        await fetch('http://localhost:8080/groupacc', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        window.location.reload() //Do we reload the page to select from updated list or select that group on accepting invite (redirect to Home)?
+    }
+
+    const handleReject = (id) => () =>
+    {
+        reject(id)
+    }
+
+    async function reject(group) 
+    {
+        const formData = new FormData();
+        formData.append("0", group)
+        formData.append("1", userID)
+        const formJson = Object.fromEntries(formData);
+        await fetch('http://localhost:8080/grouprej', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        window.location.reload() //Reload the page
+    }
 
     if (safe == true) 
     {
@@ -135,9 +176,9 @@ function Groups() {
                     {groups.length == 0 ? <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}><b style={{color: 'red'}}>You currently have no groups available</b></div> : 
                     <List style = {{overflow: 'scroll', height: 600, maxHeight: 600, display: 'flex', flexDirection: 'column'}}>
                         {groups.map((group, index) =>
-                                <div className='groups-select' key={index} onClick={handleChoose(group[0][2])}>
-                                    <h2>{group[0][0]}</h2> <p>{group[0][1]}</p>
-                                </div>
+                            <div className='groups-select' key={index} onClick={handleChoose(group[0][2])}>
+                                <h2 style={{marginLeft: '10px'}}>{group[0][0]}</h2> <p style={{marginLeft: '10px'}}>{group[0][1]}</p>
+                            </div>
                         )}
                     </List>}
                     <div className="input-container">
@@ -148,14 +189,11 @@ function Groups() {
                             <TextField required id="Name" label="Group Name"/>
                             <TextField id="Desc" label="Description"/>
                             <div>
-                            <Button variant='contained' onClick={handleCloseC} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}} type='submit'>Create</Button>
-                            <Button variant='contained' onClick={handleCloseC} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}}>Cancel</Button>
+                                <Button variant='contained' onClick={handleCloseC} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}} type='submit'>Create</Button>
+                                <Button variant='contained' onClick={handleCloseC} style={{textTransform: 'none', minWidth: 125, maxWidth: 125, backgroundColor: '#ff3b30'}}>Cancel</Button>
                             </div>
                         </form>
                         </Dialog>
-                        {/*<Button variant='contained' onClick={handleNone} className="cancel-button">
-                            Proceed Without a Group
-                        </Button>*/}
                     </div>
                 </div>
                 <div className="groups-box">
@@ -163,9 +201,13 @@ function Groups() {
                     {invites.length == 0 ? <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}><b style={{color: 'red'}}>You currently have no pending invites</b></div> : 
                     <List style = {{overflow: 'scroll', height: 600, maxHeight: 600, display: 'flex', flexDirection: 'column'}}>
                         {invites.map((group, index) =>
-                                <div className='groups-invite' key={index}>
-                                    <h2>{group[0][0]}</h2> <p>{group[0][1]}</p>
+                            <div className='groups-invite' key={index}>
+                                <h2 style={{marginLeft: '10px'}}>{group[0][0]}</h2> <p style={{marginLeft: '10px'}}>{group[0][1]}</p>
+                                <div className='invite-buttons'>
+                                    <div className='accept-button' onClick={handleAccept(group[0][2])}>Accept</div>
+                                    <div className='reject-button' onClick={handleReject(group[0][2])}>Reject</div>
                                 </div>
+                            </div>
                         )}
                     </List>}
                 </div>
