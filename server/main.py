@@ -225,6 +225,28 @@ def findInvite():
     groups.sort()
     return groups
 
+@app.route('/groupacc', methods=["POST"])
+def acceptInvite():
+    connection = Database.GetConnection()
+    accept = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('UPDATE MGOLAN.GROUPMEMBERS SET ACCEPTED = 1 WHERE (GROUPID = :0 AND USERID = :1 AND ACCEPTED = 0)', accept)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/grouprej', methods=["POST"])
+def rejectInvite():
+    connection = Database.GetConnection()
+    reject = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = :0 AND USERID = :1 AND ACCEPTED = 0)', reject)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
 @app.route('/info', methods=["POST"])
 def info():
     # decode the token received as plain text

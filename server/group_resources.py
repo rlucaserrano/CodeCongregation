@@ -137,7 +137,7 @@ class GroupResources:
             rowString = rowString + f" AND DateAdded = '{self.valDateAdded}'"
         
         # Passes information to Database class.
-        return jsonify(Database.SearchDatabase(table = "GroupResources", columns=columns, rows=rowString, order=self.order, distinct=self.distinct)), 200
+        return jsonify(Database.SearchDatabase(table = "MGOLAN.GroupResources", columns=columns, rows=rowString, order=self.order, distinct=self.distinct)), 200
     
     def AddResource(self):
         
@@ -145,11 +145,11 @@ class GroupResources:
             return jsonify({"ERROR": "POST method does not take column parameters"}), 400
         elif (self.valGroupID is None) or (self.valGroupResourceID is None) or (self.valResourceName is None) or (self.valWebsiteURL is None) or (self.valResourceCategory is None) or (self.valPublicShare is None) or (self.valDateAdded is None) or (self.valDisplayOrder is None):
             return jsonify({"ERROR": "POST method requires GroupID, GroupResourceID, ResourceName, WebsiteURL, ResourceCategory, PublicShare, DateAdded, and DisplayOrder parameters"}), 400
-        elif len(Database.SearchDatabase(table="GroupResources", rows=f"GroupID = '{self.valGroupID}'")) > 0:
+        elif len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}'")) > 0:
             return jsonify({"ERROR": "GroupID already in use"}), 409
-        elif len(Database.SearchDatabase(table="GroupResources", rows=f"GroupID = '{self.valGroupID}', GroupResourceID = '{self.valGroupResourceID}'")) > 0:
+        elif len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}', GroupResourceID = '{self.valGroupResourceID}'")) > 0:
             return jsonify({"ERROR": "ResourceName already in use"}), 409
-        elif len(Database.SearchDatabase(table="GroupResources", rows=f"GroupID = '{self.valGroupID}', WebsiteURL = '{self.valWebsiteURL}'")) > 0:
+        elif len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}', WebsiteURL = '{self.valWebsiteURL}'")) > 0:
             return jsonify({"ERROR": "WebsiteURL already in shared for this Group"}), 409 
         else: # Proprocesses inputs and attempts to insert into the database.
             if self.valResourceDescription is not None:
@@ -157,7 +157,7 @@ class GroupResources:
             else:
                 self.valResourceDescription = "NULL"
             # Checks for valid url format
-            result = Database.AddToDatabase(table = "GroupResources", entry = [f"{self.valGroupID}", f"{self.valGroupResourceID}", f"'{self.valResourceName}'", f"'{self.valWebsiteURL}'", f"'{self.valResourceCategory}'", self.valResourceDescription, f"{self.valPublicShare}", f"{self.valDateAdded}", f"{self.valDisplayOrder}"])
+            result = Database.AddToDatabase(table = "MGOLAN.GroupResources", entry = [f"{self.valGroupID}", f"{self.valGroupResourceID}", f"'{self.valResourceName}'", f"'{self.valWebsiteURL}'", f"'{self.valResourceCategory}'", self.valResourceDescription, f"{self.valPublicShare}", f"{self.valDateAdded}", f"{self.valDisplayOrder}"])
             if result == True:
                 return jsonify({"SUCCESS": "Resource added"}), 200
             else:
@@ -170,10 +170,10 @@ class GroupResources:
             return jsonify({"ERROR": "DELETE method only accepts GroupID and GroupResourceID parameter"}), 400
         if self.valGroupID is None or self.valGroupResourceID is None:
             return jsonify({"ERROR": "DELETE method requires GroupID and GroupResourceID parameters"}), 400
-        elif len(Database.SearchDatabase(table="GroupResources", rows=f"GroupID = '{self.valGroupID}', GroupResourceID = '{self.valGroupResourceID}'")) <= 0:
+        elif len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}', GroupResourceID = '{self.valGroupResourceID}'")) <= 0:
             return jsonify({"ERROR": "Resource does not exist"}), 404
         else:
-            Database.RemoveFromDatabase(table="GroupResources", key1="GroupID", value1=self.valGroupID, key2="GroupResourceID", value2=self.valGroupResourceID)
+            Database.RemoveFromDatabase(table="MGOLAN.GroupResources", key1="GroupID", value1=self.valGroupID, key2="GroupResourceID", value2=self.valGroupResourceID)
             return jsonify({"SUCCESS": "Resource deleted"}), 200
     
     def UpdateResource(self):
@@ -185,7 +185,7 @@ class GroupResources:
         if self.valResourceName is not None:
             changes.append(("ResourceName", f"'{self.valResourceName}'"))
         if self.valWebsiteURL is not None:
-            if len(Database.SearchDatabase(table="GroupResources", rows=f"GroupID = '{self.valGroupID}', WebsiteURL = '{self.valWebsiteURL}'")) > 0:
+            if len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}', WebsiteURL = '{self.valWebsiteURL}'")) > 0:
                 return jsonify({"ERROR": "WebsiteURL already in use"}), 409
             changes.append(("WebsiteURL", f"'{self.valWebsiteURL}'"))
         if self.valResourceCategory is not None:
@@ -201,7 +201,7 @@ class GroupResources:
         if len(changes) <= 0:
              return jsonify({"ERROR": "PATCH method requires at least one parameter other than GroupID and GroupResourceID"}), 400 
         else:
-            result = Database.ModifyDatabase(table = "GroupResources", key1 = "GroupID", value1 = self.valGroupID, changes = changes, key2 = "GroupResourceID", value2 = self.valGroupResourceID)
+            result = Database.ModifyDatabase(table = "MGOLAN.GroupResources", key1 = "GroupID", value1 = self.valGroupID, changes = changes, key2 = "GroupResourceID", value2 = self.valGroupResourceID)
             if result == True:
                 return jsonify({"SUCCESS": "Resource modified"}), 200
             else:
