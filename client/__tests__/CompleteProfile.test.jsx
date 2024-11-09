@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import CompleteProfile from './CompleteProfile';
+import CompleteProfile from './CompleteProfile.test';
 import '@testing-library/jest-dom/extend-expect';
 import fetchMock from 'jest-fetch-mock';
 import { BrowserRouter } from 'react-router-dom';
