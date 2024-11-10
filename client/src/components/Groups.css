@@ -36,6 +36,15 @@
     color: black
 }
 
+.groups-current {
+    border: 2px solid goldenrod;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    background-color: lightskyblue;
+    color: black
+}
+
 .groups-invite {
     border: 2px solid black;
     border-radius: 12px;
@@ -67,28 +76,4 @@
     justify-content: center;
     gap: 15px;
     min-height: 40px;
-}
-
-.accept-button {
-    border: 2px solid black;
-    border-radius: 12px;
-    background-color: greenyellow;
-    min-width: 60px;
-    max-height: 30px;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-}
-
-.reject-button {
-    border: 2px solid black;
-    border-radius: 12px;
-    background-color: red;
-    min-width: 60px;
-    max-height: 30px;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
 }
