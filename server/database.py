@@ -38,18 +38,27 @@ class Database:
     # Alters the database (insert, delete, or modify)
     @staticmethod 
     def AlterQuery(userQuery):
+        
         # Open connection and establish cursor
+        print("1")
         connection = Database.GetConnection()
         cursor = connection.cursor()
 
+        cursor.execute("ALTER SESSION SET DDL_LOCK_TIMEOUT = 5")
+        print("DDL lock timeout set to 5 seconds")
+        
+
         # Makes changes to database and commits changes
+        print(userQuery)
         cursor.execute(userQuery)
         connection.commit()
+
 
 
         # Close cursor and connection
         cursor.close()
         connection.close()
+        print("4")
 
     #========== Called by main.py ==========#
 
@@ -93,6 +102,7 @@ class Database:
 
         # Attempts to insert entry into table. Returns result.
         try:
+            print(f"INSERT INTO {table} VALUES ({attributeString})")
             Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
             return(True)
         except Exception as e:
@@ -101,13 +111,22 @@ class Database:
     
     # Removes entry from database table.
     @staticmethod
-    def RemoveFromDatabase(table, key, value):
+    def RemoveFromDatabase(table, key1, value1, key2=None, value2=None):
+       
+        if (key2 is None):
         # Attempts to remove entry from table. Returns result.
-        try:
-            Database.AlterQuery(F"DELETE FROM {table} WHERE {key} = '{value}'")
-            return(True)
-        except Exception as e:
-            return(False)
+            try:
+                Database.AlterQuery(F"DELETE FROM {table} WHERE {key1} = '{value1}'")
+                return(True)
+            except Exception as e:
+                return(False)
+        else:
+            try:
+                Database.AlterQuery(F"DELETE FROM {table} WHERE {key1} = '{value1}' AND {key2} = '{value2}'")
+                return(True)
+            except Exception as e:
+                return(False)
+
 
     # Modifies existing entry in database table
     @staticmethod
