@@ -82,7 +82,10 @@
     min-width: 35%;
     background-color: #ffffff;
     flex: 3;
+    display: flex;
+    flex-direction: column;
   }
+
 
   .right-table .table-body-2 {
     padding: 1rem;
@@ -90,13 +93,15 @@
     margin-bottom: 1rem;
     margin-right: 1rem;
     display: flex;
+    overflow-y: auto;
+    max-height: 20rem;
     flex-direction: column;
     justify-content: space-between;
   }
 
   .table-body-2 .button-format {
     padding-right: 2rem;
-    margin-top: 4rem;
+    margin-top: 2rem;
     margin-bottom: 1rem;
   }
 
@@ -104,4 +109,9 @@
     margin-bottom: .5rem;
     font-weight: bold;
     text-decoration: underline;
+  }
+
+  .table-body-2 .tb2-empty {
+    margin-bottom: .5rem;
+    font-weight: bold;
   }

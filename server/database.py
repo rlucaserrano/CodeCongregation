@@ -38,18 +38,27 @@ class Database:
     # Alters the database (insert, delete, or modify)
     @staticmethod 
     def AlterQuery(userQuery):
+        
         # Open connection and establish cursor
+        print("1")
         connection = Database.GetConnection()
         cursor = connection.cursor()
 
+        cursor.execute("ALTER SESSION SET DDL_LOCK_TIMEOUT = 5")
+        print("DDL lock timeout set to 5 seconds")
+        
+
         # Makes changes to database and commits changes
+        print(userQuery)
         cursor.execute(userQuery)
         connection.commit()
+
 
 
         # Close cursor and connection
         cursor.close()
         connection.close()
+        print("4")
 
     #========== Called by main.py ==========#
 
@@ -93,6 +102,7 @@ class Database:
 
         # Attempts to insert entry into table. Returns result.
         try:
+            print(f"INSERT INTO {table} VALUES ({attributeString})")
             Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
             return(True)
         except Exception as e:
