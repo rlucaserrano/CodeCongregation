@@ -11,7 +11,7 @@ class GroupResources:
 
         # Values for row information. 
         self.valGroupID = data.get("valGroupID", None)
-        self.valGroupResourceID = data.get("valResourceGroupID", None)
+        self.valGroupResourceID = data.get("valGroupResourceID", None)
         self.valResourceName = data.get("valResourceName", None)
         self.valWebsiteURL = data.get("valWebsiteURL", None)
         self.valResourceCategory = data.get("valResourceCategory", None)
@@ -168,7 +168,7 @@ class GroupResources:
             return jsonify({"ERROR": "DELETE method only accepts GroupID and GroupResourceID parameter"}), 400
         if self.valGroupID is None or self.valGroupResourceID is None:
             return jsonify({"ERROR": "DELETE method requires GroupID and GroupResourceID parameters"}), 400
-        elif len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}', GroupResourceID = '{self.valGroupResourceID}'")) <= 0:
+        elif len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}' AND GroupResourceID = '{self.valGroupResourceID}'")) <= 0:
             return jsonify({"ERROR": "Resource does not exist"}), 404
         else:
             Database.RemoveFromDatabase(table="MGOLAN.GroupResources", key1="GroupID", value1=self.valGroupID, key2="GroupResourceID", value2=self.valGroupResourceID)

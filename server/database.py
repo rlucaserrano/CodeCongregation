@@ -111,13 +111,22 @@ class Database:
     
     # Removes entry from database table.
     @staticmethod
-    def RemoveFromDatabase(table, key, value):
+    def RemoveFromDatabase(table, key1, value1, key2=None, value2=None):
+       
+        if (key2 is None):
         # Attempts to remove entry from table. Returns result.
-        try:
-            Database.AlterQuery(F"DELETE FROM {table} WHERE {key} = '{value}'")
-            return(True)
-        except Exception as e:
-            return(False)
+            try:
+                Database.AlterQuery(F"DELETE FROM {table} WHERE {key1} = '{value1}'")
+                return(True)
+            except Exception as e:
+                return(False)
+        else:
+            try:
+                Database.AlterQuery(F"DELETE FROM {table} WHERE {key1} = '{value1}' AND {key2} = '{value2}'")
+                return(True)
+            except Exception as e:
+                return(False)
+
 
     # Modifies existing entry in database table
     @staticmethod

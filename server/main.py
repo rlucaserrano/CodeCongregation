@@ -42,6 +42,7 @@ def default():
 
 @app.route('/groupresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessGroupResources():
+
     if request.method == "OPTIONS":
         # Handle the CORS preflight request
         response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
