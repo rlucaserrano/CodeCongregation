@@ -42,10 +42,6 @@ def default():
 
 @app.route('/groupresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessGroupResources():
-<<<<<<< HEAD
-=======
-
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     if request.method == "OPTIONS":
         # Handle the CORS preflight request
         response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
@@ -53,27 +49,12 @@ def AccessGroupResources():
         return response
 
     # Accesses EducationalResources from database
-<<<<<<< HEAD
-     # Check the content type of the request
-    print("Content-Type:", request.headers.get('Content-Type'))
-
-    # Check the raw data before parsing
-    print("Raw Data:", request.data)
-    data = request.get_json()
-    print("here1.5")
-
-    resources = GroupResources(data)
-    print("here2")
-    resources.Process()
-    print("here3")
-=======
 
 
     # Check the raw data before parsing
     data = request.get_json()
     resources = GroupResources(data)
     resources.Process()
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     return (resources.Methods(request.method))
 
 @app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"])
@@ -209,23 +190,15 @@ def findGroup():
     connection = Database.GetConnection()
     user = (request.data).decode("utf-8")
     cursor = connection.cursor()
-<<<<<<< HEAD
-    cursor.execute('SELECT GROUPID FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\' AND ACCEPTED = 1)')
-=======
     cursor.execute('SELECT GROUPID, GROUPMANAGER FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\' AND ACCEPTED = 1)')
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     results = cursor.fetchall()
     groups = []
     for i in results:
         id = str(i[0])
         cursor.execute('SELECT GROUPNAME, GROUPBIO, GROUPID FROM MGOLAN.STUDYGROUPS WHERE (GROUPID = \'' + id +'\')')
-<<<<<<< HEAD
-        groups.append(cursor.fetchall())
-=======
         entry = cursor.fetchall()
         entry.append(i[1])
         groups.append(entry)
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     cursor.close()
     connection.close()
     groups.sort()
@@ -270,8 +243,6 @@ def rejectInvite():
     connection.close()
     return ""
 
-<<<<<<< HEAD
-=======
 @app.route('/memberid', methods=["POST"])
 def findIds():
     connection = Database.GetConnection()
@@ -377,7 +348,6 @@ def remove():
     connection.close()
     return ""
 
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 @app.route('/info', methods=["POST"])
 def info():
     # decode the token received as plain text

@@ -82,38 +82,26 @@
     min-width: 35%;
     background-color: #ffffff;
     flex: 3;
-<<<<<<< HEAD
-  }
-
-=======
     display: flex;
     flex-direction: column;
   }
 
 
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
   .right-table .table-body-2 {
     padding: 1rem;
     font-size: .9rem;
     margin-bottom: 1rem;
     margin-right: 1rem;
     display: flex;
-<<<<<<< HEAD
-=======
     overflow-y: auto;
     max-height: 20rem;
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     flex-direction: column;
     justify-content: space-between;
   }
 
   .table-body-2 .button-format {
     padding-right: 2rem;
-<<<<<<< HEAD
-    margin-top: 4rem;
-=======
     margin-top: 2rem;
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     margin-bottom: 1rem;
   }
 
@@ -121,13 +109,9 @@
     margin-bottom: .5rem;
     font-weight: bold;
     text-decoration: underline;
-<<<<<<< HEAD
-  }
-=======
   }
 
   .table-body-2 .tb2-empty {
     margin-bottom: .5rem;
     font-weight: bold;
   }
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9

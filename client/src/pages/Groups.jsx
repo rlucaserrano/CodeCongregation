@@ -5,23 +5,17 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import List from '@mui/material/List';
 import '../components/Groups.css';
-<<<<<<< HEAD
-=======
 import GroupsIcon from '@mui/icons-material/Groups';
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 function Groups() {
     const [safe, setSafe] = useState(false)
 
     const [userID, setUser] = useState()
 
-<<<<<<< HEAD
-=======
     const [groupID, setGroupID] = useState()
 
     const [toRemove, setToRemove] = useState()
 
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     const [groups, setGroups] = useState()
 
     const [invites, setInvites] = useState()
@@ -39,10 +33,7 @@ function Groups() {
         })
         let info = await data.json();
         setUser(info.id)
-<<<<<<< HEAD
-=======
         setGroupID(localStorage.getItem('groupID'))
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
         let tuples = await fetch('http://localhost:8080/groups', {
             headers: {
                 'Accept': 'text/html',
@@ -52,16 +43,7 @@ function Groups() {
             body: info.id
         })
         let list = await tuples.json()
-<<<<<<< HEAD
-        let current = list.filter(omit)
-        function omit(id)
-        {
-            return id[0][2] != localStorage.getItem("groupID")
-        }
-        setGroups(current)
-=======
         setGroups(list)
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
         let pending = await fetch('http://localhost:8080/invite', {
             headers: {
                 'Accept': 'text/html',
@@ -87,11 +69,7 @@ function Groups() {
         const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
         formData.append("0", id)
         formData.append("1", form.Name.value)
-<<<<<<< HEAD
-        formData.append("2", id) //Same as group id for their default calendar?
-=======
         formData.append("2", id)
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
         formData.append("3", 0) //What would be the default? Temporary or permanent?
         formData.append("4", form.Desc.value)
         const formJson = Object.fromEntries(formData);
@@ -136,8 +114,6 @@ function Groups() {
         setOpenC(false);
     };
 
-<<<<<<< HEAD
-=======
     const handleView = (id) => () =>
     {
         view(id)
@@ -168,7 +144,6 @@ function Groups() {
     const [clicked, setClicked] = useState()
     const [members, setMembers] = useState([])
 
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     const handleChoose = (id) => () =>
     {
         localStorage.setItem('groupID', id)
@@ -196,11 +171,7 @@ function Groups() {
                 data: formJson
             })
         })
-<<<<<<< HEAD
-        window.location.reload() //Do we reload the page to select from updated list or select that group on accepting invite (redirect to Home)?
-=======
         window.location.reload()
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     }
 
     const handleReject = (id) => () =>
@@ -227,8 +198,6 @@ function Groups() {
         window.location.reload() //Reload the page
     }
 
-<<<<<<< HEAD
-=======
     const handleClickOpenNew = (id) => 
     {
         setOpenGroup(id);
@@ -347,7 +316,6 @@ function Groups() {
         setClicked()
     }
 
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     if (safe == true) 
     {
         return (
@@ -357,13 +325,6 @@ function Groups() {
                     {groups.length == 0 ? <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}><b style={{color: 'red'}}>You currently have no groups available</b></div> : 
                     <List style = {{overflow: 'scroll', height: 600, maxHeight: 600, display: 'flex', flexDirection: 'column'}}>
                         {groups.map((group, index) =>
-<<<<<<< HEAD
-                            <div className='groups-select' key={index} onClick={handleChoose(group[0][2])}>
-                                <h2 style={{marginLeft: '10px'}}>{group[0][0]}</h2> <p style={{marginLeft: '10px'}}>{group[0][1]}</p>
-                            </div>
-                        )}
-                    </List>}
-=======
                         <div className = {(group[0][2] == localStorage.getItem("groupID") ? 'groups-current' : 'groups-select')}>
                             <div key={index} onClick={handleView(group[0][2])}>
                                 <h2 style={{marginLeft: '10px'}}>{group[0][0]} {group[1] == 1 ? <GroupsIcon/> : <></>}</h2>
@@ -424,7 +385,6 @@ function Groups() {
                             <Button variant='contained' onClick={handleCloseRem} style={{textTransform: 'none', minWidth: 125, maxWidth: 125, backgroundColor: '#ff3b30'}}>Cancel</Button>
                         </div>
                     </Dialog>
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
                     <div className="input-container">
                     <Button variant='outlined' onClick={handleOpenC}>Create New Group</Button>
                         <Dialog open={openC} onClose={handleCloseC}>
@@ -448,13 +408,8 @@ function Groups() {
                             <div className='groups-invite' key={index}>
                                 <h2 style={{marginLeft: '10px'}}>{group[0][0]}</h2> <p style={{marginLeft: '10px'}}>{group[0][1]}</p>
                                 <div className='invite-buttons'>
-<<<<<<< HEAD
-                                    <div className='accept-button' onClick={handleAccept(group[0][2])}>Accept</div>
-                                    <div className='reject-button' onClick={handleReject(group[0][2])}>Reject</div>
-=======
                                     <Button style={{border: '2px solid black', borderRadius: '12px', color: 'black', backgroundColor: 'greenyellow', minWidth: '60px', maxHeight: '40.5px', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}} onClick={handleAccept(group[0][2])}>Accept</Button>
                                     <Button style={{border: '2px solid black', borderRadius: '12px', color: 'black', backgroundColor: 'red', minWidth: '60px', maxHeight: '40.5px', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center'}} onClick={handleReject(group[0][2])}>Reject</Button>
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
                                 </div>
                             </div>
                         )}

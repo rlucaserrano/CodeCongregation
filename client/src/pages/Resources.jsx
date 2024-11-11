@@ -8,8 +8,6 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
-<<<<<<< HEAD
-=======
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
@@ -18,23 +16,16 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 import BuildIcon from '@mui/icons-material/Build'; //Practice Questions
 import SchoolIcon from '@mui/icons-material/School'; //Tutorials
 import VisibilityIcon from '@mui/icons-material/Visibility'; //Visualization Materials
 import BookIcon from '@mui/icons-material/Book'; //Computer Science Theory
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary'; //Misc/Other
-<<<<<<< HEAD
-import { IconButton, TableBody } from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import { CheckBox } from '@mui/icons-material';
-=======
 import { DialogContentText, IconButton, TableBody } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { CheckBox, Terminal } from '@mui/icons-material';
 
 
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 // Sources used to create Resources.jsx
 // 1. https://mui.com/material-ui/
@@ -42,22 +33,13 @@ import { CheckBox, Terminal } from '@mui/icons-material';
 // 3. https://www.robinwieruch.de/react-checkbox/
 // 4. https://www.geeksforgeeks.org/how-to-declare-global-variables-in-javascript/
 // 5. https://www.w3schools.com/js/js_set_methods.asp
-<<<<<<< HEAD
-=======
 // 6. https://mui.com/material-ui/react-dialog/
 // 7. https://mui.com/material-ui/react-radio-button/
 // 8. https://www.geeksforgeeks.org/how-to-disable-a-button-in-reactjs/
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 // Global resources. Will need to be updated for proper guest display and study group navigation.
 let guest = false;
 let user = true;
-<<<<<<< HEAD
-let categories = ["Practice Questions", "Tutorials", "Visualization Tools", "Computer Science Theory", "Collaborative Tools", "Career Development"]
-let groupID = "1";
-let maskedCat = new Set();
-let clickedRow = 0;
-=======
 let groupID = "1";
 let maskedCat = new Set();
 let clickedRow = 0;
@@ -78,7 +60,6 @@ function displayDescription(vis) {
     )
   }
 }
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 function useGroupResources(currGroupID) {
 
@@ -108,8 +89,6 @@ function useGroupResources(currGroupID) {
 
   return [safe, res];
 }
-<<<<<<< HEAD
-=======
 
 // Taken, with slight modification, from Groups. 
 function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, resourceName}) {
@@ -319,7 +298,6 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
     );
 }
 
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 function useGroupResourceCategories(currGroupID) {
 
   const [safe, setSafe] = useState(false)
@@ -354,27 +332,19 @@ function useGroupResourceCategories(currGroupID) {
 function GenerateRows(data, updateRowClick){
 
   // Iterates through array to generate and return rows of the table.
-<<<<<<< HEAD
-=======
   if (resetClick === true)
   {
     clickedRow = 0;
     resetClick = false;
   }
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
   let returnedLine = [];
   for (let i = 0; i < data.length; i++) {
     if (!maskedCat.has(data[i][4])) {
       if (i == clickedRow) {
         returnedLine.push(
           <TableRow style={{backgroundColor: '#f7f7f8'}}>
-<<<<<<< HEAD
-            <TableCell style={{fontWeight: 'bold'}}>{data[i][2]}</TableCell>
-            <TableCell ><a href={data[i][3]} target='_blank' style={{fontWeight: 'bold'}}>{data[i][3]}</a></TableCell>
-=======
             <TableCell style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][2]}</TableCell>
             <TableCell ><a href={data[i][3]} target='_blank' style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][3]}</a></TableCell>
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
             <TableCell></TableCell>
           </TableRow>
         );
@@ -382,26 +352,17 @@ function GenerateRows(data, updateRowClick){
       else {
         returnedLine.push(
           <TableRow>
-<<<<<<< HEAD
-            <TableCell>{data[i][2]}</TableCell>
-            <TableCell><a href={data[i][3]} target='_blank'>{data[i][3]}</a></TableCell>
-            <TableCell><IconButton onClick={() => updateRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
-=======
             <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[i][2]}</TableCell>
             <TableCell style={{textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis'}}><a href={data[i][3]} target='_blank'>{data[i][3]}</a></TableCell>
             <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => updateRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
           </TableRow>
         );
       }
 
     }
-<<<<<<< HEAD
-=======
     else if (i == clickedRow) {
       clickedRow = clickedRow + 1;
     }
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
   }
   return returnedLine;
@@ -411,17 +372,10 @@ function PrivateStatus(pub)
 {
   if (pub === 0)
   {
-<<<<<<< HEAD
-    return <>Private Resource</>
-  }
-  else{
-    return <>Public Resource</>
-=======
     return <>Group Resource</>
   }
   else{
     return <>Community Resource</>
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
   }
 }
 
@@ -440,8 +394,6 @@ function GenerateCheckboxs(data, updateRowMask){
   return returnedLine;
 }
 
-<<<<<<< HEAD
-=======
 function validClick(resources, setOpenD, setOpenM){
 
   if (resources[1] && resources[1].length > clickedRow)
@@ -472,18 +424,12 @@ function validClick(resources, setOpenD, setOpenM){
     )
   }
 }
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 function GroupResources() {
 
  let resources = useGroupResources(groupID);
  let categories = useGroupResourceCategories(groupID);
  const [updateVersion, setUpdateVersion] = useState(0);
-<<<<<<< HEAD
-
- function updateRowMask(cat)
-{
-=======
  const [openC, setOpenC] = React.useState(false);
  const [openD, setOpenD] = React.useState(false);
  const [openM, setOpenM] = React.useState(false);
@@ -494,7 +440,6 @@ function GroupResources() {
   {
     resetClick = true;
   }
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
   const isPresent = maskedCat.has(cat);
   if (isPresent)
   {
@@ -521,11 +466,7 @@ function updateRowClick(row)
           <div className= "resources-group-header">
             <header className="group-title">Group Resources </header>
             <div className="button-format">
-<<<<<<< HEAD
-              <Button onClick={() => setOpenN(true)} variant="contained" color="secondary">+ Share New Resource</Button>
-=======
               <Button onClick={() => setOpenC(true)} variant="contained" color="secondary">+ Share New Resource</Button>
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
             </div>
           </div>
           <div className="group-table">
@@ -537,43 +478,6 @@ function updateRowClick(row)
               </Table>
             </div>
             <div className="middle-table">
-<<<<<<< HEAD
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell style={{fontWeight: 'bold'}}>Name</TableCell>
-                    <TableCell style={{fontWeight: 'bold'}}>Website URL</TableCell>
-                  </TableRow>
-                </TableHead>
-              </Table>
-              <Table>
-                <div className="table-body-1">
-                  <TableBody>
-                    {GenerateRows(resources[1], updateRowClick)}
-                  </TableBody>
-                </div>
-              </Table>
-            </div>
-            <div className="right-table">
-            <Table>
-                <TableHead>
-                  <TableCell style={{fontWeight: 'bold'}}>Details</TableCell>
-                </TableHead>
-            </Table>
-            <div className="table-body-2">
-              <div className="tb2-header">{"Description"}</div>
-              {resources[1][clickedRow][5]}
-              <div style={{marginTop: '3rem', fontWeight: 'bold'}}>{PrivateStatus(resources[1][clickedRow][6])}</div>
-              <div>Date Added: {resources[1][clickedRow][7]}</div>
-              <div className="button-format">
-                <Button onClick={() => setOpenN(true)} variant="contained" color="secondary">Modify</Button>
-                <Button onClick={() => setOpenN(true)} variant="contained" style={{backgroundColor: '#e8e8e8', color: '#FF0000', marginLeft: '1rem'}}>Delete</Button>
-              </div>
-            </div>
-            </div>
-          </div>
-          {<CommunityResources/>}
-=======
               <Table style={{ tableLayout: 'fixed', width: '100%'}}>
                 <TableHead>
                   <TableRow>
@@ -611,7 +515,6 @@ function updateRowClick(row)
           {openC && <AddResourcePopUp openC={openC} handleCloseC={() => setOpenC(false)} groupID={groupID}/>}
           {openD && <DeleteResourcePopUp openD={openD} handleCloseD={() => setOpenD(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} resourceName={resources[1][clickedRow][2]}/>}
           {openM && <ModifyResourcePopUp openM={openM} handleCloseM={() => setOpenM(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} prevResourceName={resources[1][clickedRow][2]} prevWebsiteURL={resources[1][clickedRow][3]} prevResourceCategory={resources[1][clickedRow][4]} prevResourceDescription={resources[1][clickedRow][5]} prevPublicShare={resources[1][clickedRow][6]}/>}
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
         </>
       )
     }
@@ -644,11 +547,6 @@ function CommunityResources() {
   )
 }
 
-<<<<<<< HEAD
-
-
-=======
->>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 function Resources() {
 
   return (
