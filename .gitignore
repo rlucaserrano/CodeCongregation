@@ -7,11 +7,57 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Python compiled files and cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual Environments
+.venv/
+venv/
+functions/venv/
+
+# Environment variables
+.env
+*.env
+server/.env
+client/.env
+
+# Private keys and sensitive files
+*.pem
+*.key
+server/serviceAccountKey.json
+config.py
+secret_config.py
+
+# Temporary and backup files
+*.tmp
+*.sw?
+*.bak
+
+# Python dependency management files
+*.egg-info/
+pip-log.txt
+htmlcov/
+.tox/
+.coverage
+
+# Configuration and other generated files
+*.cfg
+*.conf
+*.ini
+
+# Node.js dependencies
+node_modules/
+dist/
+dist-ssr/
 # Node.js dependencies
 node_modules
 dist
 dist-ssr
 *.local
+client/node_modules/
+client/dist/
 
 # Python compiled files and cache
 __pycache__/
@@ -22,50 +68,22 @@ __pycache__/
 venv/
 functions/venv/
 
-# Editor directories and files
-.vscode/*
+# IDE and editor-specific files
+.vscode/
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
-
-# Environment variables and sensitive configuration
-.env
-*.env
-server/.env
-client/.env
-server/serviceAccountKey.json
-
-# Ignore private keys or sensitive files
-*.pem
-*.key
-
-# Python package folders for dependency management
-*.egg-info/
-*.dist-info/
-pip-log.txt
-htmlcov/
-.tox/
-.coverage
-
-# Generated config and secrets
-secret_config.py
-*.cfg
-*.conf
-*.ini
-
-# macOS specific files
 .DS_Store
 
-# CRLF warning fix for certain files
+# OS-specific files
+.DS_Store
+
+# CRLF warning files
 *RECORD
 *py.typed
 
-# Temporary files
-*.tmp
-
-functions/.venv/
+# Ignore all *.dist-info directories within functions
+functions/*.dist-info/

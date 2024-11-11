@@ -1,13 +1,116 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React</title>
+
+  <!-- Load Google API client library -->
+  <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+
+  <script type="text/javascript">
+    const CLIENT_ID = '13471835315-0f2828mq9oek94svibara2cp10ugs8h8.apps.googleusercontent.com';
+    const API_KEY = 'AIzaSyAds-cZ_SvB0VM8HnWWfimeHYFvoSkIxhE';
+    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+    const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+
+    let tokenClient;
+    let gapiInited = false;
+    let gisInited = false;
+
+    function gapiLoaded() {
+      gapi.load('client', initializeGapiClient);
+    }
+
+    async function initializeGapiClient() {
+      await gapi.client.init({
+        apiKey: API_KEY,
+        discoveryDocs: [DISCOVERY_DOC],
+      });
+      gapiInited = true;
+
+      const savedToken = localStorage.getItem("google_access_token");
+      const tokenExpiry = localStorage.getItem("google_token_expiry");
+
+      if (savedToken && tokenExpiry && new Date().getTime() < Number(tokenExpiry)) {
+        gapi.client.setToken({ access_token: savedToken });
+        listUpcomingEvents();
+      }
+    }
+
+    function gisLoaded() {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: SCOPES,
+        callback: (response) => {
+          if (response.error !== undefined) {
+            throw response;
+          }
+          const expiresIn = response.expires_in * 1000; 
+          const expiryTime = new Date().getTime() + expiresIn;
+
+          localStorage.setItem("google_access_token", response.access_token);
+          localStorage.setItem("google_token_expiry", expiryTime.toString());
+
+          listUpcomingEvents();
+        },
+      });
+      gisInited = true;
+    }
+
+    function handleAuthClick() {
+      const currentToken = gapi.client.getToken();
+      if (currentToken === null) {
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      } else {
+        listUpcomingEvents();
+      }
+    }
+
+    function handleSignoutClick() {
+      const token = gapi.client.getToken();
+      if (token !== null) {
+        google.accounts.oauth2.revoke(token.access_token);
+        gapi.client.setToken('');
+        localStorage.removeItem("google_access_token");
+        localStorage.removeItem("google_token_expiry");
+      }
+    }
+
+    async function listUpcomingEvents() {
+      let response;
+      try {
+        const request = {
+          'calendarId': 'primary',
+          'timeMin': (new Date()).toISOString(),
+          'showDeleted': false,
+          'singleEvents': true,
+          'maxResults': 10,
+          'orderBy': 'startTime',
+        };
+        response = await gapi.client.calendar.events.list(request);
+      } catch (err) {
+        console.error("Error fetching events:", err.message);
+        return;
+      }
+
+      const events = response.result.items;
+      if (!events || events.length === 0) {
+        console.log('No events found.');
+        return;
+      }
+      const output = events.map(
+          (event) => `${event.summary} (${event.start.dateTime || event.start.date})`
+      );
+      console.log("Upcoming Events:", output);
+    }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <!-- Main React application script -->
+  <script type="module" src="/src/main.jsx"></script>
+</body>
 </html>

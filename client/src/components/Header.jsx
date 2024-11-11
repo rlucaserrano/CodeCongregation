@@ -31,7 +31,8 @@ function Header() {
           <ul>
             <li><Link to="/resources">Resources</Link></li>
             <li><Link to="/messages">Messages</Link></li>
-            <li><Link to="/calendar">Calendar</Link></li>
+            {/* <li><Link to="/calendar">Calendar</Link></li> */}
+            <li><Link to="/GoogleCalendar">GoogleCalendar</Link></li>
           </ul>
         </div>
         <div className="nav-right">
