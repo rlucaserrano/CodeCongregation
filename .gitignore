@@ -7,127 +7,70 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-
-To exclude files that contain secrets or sensitive information from version control in Git, such as .env files or private keys, add the paths of those files to your .gitignore file. Based on your project structure, you can ignore specific files and directories like the virtual environment and cache files, which often contain no secrets but can clutter your repository.
-
-Here’s a typical .gitignore setup for Python projects that includes common patterns to exclude secrets and unnecessary files:
-
-gitignore
-Copy code
-# Ignore Python compiled files and cache
+# Python compiled files and cache
 __pycache__/
 *.py[cod]
 *.so
 
-# Ignore Virtual Environment
+# Virtual Environments
+.venv/
 venv/
-.env
+functions/venv/
 
-# Ignore any private keys or sensitive files
-*.pem
-*.key
-
-# Ignore log files and temporary files
-*.log
-*.tmp
-
-# Ignore Python package folders for dependency management
-*.egg-info/
-pip-log.txt
-htmlcov/
-.tox/
-.coverage
-
-# Ignore generated config and secrets
-config.py
-secret_config.py
-*.cfg
-*.conf
-*.ini
-
-# Node.js dependencies (if using a Node client)
-client/node_modules/
-client/dist/
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
+# Environment variables
 .env
 *.env
 server/.env
 client/.env
 
-# Python virtual environment
-.venv/
-venv/
-functions/venv/
-
-# Distribution/package files
-*.egg-info/
-*.dist-info/
-
-# Byte-compiled and cache files
-__pycache__/
-*.py[cod]
-*.so
-
-# macOS specific files
-.DS_Store
-
-# CRLF warning fix
-*RECORD
-*py.typed
-
-# Ignore any private keys or sensitive files
+# Private keys and sensitive files
 *.pem
 *.key
+server/serviceAccountKey.json
+config.py
+secret_config.py
 
+# Temporary and backup files
 *.tmp
+*.sw?
+*.bak
 
-
-To exclude files that contain secrets or sensitive information from version control in Git, such as .env files or private keys, add the paths of those files to your .gitignore file. Based on your project structure, you can ignore specific files and directories like the virtual environment and cache files, which often contain no secrets but can clutter your repository.
-
-Here’s a typical .gitignore setup for Python projects that includes common patterns to exclude secrets and unnecessary files:
-
-gitignore
-Copy code
-# Ignore Python compiled files and cache
-__pycache__/
-*.py[cod]
-*.so
-
-# Ignore Virtual Environment
-venv/
-.env
-
-# Ignore any private keys or sensitive files
-*.pem
-*.key
-
-# Ignore log files and temporary files
-*.log
-*.tmp
-
-# Ignore Python package folders for dependency management
+# Python dependency management files
 *.egg-info/
 pip-log.txt
 htmlcov/
 .tox/
 .coverage
 
-secret_config.py
+# Configuration and other generated files
 *.cfg
 *.conf
 *.ini
+
+# Node.js dependencies
+node_modules/
+dist/
+dist-ssr/
+*.local
+client/node_modules/
+client/dist/
+
+# IDE and editor-specific files
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+
+# OS-specific files
+.DS_Store
+
+# CRLF warning files
+*RECORD
+*py.typed
+
+# Ignore all *.dist-info directories within functions
+functions/*.dist-info/
