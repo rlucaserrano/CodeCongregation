@@ -237,52 +237,23 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
   const handleCreate = async (e) =>
     {
         e.preventDefault()
-        const form = e.target;
-        const formData = new FormData();
-        formData.append('valGroupID', groupID);
-        formData.append('valGroupResourceID', groupResourceID);
-        let modify = false;
-        if (prevResourceName !== form.ResourceName.value)
-          {
-            formData.append('valResourceName', form.ResourceName.value);
-            modify = true;
-          }
-        if (prevWebsiteURL !== form.WebsiteURL.value)
-          {
-            formData.append('valWebsiteURL', form.WebsiteURL.value);
-            modify = true;
-          }
-        if (prevResourceDescription !== form.Description.value)
-          {
-            formData.append('valDescription', form.Description.value);
-            modify = true;
-          }
-        if (prevResourceCategory !== form.ResourceCategory.value)
-          {
-            formData.append('valResourceCategory', form.ResourceCategory.value);
-            modify = true;
-          }
-        if (prevPublicShare.toString() !== publicShare.toString())
-          {
-            formData.append('valPublicShare', publicShare.toString());
-            modify = true;
-          }
-        if (modify)
-        {
-          const formJson = Object.fromEntries(formData);
-
-          await fetch('http://localhost:8080/groupresources', {
-              headers: {
-                  'Accept': 'application/json',
-                  'Content-Type': 'application/json'
-                },
-              method: 'PATCH',
-              body: JSON.stringify({
-                  data: formJson,
-              })
-          });
-        }
-
+      const form = e.target;
+        await fetch('http://localhost:8080/groupresources', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'PATCH',
+            body: JSON.stringify({
+              'valGroupID': groupID.toString(),
+              'valGroupResourceID': groupResourceID.toString(),
+              'valResourceName': form.ResourceName.value,
+              'valWebsiteURL': form.WebsiteURL.value,
+              'valDescription': form.Description.value,
+              'valResourceCatehory': form.ResourceCategory.value,
+              'valPublicShare': publicShare.toString()
+            })
+        });
         handleCloseM();
         window.location.reload();
 

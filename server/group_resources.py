@@ -175,6 +175,7 @@ class GroupResources:
             return jsonify({"SUCCESS": "Resource deleted"}), 200
     
     def UpdateResource(self):
+        print("Here")
         if (self.colGroupID is not None or self.colGroupResourceID is not None or self.colResourceName is not None or self.colWebsiteURL is not None or self.colResourceCategory is not None or self.colResourceDescription is not None or self.colPublicShare is not None or self.colDateAdded is not None or self.colDisplayOrder is not None):
             return jsonify({"ERROR": "PATCH method does not take column parameters"}), 400
         if self.valGroupID is None or self.valGroupResourceID is None:
@@ -183,8 +184,6 @@ class GroupResources:
         if self.valResourceName is not None:
             changes.append(("ResourceName", f"'{self.valResourceName}'"))
         if self.valWebsiteURL is not None:
-            if len(Database.SearchDatabase(table="MGOLAN.GroupResources", rows=f"GroupID = '{self.valGroupID}', WebsiteURL = '{self.valWebsiteURL}'")) > 0:
-                return jsonify({"ERROR": "WebsiteURL already in use"}), 409
             changes.append(("WebsiteURL", f"'{self.valWebsiteURL}'"))
         if self.valResourceCategory is not None:
             changes.append(("ResourceCategory", f"'{self.valResourceCategory}'")) 

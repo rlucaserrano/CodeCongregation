@@ -130,7 +130,7 @@ class Database:
 
     # Modifies existing entry in database table
     @staticmethod
-    def ModifyDatabase(table, key, value, changes):
+    def ModifyDatabase(table, key1, value1, changes, key2, value2):
         # Creates a string of attribute changes.
         changesString = ""
         for c in changes:
@@ -138,11 +138,18 @@ class Database:
         changesString = changesString[:-2]
 
         # Attempts to update entry into table. Returns result.
-        try:
-            Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
-            return(True)
-        except Exception as e:
-            return(False)
+        if (key2 is None):
+            try:
+                Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key1} = '{value1}'")
+                return(True)
+            except Exception as e:
+                return(False)
+        else:
+            try:
+                Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key1} = '{value1}' AND {key2} = '{value2}'")
+                return(True)
+            except Exception as e:
+                return(False)
     @staticmethod
     def TestConnection():
         try:
