@@ -339,15 +339,8 @@ def remove():
     if (manager == []):
         print("Not a manager")
     else:
-        #If we allow deletion by typing (instead of selecting)
-        cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE (USERNAME = \'' + data["2"] + '\')')
-        userID = cursor.fetchall()
-        if(userID == []):
-            print("No such user exists")
-        else:
-            #Else skip to this (replacing userID with the JSON entry)
-            cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + str(userID[0][0]) + '\')')
-            connection.commit()
+        cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + data["2"] + '\')')
+        connection.commit()
     cursor.close()
     connection.close()
     return ""
