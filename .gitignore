@@ -68,4 +68,4 @@ secret_config.py
 # Temporary files
 *.tmp
 
-functions/
+functions/.venv/
