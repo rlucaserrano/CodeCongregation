@@ -7,10 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node.js dependencies
 node_modules
 dist
 dist-ssr
 *.local
+
+# Python compiled files and cache
+__pycache__/
+*.py[cod]
+*.so
+# Virtual Environment
+.venv/
+venv/
+functions/venv/
 
 # Editor directories and files
 .vscode/*
@@ -23,7 +33,39 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment variables and sensitive configuration
 .env
 *.env
 server/.env
 client/.env
+server/serviceAccountKey.json
+
+# Ignore private keys or sensitive files
+*.pem
+*.key
+
+# Python package folders for dependency management
+*.egg-info/
+*.dist-info/
+pip-log.txt
+htmlcov/
+.tox/
+.coverage
+
+# Generated config and secrets
+secret_config.py
+*.cfg
+*.conf
+*.ini
+
+# macOS specific files
+.DS_Store
+
+# CRLF warning fix for certain files
+*RECORD
+*py.typed
+
+# Temporary files
+*.tmp
+
+functions/

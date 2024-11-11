@@ -38,18 +38,41 @@ class Database:
     # Alters the database (insert, delete, or modify)
     @staticmethod 
     def AlterQuery(userQuery):
+<<<<<<< HEAD
         # Open connection and establish cursor
         connection = Database.GetConnection()
         cursor = connection.cursor()
 
         # Makes changes to database and commits changes
+=======
+        
+        # Open connection and establish cursor
+        print("1")
+        connection = Database.GetConnection()
+        cursor = connection.cursor()
+
+        cursor.execute("ALTER SESSION SET DDL_LOCK_TIMEOUT = 5")
+        print("DDL lock timeout set to 5 seconds")
+        
+
+        # Makes changes to database and commits changes
+        print(userQuery)
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
         cursor.execute(userQuery)
         connection.commit()
 
 
+<<<<<<< HEAD
         # Close cursor and connection
         cursor.close()
         connection.close()
+=======
+
+        # Close cursor and connection
+        cursor.close()
+        connection.close()
+        print("4")
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
     #========== Called by main.py ==========#
 
@@ -93,6 +116,10 @@ class Database:
 
         # Attempts to insert entry into table. Returns result.
         try:
+<<<<<<< HEAD
+=======
+            print(f"INSERT INTO {table} VALUES ({attributeString})")
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
             Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
             return(True)
         except Exception as e:
@@ -101,6 +128,7 @@ class Database:
     
     # Removes entry from database table.
     @staticmethod
+<<<<<<< HEAD
     def RemoveFromDatabase(table, key, value):
         # Attempts to remove entry from table. Returns result.
         try:
@@ -112,6 +140,28 @@ class Database:
     # Modifies existing entry in database table
     @staticmethod
     def ModifyDatabase(table, key, value, changes):
+=======
+    def RemoveFromDatabase(table, key1, value1, key2=None, value2=None):
+       
+        if (key2 is None):
+        # Attempts to remove entry from table. Returns result.
+            try:
+                Database.AlterQuery(F"DELETE FROM {table} WHERE {key1} = '{value1}'")
+                return(True)
+            except Exception as e:
+                return(False)
+        else:
+            try:
+                Database.AlterQuery(F"DELETE FROM {table} WHERE {key1} = '{value1}' AND {key2} = '{value2}'")
+                return(True)
+            except Exception as e:
+                return(False)
+
+
+    # Modifies existing entry in database table
+    @staticmethod
+    def ModifyDatabase(table, key1, value1, changes, key2, value2):
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
         # Creates a string of attribute changes.
         changesString = ""
         for c in changes:
@@ -119,11 +169,26 @@ class Database:
         changesString = changesString[:-2]
 
         # Attempts to update entry into table. Returns result.
+<<<<<<< HEAD
         try:
             Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key} = {value}")
             return(True)
         except Exception as e:
             return(False)
+=======
+        if (key2 is None):
+            try:
+                Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key1} = '{value1}'")
+                return(True)
+            except Exception as e:
+                return(False)
+        else:
+            try:
+                Database.AlterQuery(f"UPDATE {table} SET {changesString} WHERE {key1} = '{value1}' AND {key2} = '{value2}'")
+                return(True)
+            except Exception as e:
+                return(False)
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     @staticmethod
     def TestConnection():
         try:

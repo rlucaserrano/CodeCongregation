@@ -8,14 +8,33 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
+<<<<<<< HEAD
+=======
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import FormControl from '@mui/material/FormControl';
+import FormLabel from '@mui/material/FormLabel';
+import FormControlLabel from '@mui/material/FormControlLabel';
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 import BuildIcon from '@mui/icons-material/Build'; //Practice Questions
 import SchoolIcon from '@mui/icons-material/School'; //Tutorials
 import VisibilityIcon from '@mui/icons-material/Visibility'; //Visualization Materials
 import BookIcon from '@mui/icons-material/Book'; //Computer Science Theory
 import LocalLibraryIcon from '@mui/icons-material/LocalLibrary'; //Misc/Other
+<<<<<<< HEAD
 import { IconButton, TableBody } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import { CheckBox } from '@mui/icons-material';
+=======
+import { DialogContentText, IconButton, TableBody } from '@mui/material';
+import InfoIcon from '@mui/icons-material/Info';
+import { CheckBox, Terminal } from '@mui/icons-material';
+
+
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 // Sources used to create Resources.jsx
 // 1. https://mui.com/material-ui/
@@ -23,14 +42,43 @@ import { CheckBox } from '@mui/icons-material';
 // 3. https://www.robinwieruch.de/react-checkbox/
 // 4. https://www.geeksforgeeks.org/how-to-declare-global-variables-in-javascript/
 // 5. https://www.w3schools.com/js/js_set_methods.asp
+<<<<<<< HEAD
+=======
+// 6. https://mui.com/material-ui/react-dialog/
+// 7. https://mui.com/material-ui/react-radio-button/
+// 8. https://www.geeksforgeeks.org/how-to-disable-a-button-in-reactjs/
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 // Global resources. Will need to be updated for proper guest display and study group navigation.
 let guest = false;
 let user = true;
+<<<<<<< HEAD
 let categories = ["Practice Questions", "Tutorials", "Visualization Tools", "Computer Science Theory", "Collaborative Tools", "Career Development"]
 let groupID = "1";
 let maskedCat = new Set();
 let clickedRow = 0;
+=======
+let groupID = "1";
+let maskedCat = new Set();
+let clickedRow = 0;
+let resetClick = false;
+
+function displayDescription(vis) {
+  
+  if (vis === '0')
+  {
+    return (
+      <>Share resources privately with your group members.</>
+    )
+  }
+  else
+  {
+    return (
+      <>Contribute your sharing activity to help community members discover valuable resources.</>
+    )
+  }
+}
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 function useGroupResources(currGroupID) {
 
@@ -60,6 +108,218 @@ function useGroupResources(currGroupID) {
 
   return [safe, res];
 }
+<<<<<<< HEAD
+=======
+
+// Taken, with slight modification, from Groups. 
+function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, resourceName}) {
+
+  const handleCreate = async (e) =>
+    {
+        e.preventDefault()  
+        await fetch('http://localhost:8080/groupresources', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'DELETE',
+            body: JSON.stringify({
+                'valGroupID': groupID,
+                'valGroupResourceID': groupResourceID.toString()
+            })
+        });
+        handleCloseD();
+        window.location.reload();
+    }
+
+    return (
+      <Dialog open={openD} onClose={handleCloseD}>
+        <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
+          <DialogTitle style={{color: '#FF0000', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Delete Resource: {resourceName}</DialogTitle>
+          <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
+          <DialogContentText style={{justifyContent: 'center', margin: '1rem'}}>Please note that deleted resources cannot be recovered. Are you sure you want to permanently delete {resourceName} from this group’s shared resources?</DialogContentText>
+          <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
+            <Button variant='contained' type='submit' style={{backgroundColor: '#FF0000'}}> Confirm Delete</Button>
+            <Button variant='contained' onClick={handleCloseD} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
+          </div>
+        </form>
+      </Dialog>
+    );
+}
+
+
+// Taken, with slight modification, from Groups. 
+function AddResourcePopUp({openC, handleCloseC, groupID}) {
+
+  const [publicShare, setPublicShare] = useState("0");
+  const [resourceName, setResourceName] = useState("");
+  const [websiteURL, setWebsiteURL] = useState("");
+  const [resourceCategory, setResourceCategory] = useState("");
+
+  function displayCreateButton() {
+  
+    if (resourceName != "" && websiteURL != "" && resourceCategory != "")
+    {
+      return (<Button variant='contained' type='submit'>Share</Button>);
+    }
+    else {
+      
+      return (<Button variant='contained' style={{color: '#556cd6', background: '#ffffff', border: 'solid 1px #556cd6'}} disabled={true}>Share</Button>);
+    }
+  }
+
+  const handleCreate = async (e) =>
+    {
+        e.preventDefault()
+        const form = e.target;
+        const formData = new FormData();
+        const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+
+        await fetch('http://localhost:8080/groupresources', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'POST',
+            body: JSON.stringify({
+                'valGroupID': groupID,
+                'valResourceName': form.ResourceName.value,
+                'valWebsiteURL': form.WebsiteURL.value,
+                'valDescription':form.Description.value,
+                'valResourceCategory': form.ResourceCategory.value,
+                'valPublicShare': publicShare.toString(),
+            })
+        });
+        handleCloseC();
+        window.location.reload();
+
+    }
+
+    return (
+      <Dialog open={openC} onClose={handleCloseC}>
+        <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
+          <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Share New Resource</DialogTitle>
+          <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
+          <div style={{display: 'flex', margin: '1rem', width: '90%', gap: '1rem'}}>
+            <FormControl style={{flex: '25%'}}>
+              <FormLabel id="demo-controlled-radio-buttons-group" style={{fontWeight: 'bold'}}>Visibility</FormLabel>
+              <RadioGroup
+                aria-labelledby="demo-controlled-radio-buttons-group"
+                name="controlled-radio-buttons-group"
+                defaultValue={"0"}
+              >
+                <FormControlLabel value="0" control={<Radio />} label="Group" onClick={() => setPublicShare("0")}/>
+                <FormControlLabel value="1" control={<Radio />} label="Community" onClick={() => setPublicShare("1")} />
+              </RadioGroup>
+            </FormControl>
+            <div style={{flex: '60%', marginLeft: '1rem', alignContent: 'center', color: '#2e3945'}}>
+              {displayDescription(publicShare)}
+            </div>
+          </div>
+          <div style={{margin: '1rem', display: 'flex', flexDirection: 'column'}}>
+            <TextField required id="ResourceName" label="Resource Name" onChange={(input) => setResourceName(input.target.value)}/>
+            <br/>
+            <TextField required id="WebsiteURL" label="Website URL" onChange={(input) => setWebsiteURL(input.target.value)}/>
+            <br/>
+            <TextField required id="ResourceCategory" label="Resource Category" onChange={(input) => setResourceCategory(input.target.value)}/>
+            <br/>
+            <TextField id="Description" label="Description" multiline minRows={4}/>
+          </div>
+          <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
+            {displayCreateButton()}
+            <Button variant='contained' onClick={handleCloseC} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
+          </div>
+        </form>
+      </Dialog>
+    );
+}
+
+
+function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, prevResourceName, prevWebsiteURL, prevResourceCategory, prevResourceDescription, prevPublicShare}) {
+
+  const [publicShare, setPublicShare] = useState(prevPublicShare);
+  const [resourceName, setResourceName] = useState(prevResourceName);
+  const [websiteURL, setWebsiteURL] = useState(prevWebsiteURL);
+  const [resourceCategory, setResourceCategory] = useState(prevResourceCategory);
+  const [resourceDescription, setResourceDescription] = useState(prevResourceDescription);
+
+  function displayModifyButton() {
+  
+    if (resourceName != "" && websiteURL != "" && resourceCategory != "")
+    {
+      return (<Button variant='contained' type='submit'>Modify</Button>);
+    }
+    else {
+      
+      return (<Button variant='contained' style={{color: '#556cd6', background: '#ffffff', border: 'solid 1px #556cd6'}} disabled={true}>Modify</Button>);
+    }
+  }
+
+  const handleCreate = async (e) =>
+    {
+        e.preventDefault()
+      const form = e.target;
+        await fetch('http://localhost:8080/groupresources', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'PATCH',
+            body: JSON.stringify({
+              'valGroupID': groupID.toString(),
+              'valGroupResourceID': groupResourceID.toString(),
+              'valResourceName': form.ResourceName.value,
+              'valWebsiteURL': form.WebsiteURL.value,
+              'valDescription': form.Description.value,
+              'valResourceCatehory': form.ResourceCategory.value,
+              'valPublicShare': publicShare.toString()
+            })
+        });
+        handleCloseM();
+        window.location.reload();
+
+    }
+
+    return (
+      <Dialog open={openM} onClose={handleCloseM}>
+        <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
+          <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Modify Resource: {prevResourceName}</DialogTitle>
+          <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
+          <div style={{display: 'flex', margin: '1rem', width: '90%', gap: '1rem'}}>
+            <FormControl style={{flex: '25%'}}>
+              <FormLabel id="demo-controlled-radio-buttons-group" style={{fontWeight: 'bold'}}>Visibility</FormLabel>
+              <RadioGroup
+                aria-labelledby="demo-controlled-radio-buttons-group"
+                name="controlled-radio-buttons-group"
+                defaultValue={prevPublicShare}
+              >
+                <FormControlLabel value="0" control={<Radio />} label="Group" onClick={() => setPublicShare("0")}/>
+                <FormControlLabel value="1" control={<Radio />} label="Community" onClick={() => setPublicShare("1")} />
+              </RadioGroup>
+            </FormControl>
+            <div style={{flex: '60%', marginLeft: '1rem', alignContent: 'center', color: '#2e3945'}}>
+              {displayDescription(publicShare.toString())}
+            </div>
+          </div>
+          <div style={{margin: '1rem', display: 'flex', flexDirection: 'column'}}>
+            <TextField required id="ResourceName" label="Resource Name" value={resourceName} onChange={(input) => setResourceName(input.target.value)}/>
+            <br/>
+            <TextField required id="WebsiteURL" label="Website URL" value={websiteURL} onChange={(input) => setWebsiteURL(input.target.value)}/>
+            <br/>
+            <TextField required id="ResourceCategory" label="Resource Category" value={resourceCategory} onChange={(input) => setResourceCategory(input.target.value)}/>
+            <br/>
+            <TextField id="Description" value ={resourceDescription} label="Description" onChange={(input) => setResourceDescription(input.target.value)} multiline minRows={4}/>
+          </div>
+          <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
+            {displayModifyButton()}
+            <Button variant='contained' onClick={handleCloseM} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
+          </div>
+        </form>
+      </Dialog>
+    );
+}
+
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 function useGroupResourceCategories(currGroupID) {
 
   const [safe, setSafe] = useState(false)
@@ -94,14 +354,27 @@ function useGroupResourceCategories(currGroupID) {
 function GenerateRows(data, updateRowClick){
 
   // Iterates through array to generate and return rows of the table.
+<<<<<<< HEAD
+=======
+  if (resetClick === true)
+  {
+    clickedRow = 0;
+    resetClick = false;
+  }
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
   let returnedLine = [];
   for (let i = 0; i < data.length; i++) {
     if (!maskedCat.has(data[i][4])) {
       if (i == clickedRow) {
         returnedLine.push(
           <TableRow style={{backgroundColor: '#f7f7f8'}}>
+<<<<<<< HEAD
             <TableCell style={{fontWeight: 'bold'}}>{data[i][2]}</TableCell>
             <TableCell ><a href={data[i][3]} target='_blank' style={{fontWeight: 'bold'}}>{data[i][3]}</a></TableCell>
+=======
+            <TableCell style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][2]}</TableCell>
+            <TableCell ><a href={data[i][3]} target='_blank' style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][3]}</a></TableCell>
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
             <TableCell></TableCell>
           </TableRow>
         );
@@ -109,14 +382,26 @@ function GenerateRows(data, updateRowClick){
       else {
         returnedLine.push(
           <TableRow>
+<<<<<<< HEAD
             <TableCell>{data[i][2]}</TableCell>
             <TableCell><a href={data[i][3]} target='_blank'>{data[i][3]}</a></TableCell>
             <TableCell><IconButton onClick={() => updateRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
+=======
+            <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[i][2]}</TableCell>
+            <TableCell style={{textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis'}}><a href={data[i][3]} target='_blank'>{data[i][3]}</a></TableCell>
+            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => updateRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
           </TableRow>
         );
       }
 
     }
+<<<<<<< HEAD
+=======
+    else if (i == clickedRow) {
+      clickedRow = clickedRow + 1;
+    }
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
   }
   return returnedLine;
@@ -126,10 +411,17 @@ function PrivateStatus(pub)
 {
   if (pub === 0)
   {
+<<<<<<< HEAD
     return <>Private Resource</>
   }
   else{
     return <>Public Resource</>
+=======
+    return <>Group Resource</>
+  }
+  else{
+    return <>Community Resource</>
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
   }
 }
 
@@ -148,15 +440,61 @@ function GenerateCheckboxs(data, updateRowMask){
   return returnedLine;
 }
 
+<<<<<<< HEAD
+=======
+function validClick(resources, setOpenD, setOpenM){
+
+  if (resources[1] && resources[1].length > clickedRow)
+  {
+    return(
+      <TableRow>
+        <div className="tb2-header">{"Description"}</div>
+        {resources[1][clickedRow][5]}
+        <br/>
+        <br/>
+        <dev style={{marginTop: '1rem', overflow: 'hidden', textOverflow: 'ellipsis'}}><a href={resources[1][clickedRow][3]} target='_blank'>{resources[1][clickedRow][3]}</a></dev>
+        <div style={{marginTop: '2rem', fontWeight: 'bold'}}>{PrivateStatus(resources[1][clickedRow][6])}</div>
+        <div>Date Added: {resources[1][clickedRow][7]}</div>
+        <div className="button-format">
+          <Button onClick={() => setOpenM(true)} variant="contained" color="secondary">Modify</Button>
+          <Button onClick={() => setOpenD(true)} variant="contained" style={{backgroundColor: '#e8e8e8', color: '#FF0000', marginLeft: '1rem'}}>Delete</Button>
+        </div>
+      </TableRow>
+    )
+  }
+  else 
+  {
+    return(
+      <div className="table-body-2">
+        <div className="tb2-empty">{"No Resource Selected"}</div>
+        Please select at least one resource category to continue exploring shared group resources.
+      </div>
+    )
+  }
+}
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 
 function GroupResources() {
 
  let resources = useGroupResources(groupID);
  let categories = useGroupResourceCategories(groupID);
  const [updateVersion, setUpdateVersion] = useState(0);
+<<<<<<< HEAD
 
  function updateRowMask(cat)
 {
+=======
+ const [openC, setOpenC] = React.useState(false);
+ const [openD, setOpenD] = React.useState(false);
+ const [openM, setOpenM] = React.useState(false);
+
+ function updateRowMask(cat)
+{
+  if (maskedCat.size === categories[1].length)
+  {
+    resetClick = true;
+  }
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
   const isPresent = maskedCat.has(cat);
   if (isPresent)
   {
@@ -183,7 +521,11 @@ function updateRowClick(row)
           <div className= "resources-group-header">
             <header className="group-title">Group Resources </header>
             <div className="button-format">
+<<<<<<< HEAD
               <Button onClick={() => setOpenN(true)} variant="contained" color="secondary">+ Share New Resource</Button>
+=======
+              <Button onClick={() => setOpenC(true)} variant="contained" color="secondary">+ Share New Resource</Button>
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
             </div>
           </div>
           <div className="group-table">
@@ -195,6 +537,7 @@ function updateRowClick(row)
               </Table>
             </div>
             <div className="middle-table">
+<<<<<<< HEAD
               <Table>
                 <TableHead>
                   <TableRow>
@@ -230,6 +573,45 @@ function updateRowClick(row)
             </div>
           </div>
           {<CommunityResources/>}
+=======
+              <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Name</TableCell>
+                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Website URL</TableCell>
+                  </TableRow>
+                </TableHead>
+              </Table>
+              <div className="table-body-1">
+                <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                    <TableBody>
+                      {GenerateRows(resources[1], updateRowClick)}
+                    </TableBody>
+                </Table>
+              </div>
+            </div>
+            <div className="right-table">
+            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                <TableHead>
+                  <tableRow>
+                    <TableCell style={{fontWeight: 'bold'}}>Details</TableCell>
+                  </tableRow>
+                </TableHead>
+            </Table>
+            <div className="table-body-2">
+              <Table style={{tableLayout: 'fixed', width: '100%'}}>
+                <TableBody>
+                  {validClick(resources, setOpenD, setOpenM)}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+          {<CommunityResources/>}
+          {openC && <AddResourcePopUp openC={openC} handleCloseC={() => setOpenC(false)} groupID={groupID}/>}
+          {openD && <DeleteResourcePopUp openD={openD} handleCloseD={() => setOpenD(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} resourceName={resources[1][clickedRow][2]}/>}
+          {openM && <ModifyResourcePopUp openM={openM} handleCloseM={() => setOpenM(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} prevResourceName={resources[1][clickedRow][2]} prevWebsiteURL={resources[1][clickedRow][3]} prevResourceCategory={resources[1][clickedRow][4]} prevResourceDescription={resources[1][clickedRow][5]} prevPublicShare={resources[1][clickedRow][6]}/>}
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
         </>
       )
     }
@@ -262,8 +644,11 @@ function CommunityResources() {
   )
 }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 function Resources() {
 
   return (

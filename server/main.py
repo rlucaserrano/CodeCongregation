@@ -42,6 +42,10 @@ def default():
 
 @app.route('/groupresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessGroupResources():
+<<<<<<< HEAD
+=======
+
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     if request.method == "OPTIONS":
         # Handle the CORS preflight request
         response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
@@ -49,6 +53,7 @@ def AccessGroupResources():
         return response
 
     # Accesses EducationalResources from database
+<<<<<<< HEAD
      # Check the content type of the request
     print("Content-Type:", request.headers.get('Content-Type'))
 
@@ -61,6 +66,14 @@ def AccessGroupResources():
     print("here2")
     resources.Process()
     print("here3")
+=======
+
+
+    # Check the raw data before parsing
+    data = request.get_json()
+    resources = GroupResources(data)
+    resources.Process()
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     return (resources.Methods(request.method))
 
 @app.route('/users', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"])
@@ -196,13 +209,23 @@ def findGroup():
     connection = Database.GetConnection()
     user = (request.data).decode("utf-8")
     cursor = connection.cursor()
+<<<<<<< HEAD
     cursor.execute('SELECT GROUPID FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\' AND ACCEPTED = 1)')
+=======
+    cursor.execute('SELECT GROUPID, GROUPMANAGER FROM MGOLAN.GROUPMEMBERS WHERE (USERID = \'' + user + '\' AND ACCEPTED = 1)')
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     results = cursor.fetchall()
     groups = []
     for i in results:
         id = str(i[0])
         cursor.execute('SELECT GROUPNAME, GROUPBIO, GROUPID FROM MGOLAN.STUDYGROUPS WHERE (GROUPID = \'' + id +'\')')
+<<<<<<< HEAD
         groups.append(cursor.fetchall())
+=======
+        entry = cursor.fetchall()
+        entry.append(i[1])
+        groups.append(entry)
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
     cursor.close()
     connection.close()
     groups.sort()
@@ -247,6 +270,114 @@ def rejectInvite():
     connection.close()
     return ""
 
+<<<<<<< HEAD
+=======
+@app.route('/memberid', methods=["POST"])
+def findIds():
+    connection = Database.GetConnection()
+    data = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('SELECT USERID, ACCEPTED FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = :0 AND USERID != :1)', data)
+    results = cursor.fetchall()
+    members = []
+    friends = []
+    for i in results:
+        ind = []
+        id = str(i[0])
+        cursor.execute('SELECT USERNAME, USERID FROM MGOLAN.USERTABLE WHERE (USERID = \'' + id +'\')')
+        result = cursor.fetchall()
+        members.append(result[0][0])
+        ind.append(result[0][1])
+        cursor.execute('SELECT FRIENDSTATUS, NUMBEROFCOLLABORATIONS FROM MGOLAN.COLLABORATIONHISTORY WHERE ((FIRSTUSERID = \'' + id +'\' AND SECONDUSERID = \'' + data["1"] +'\') OR (FIRSTUSERID = \'' + data["1"] +'\' AND SECONDUSERID = \'' + id +'\')) FETCH FIRST 1 ROWS ONLY')
+        res = (cursor.fetchall())
+        if (res == []):
+            ind.append(-1) #Friend Status
+            ind.append(0) #Collaboration Count
+            ind.append(i[1]) #Accepted Invite to Group
+        else:
+            ind.append(res[0][0])
+            ind.append(res[0][1])
+            ind.append(i[1])
+        friends.append(ind)
+    cursor.close()
+    connection.close()
+    toReturn = dict(zip(members, friends))
+    return toReturn
+
+@app.route('/friendreq', methods=["POST"])
+def friendReq():
+    connection = Database.GetConnection()
+    data = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('''INSERT INTO MGOLAN.COLLABORATIONHISTORY VALUES(:0,:1,0,:2)''', data)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/sendinvite', methods=["POST"])
+def sendInvite():
+    connection = Database.GetConnection()
+    data = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('SELECT USERID FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + data["1"] + '\' AND GROUPMANAGER = 1)')
+    manager = cursor.fetchall()
+    if (manager == []):
+        print("Not a manager")
+    else:
+        cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE (USERNAME = \'' + data["2"] + '\')')
+        userID = cursor.fetchall()
+        if(userID == []):
+            print("No such user exists")
+        else:
+            cursor.execute('SELECT USERID FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + str(userID[0][0]) + '\')')
+            sent = cursor.fetchall()
+            if(sent != []):
+                print("Invite already sent/accepted")
+            else:
+                cursor.execute('INSERT INTO MGOLAN.GROUPMEMBERS VALUES(\'' + data["0"] + '\',\'' + str(userID[0][0]) + '\',0,0)')
+                connection.commit()
+                print("Invited")
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/leave', methods=["POST"])
+def leave():
+    connection = Database.GetConnection()
+    data = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = :0 AND USERID = :1)', data)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+
+@app.route('/remuser', methods=["POST"])
+def remove():
+    connection = Database.GetConnection()
+    data = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('SELECT USERID FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + data["1"] + '\' AND GROUPMANAGER = 1)')
+    manager = cursor.fetchall()
+    if (manager == []):
+        print("Not a manager")
+    else:
+        #If we allow deletion by typing (instead of selecting)
+        cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE (USERNAME = \'' + data["2"] + '\')')
+        userID = cursor.fetchall()
+        if(userID == []):
+            print("No such user exists")
+        else:
+            #Else skip to this (replacing userID with the JSON entry)
+            cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + str(userID[0][0]) + '\')')
+            connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 @app.route('/info', methods=["POST"])
 def info():
     # decode the token received as plain text

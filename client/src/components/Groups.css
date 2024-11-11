@@ -36,6 +36,18 @@
     color: black
 }
 
+<<<<<<< HEAD
+=======
+.groups-current {
+    border: 2px solid goldenrod;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    background-color: lightskyblue;
+    color: black
+}
+
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 .groups-invite {
     border: 2px solid black;
     border-radius: 12px;
@@ -67,6 +79,7 @@
     justify-content: center;
     gap: 15px;
     min-height: 40px;
+<<<<<<< HEAD
 }
 
 .accept-button {
@@ -91,4 +104,6 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
+=======
+>>>>>>> 43cf935a6e697def62271eb07b341be74e4b9fb9
 }
