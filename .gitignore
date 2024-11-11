@@ -7,6 +7,47 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+
+To exclude files that contain secrets or sensitive information from version control in Git, such as .env files or private keys, add the paths of those files to your .gitignore file. Based on your project structure, you can ignore specific files and directories like the virtual environment and cache files, which often contain no secrets but can clutter your repository.
+
+Here’s a typical .gitignore setup for Python projects that includes common patterns to exclude secrets and unnecessary files:
+
+gitignore
+Copy code
+# Ignore Python compiled files and cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Ignore Virtual Environment
+venv/
+.env
+
+# Ignore any private keys or sensitive files
+*.pem
+*.key
+
+# Ignore log files and temporary files
+*.log
+*.tmp
+
+# Ignore Python package folders for dependency management
+*.egg-info/
+pip-log.txt
+htmlcov/
+.tox/
+.coverage
+
+# Ignore generated config and secrets
+config.py
+secret_config.py
+*.cfg
+*.conf
+*.ini
+
+# Node.js dependencies (if using a Node client)
+client/node_modules/
+client/dist/
 node_modules
 dist
 dist-ssr
@@ -27,3 +68,66 @@ dist-ssr
 *.env
 server/.env
 client/.env
+
+# Python virtual environment
+.venv/
+venv/
+functions/venv/
+
+# Distribution/package files
+*.egg-info/
+*.dist-info/
+
+# Byte-compiled and cache files
+__pycache__/
+*.py[cod]
+*.so
+
+# macOS specific files
+.DS_Store
+
+# CRLF warning fix
+*RECORD
+*py.typed
+
+# Ignore any private keys or sensitive files
+*.pem
+*.key
+
+*.tmp
+
+
+To exclude files that contain secrets or sensitive information from version control in Git, such as .env files or private keys, add the paths of those files to your .gitignore file. Based on your project structure, you can ignore specific files and directories like the virtual environment and cache files, which often contain no secrets but can clutter your repository.
+
+Here’s a typical .gitignore setup for Python projects that includes common patterns to exclude secrets and unnecessary files:
+
+gitignore
+Copy code
+# Ignore Python compiled files and cache
+__pycache__/
+*.py[cod]
+*.so
+
+# Ignore Virtual Environment
+venv/
+.env
+
+# Ignore any private keys or sensitive files
+*.pem
+*.key
+
+# Ignore log files and temporary files
+*.log
+*.tmp
+
+# Ignore Python package folders for dependency management
+*.egg-info/
+pip-log.txt
+htmlcov/
+.tox/
+.coverage
+
+secret_config.py
+*.cfg
+*.conf
+*.ini

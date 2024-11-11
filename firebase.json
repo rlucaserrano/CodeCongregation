@@ -1,12 +1,16 @@
 {
   "hosting": {
-    "public": "dist",
+    "public": "client/dist",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
     ],
     "rewrites": [
+      {
+        "source": "/api/**",
+        "function": "flask_app"
+      },
       {
         "source": "**",
         "destination": "/index.html"
