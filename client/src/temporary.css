@@ -1,3 +1,14 @@
+.main-title {
+  margin-top: 5rem;
+    display: flex;
+    justify-content: center;
+    margin-left: 2.5%;
+    margin-right: 2.5%;
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #1c1c1e;
+}
+
 .resources-group-header {
     margin-top: 2rem;
     display: flex;
@@ -10,7 +21,7 @@
 }
 
 .resources-group-header .group-title {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     padding-left: 2rem;
     font-weight: bold;
     color: #556cd6;
@@ -114,4 +125,33 @@
   .table-body-2 .tb2-empty {
     margin-bottom: .5rem;
     font-weight: bold;
+  }
+
+  .resources-community-header {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+    margin-left: 2.5%;
+    margin-right: 2.5%;
+    background-color: #e8e8e8; 
+    border-bottom: 1px solid #1c1c1e;
+}
+
+  .resources-community-header .button-format3 {
+    display: flex;
+    width: 6rem;
+    height: 6rem;
+    padding-right: 2rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .resources-community-body {
+    display: flex;
+    justify-content: center;
+    margin-left: 2.5%;
+    margin-right: 2.5%;
+    margin-bottom: 2.5%;
+    padding: 1rem;
+    background-color: #ffffff; 
   }

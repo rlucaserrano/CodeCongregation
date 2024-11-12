@@ -8,6 +8,7 @@ import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Button from '@mui/material/Button';
+import ButtonGroup from '@mui/material/ButtonGroup';
 import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import TextField from '@mui/material/TextField';
@@ -16,6 +17,7 @@ import RadioGroup from '@mui/material/RadioGroup';
 import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import CircularProgress from '@mui/material/CircularProgress';
 import BuildIcon from '@mui/icons-material/Build'; //Practice Questions
 import SchoolIcon from '@mui/icons-material/School'; //Tutorials
 import VisibilityIcon from '@mui/icons-material/Visibility'; //Visualization Materials
@@ -41,6 +43,7 @@ import { CheckBox, Terminal } from '@mui/icons-material';
 let guest = false;
 let user = true;
 let groupID = "1";
+let groupName = "Swamp Scripters"
 let maskedCat = new Set();
 let clickedRow = 0;
 let resetClick = false;
@@ -89,6 +92,32 @@ function useGroupResources(currGroupID) {
 
   return [safe, res];
 }
+
+function useCommunityResources(currGroupID) {
+
+  const [safe, setSafe] = useState(false)
+  const [res, setRes] = useState()
+
+  async function handleResGet()
+  {
+    let data = await fetch('http://localhost:8080/groupresources', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        method: 'GET'
+    })
+    setRes(await data.json());
+    setSafe(true)  
+  }
+
+  useEffect(() => {
+    handleResGet();
+  });
+
+  return [safe, res];
+}
+
 
 // Taken, with slight modification, from Groups. 
 function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, resourceName}) {
@@ -344,8 +373,8 @@ function GenerateRows(data, updateRowClick){
         returnedLine.push(
           <TableRow style={{backgroundColor: '#f7f7f8'}}>
             <TableCell style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][2]}</TableCell>
-            <TableCell ><a href={data[i][3]} target='_blank' style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][3]}</a></TableCell>
-            <TableCell></TableCell>
+            <TableCell style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}><a href={data[i][3]} target='_blank'>{data[i][3]}</a></TableCell>
+            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><InfoIcon style={{color: '#e8e8e8'}}/></TableCell>
           </TableRow>
         );
       }
@@ -358,7 +387,6 @@ function GenerateRows(data, updateRowClick){
           </TableRow>
         );
       }
-
     }
     else if (i == clickedRow) {
       clickedRow = clickedRow + 1;
@@ -404,7 +432,7 @@ function validClick(resources, setOpenD, setOpenM){
         {resources[1][clickedRow][5]}
         <br/>
         <br/>
-        <dev style={{marginTop: '1rem', overflow: 'hidden', textOverflow: 'ellipsis'}}><a href={resources[1][clickedRow][3]} target='_blank'>{resources[1][clickedRow][3]}</a></dev>
+        <dev style={{marginTop: '1rem', wordWrap: 'break-word', wordBreak: 'break-all'}}><a href={resources[1][clickedRow][3]} target='_blank'>{resources[1][clickedRow][3]}</a></dev>
         <div style={{marginTop: '2rem', fontWeight: 'bold'}}>{PrivateStatus(resources[1][clickedRow][6])}</div>
         <div>Date Added: {resources[1][clickedRow][7]}</div>
         <div className="button-format">
@@ -459,12 +487,21 @@ function updateRowClick(row)
   setUpdateVersion((current) => current +1);
 }
 
-  if (resources[0] && categories[0])
+if (!resources[0] || !categories[0])
+{
+  return (
+    <div style={{margin: '15rem', display: 'flex', justifyContent: 'center'}}>
+      <CircularProgress />
+    </div>
+  )
+}
+
+if (resources[0] && categories[0])
     {
       return (
         <>
           <div className= "resources-group-header">
-            <header className="group-title">Group Resources </header>
+            <header className="group-title">{groupName}</header>
             <div className="button-format">
               <Button onClick={() => setOpenC(true)} variant="contained" color="secondary">+ Share New Resource</Button>
             </div>
@@ -511,13 +548,13 @@ function updateRowClick(row)
             </div>
           </div>
         </div>
-          {<CommunityResources/>}
           {openC && <AddResourcePopUp openC={openC} handleCloseC={() => setOpenC(false)} groupID={groupID}/>}
           {openD && <DeleteResourcePopUp openD={openD} handleCloseD={() => setOpenD(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} resourceName={resources[1][clickedRow][2]}/>}
           {openM && <ModifyResourcePopUp openM={openM} handleCloseM={() => setOpenM(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} prevResourceName={resources[1][clickedRow][2]} prevWebsiteURL={resources[1][clickedRow][3]} prevResourceCategory={resources[1][clickedRow][4]} prevResourceDescription={resources[1][clickedRow][5]} prevPublicShare={resources[1][clickedRow][6]}/>}
         </>
       )
     }
+
 }
 
 function GuestMessage() {
@@ -528,31 +565,148 @@ function GuestMessage() {
   )
 }
 
-function CommunityResources() {
+function CommunityResources() 
+{
+  let resources = useCommunityResources();
+  const [updateVersion, setUpdateVersion] = useState(0);
+  const [openC, setOpenC] = React.useState(false);
 
+ function updateRowMask(cat)
+{
+  if (maskedCat.size === categories[1].length)
+  {
+    resetClick = true;
+  }
+  const isPresent = maskedCat.has(cat);
+  if (isPresent)
+  {
+    maskedCat.delete(cat);
+  }
+  else
+  {
+    maskedCat.add(cat);
+  }
+
+  setUpdateVersion((current) => current +1);
+}
+
+function updateRowClick(row)
+{
+  clickedRow = row;
+  setUpdateVersion((current) => current +1);
+}
+
+if (!resources[0] || !categories[0])
+{
   return (
-    <div style={{margin: '2rem'}}>
-      <hr />
-      <h2>Frequently Shared Resources</h2>
-      <p> 
-      When sharing group resources, users will be required to label each resource as either public or private. 
-      If the user selects private, no further action will occur. 
-      Conversely, if the user selects public, the community resources database will be updated. Specifically, novel resources will be added with a share value of one. 
-      Whereas existing resources will have their share count increased by 1. 
-      Here, community resources will be ranked by how often they are shared. 
-      This will allow users to easily discover useful resources to share with their groups. 
-      </p>
-      <h3>Coming Soon ...</h3>
+    <div style={{margin: '15rem', display: 'flex', justifyContent: 'center'}}>
+      <CircularProgress />
     </div>
   )
 }
 
+if (resources[0] && categories[0])
+    {
+      return (
+        <>
+          <div className= "resources-group-header">
+            <header className="group-title">{groupName}</header>
+            <div className="button-format">
+              <Button onClick={() => setOpenC(true)} variant="contained" color="secondary">+ Share New Resource</Button>
+            </div>
+          </div>
+          <div className="group-table">
+            <div className="left-table">
+              <Table>
+                    <TableCell>
+                      {GenerateCheckboxs(categories[1], updateRowMask)}
+                    </TableCell>
+              </Table>
+            </div>
+            <div className="middle-table">
+              <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                <TableHead>
+                  <TableRow>
+                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Name</TableCell>
+                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Website URL</TableCell>
+                  </TableRow>
+                </TableHead>
+              </Table>
+              <div className="table-body-1">
+                <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                    <TableBody>
+                      {GenerateRows(resources[1], updateRowClick)}
+                    </TableBody>
+                </Table>
+              </div>
+            </div>
+            <div className="right-table">
+            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                <TableHead>
+                  <tableRow>
+                    <TableCell style={{fontWeight: 'bold'}}>Details</TableCell>
+                  </tableRow>
+                </TableHead>
+            </Table>
+            <div className="table-body-2">
+              <Table style={{tableLayout: 'fixed', width: '100%'}}>
+                <TableBody>
+                  {validClick(resources, setOpenD, setOpenM)}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        </div>
+          {openC && <AddResourcePopUp openC={openC} handleCloseC={() => setOpenC(false)} groupID={groupID}/>}
+          {openD && <DeleteResourcePopUp openD={openD} handleCloseD={() => setOpenD(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} resourceName={resources[1][clickedRow][2]}/>}
+          {openM && <ModifyResourcePopUp openM={openM} handleCloseM={() => setOpenM(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} prevResourceName={resources[1][clickedRow][2]} prevWebsiteURL={resources[1][clickedRow][3]} prevResourceCategory={resources[1][clickedRow][4]} prevResourceDescription={resources[1][clickedRow][5]} prevPublicShare={resources[1][clickedRow][6]}/>}
+        </>
+      )
+    }
+
+}
+
 function Resources() {
+
+  const [clickedButton, setClickedButton] = useState("group");
+
+  function CurrentDisplay()
+  {
+    if (clickedButton === "group")
+    {
+      return (
+        <>
+        {guest && <GuestMessage />}
+        {user && <GroupResources />}
+        </>
+      )
+    }
+    if ((clickedButton === "community"))
+    {
+      return (<CommunityResources/>)
+    }
+  }
+
+  function buttonStyle(button)
+  {
+    if (button === clickedButton)
+    {
+      return ({backgroundColor: '#f1f4fe', border: '#1c1c1e 2px solid', color:'#1c1c1e', fontWeight: 'bold', outline: 'none'})
+    }
+    else
+    {
+      return ({backgroundColor: '#f1f4fe', border: '#1c1c1e 1px solid', color:'#1c1c1e'})
+    }
+  }
 
   return (
     <div>
-        {guest && <GuestMessage />}
-        {user && <GroupResources />}
+        <div class='main-title'>Resources</div>
+        <ButtonGroup style={{marginLeft: '2.5%'}} size = "large" varient="text" aria-label="Basic button group">
+          <Button onClick={() => setClickedButton("group")} style={buttonStyle("group")}>Group</Button>
+          <Button onClick={() => setClickedButton("community")} style={buttonStyle("community")}>Community</Button>
+        </ButtonGroup>
+        {<CurrentDisplay/>}
     </div>
   )
 }

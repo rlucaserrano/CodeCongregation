@@ -1,6 +1,8 @@
 from flask import jsonify
 from database import Database
 from proc_and_sec import ProcAndSec
+import random
+
 class GroupResources:
     def __init__(self, data=None):
 
@@ -138,8 +140,8 @@ class GroupResources:
     
     def AddResource(self):
         
-        self.valGroupResourceID = '20'
-        self.valDisplayOrder = '20'
+        self.valGroupResourceID = str(random.randint(1,10000))
+        self.valDisplayOrder = str(random.randint(1,10000))
         if (self.colGroupID is not None or self.colGroupResourceID is not None or self.colResourceName is not None or self.colWebsiteURL is not None or self.colResourceCategory is not None or self.colResourceDescription is not None or self.colPublicShare is not None or self.colDateAdded is not None or self.colDisplayOrder is not None):
             return jsonify({"ERROR": "POST method does not take column parameters"}), 400
         elif (self.valGroupID is None) or (self.valResourceName is None) or (self.valWebsiteURL is None) or (self.valResourceCategory is None) or (self.valPublicShare is None):
