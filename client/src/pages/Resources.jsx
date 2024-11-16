@@ -18,6 +18,14 @@ import FormControl from '@mui/material/FormControl';
 import FormLabel from '@mui/material/FormLabel';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
+import Tabs from '@mui/material/Tabs';
+import Tab from '@mui/material/Tab'; 
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+
 import BuildIcon from '@mui/icons-material/Build'; //Practice Questions
 import SchoolIcon from '@mui/icons-material/School'; //Tutorials
 import VisibilityIcon from '@mui/icons-material/Visibility'; //Visualization Materials
@@ -38,6 +46,9 @@ import { CheckBox, Terminal } from '@mui/icons-material';
 // 6. https://mui.com/material-ui/react-dialog/
 // 7. https://mui.com/material-ui/react-radio-button/
 // 8. https://www.geeksforgeeks.org/how-to-disable-a-button-in-reactjs/
+// 9. https://mui.com/material-ui/react-button-group/
+// 10. https://legacy.reactjs.org/docs/hooks-effect.html
+
 
 // Global resources. Will need to be updated for proper guest display and study group navigation.
 let guest = false;
@@ -46,7 +57,9 @@ let groupID = "1";
 let groupName = "Swamp Scripters"
 let maskedCat = new Set();
 let clickedRow = 0;
+let clickedCRow = 0;
 let resetClick = false;
+let resetCClick = false;
 
 function displayDescription(vis) {
   
@@ -59,10 +72,11 @@ function displayDescription(vis) {
   else
   {
     return (
-      <>Contribute your sharing activity to help community members discover valuable resources.</>
+      <>Contribute this information to help others discover valuable resources. Don't select if provided data contains personal information.</>
     )
   }
 }
+
 
 function useGroupResources(currGroupID) {
 
@@ -93,14 +107,14 @@ function useGroupResources(currGroupID) {
   return [safe, res];
 }
 
-function useCommunityResources(currGroupID) {
+function useCommunityResources() {
 
   const [safe, setSafe] = useState(false)
   const [res, setRes] = useState()
 
   async function handleResGet()
   {
-    let data = await fetch('http://localhost:8080/groupresources', {
+    let data = await fetch('http://localhost:8080/educationalresources', {
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -113,11 +127,10 @@ function useCommunityResources(currGroupID) {
 
   useEffect(() => {
     handleResGet();
-  });
+  }, []);
 
   return [safe, res];
 }
-
 
 // Taken, with slight modification, from Groups. 
 function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, resourceName}) {
@@ -156,17 +169,17 @@ function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, res
 }
 
 
-// Taken, with slight modification, from Groups. 
 function AddResourcePopUp({openC, handleCloseC, groupID}) {
 
   const [publicShare, setPublicShare] = useState("0");
   const [resourceName, setResourceName] = useState("");
   const [websiteURL, setWebsiteURL] = useState("");
   const [resourceCategory, setResourceCategory] = useState("");
-
+  const [comCategory, setComCategory] = useState("");
+  
   function displayCreateButton() {
   
-    if (resourceName != "" && websiteURL != "" && resourceCategory != "")
+    if (resourceName != "" && websiteURL != "" && resourceCategory != "" && comCategory != "")
     {
       return (<Button variant='contained' type='submit'>Share</Button>);
     }
@@ -196,6 +209,8 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
                 'valDescription':form.Description.value,
                 'valResourceCategory': form.ResourceCategory.value,
                 'valPublicShare': publicShare.toString(),
+                'valReplacementCategory': comCategory,
+                'source': 'group'
             })
         });
         handleCloseC();
@@ -208,7 +223,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
           <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Share New Resource</DialogTitle>
           <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
-          <div style={{display: 'flex', margin: '1rem', width: '90%', gap: '1rem'}}>
+          <div style={{display: 'flex', margin: '0.5rem', width: '90%', gap: '1rem'}}>
             <FormControl style={{flex: '25%'}}>
               <FormLabel id="demo-controlled-radio-buttons-group" style={{fontWeight: 'bold'}}>Visibility</FormLabel>
               <RadioGroup
@@ -224,14 +239,34 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
               {displayDescription(publicShare)}
             </div>
           </div>
-          <div style={{margin: '1rem', display: 'flex', flexDirection: 'column'}}>
+          <div style={{margin: '0.5rem', display: 'flex', flexDirection: 'column'}}>
             <TextField required id="ResourceName" label="Resource Name" onChange={(input) => setResourceName(input.target.value)}/>
             <br/>
             <TextField required id="WebsiteURL" label="Website URL" onChange={(input) => setWebsiteURL(input.target.value)}/>
+            <div style={{fontSize: 'small', marginTop: '1rem', marginBottom: '0.75rem'}}>Select the category that best describes this resource. Optionally, you can change the displayed category name to fit the needs of your group:</div>
+            <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
+              <FormControl style={{flex: 1}}>
+              <InputLabel required id="demo-simple-select-label">Resource Category</InputLabel>
+              <Select
+                labelId="demo-simple-select-label"
+                id="demo-simple-select"
+                value={comCategory}
+                label="Please select "
+                onChange={(click) => {setComCategory(click.target.value); setResourceCategory(click.target.value)}}
+              >
+                  <MenuItem value={"Practice Questions"}>Practice Questions</MenuItem>
+                  <MenuItem value={"Tutorials"}>Tutorials</MenuItem>
+                  <MenuItem value={"Computer Science Theory"}>Computer Science Theory</MenuItem>
+                  <MenuItem value={"Visualization Tools"}>Visualization Tools</MenuItem>
+                  <MenuItem value={"Collaboration Tools"}>Collaboration Tools</MenuItem>
+                  <MenuItem value={"Software Development Tools"}>Software Development Tools</MenuItem>
+                  <MenuItem value={"Career Development"}>Career Development</MenuItem>
+              </Select>
+              </FormControl>
+              <TextField style={{flex: 1.25}} required id="ResourceCategory" value={resourceCategory} label="Displayed Category Name" onChange={(input) => setResourceCategory(input.target.value)}/>
+            </div>
             <br/>
-            <TextField required id="ResourceCategory" label="Resource Category" onChange={(input) => setResourceCategory(input.target.value)}/>
-            <br/>
-            <TextField id="Description" label="Description" multiline minRows={4}/>
+            <TextField id="Description" label="Description" multiline minRows={3}/>
           </div>
           <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
             {displayCreateButton()}
@@ -242,10 +277,139 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
     );
 }
 
+function FeedbackPopUp({openF, handleCloseF, resourceID}) {
 
-function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, prevResourceName, prevWebsiteURL, prevResourceCategory, prevResourceDescription, prevPublicShare}) {
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  
+  function displaySubmitButton() {
+  
+    if (description != "" && category != "")
+    {
+      return (<Button variant='contained' type='submit'>Submit</Button>);
+    }
+    else {
+      
+      return (<Button variant='contained' style={{color: '#556cd6', background: '#ffffff', border: 'solid 1px #556cd6'}} disabled={true}>Submit</Button>);
+    }
+  }
 
-  const [publicShare, setPublicShare] = useState(prevPublicShare);
+  const handleCreate = async (e) =>
+    {
+        e.preventDefault()
+
+        await fetch('http://localhost:8080/feedback', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'POST',
+            body: JSON.stringify({
+                'valDescription': description,
+                'valCategory': category,
+                'valResourceID': resourceID
+            })
+        });
+        handleCloseF();
+        window.location.reload();
+
+    }
+
+    return (
+      <Dialog open={openF} onClose={handleCloseF}>
+        <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
+          <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Submit Feedback</DialogTitle>
+          <div style={{margin: '0.5rem', display: 'flex', flexDirection: 'column'}}>
+            <TextField required id="ResourceName" label="Feedback Topic" onChange={(input) => setCategory(input.target.value)}/>
+            <br/>
+            <TextField required id="description" label="Description" onChange={(input) => setDescription(input.target.value)}/>
+            <br/>
+          </div>
+          <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
+            {displaySubmitButton()}
+            <Button variant='contained' onClick={handleCloseF} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
+          </div>
+        </form>
+      </Dialog>
+    );
+
+}
+
+function CommunitySharePopUp({openS, handleCloseS, groupID, comResourceID, comResourceName, comWebsiteURL, prevResourceCategory, prevResourceDescription, comShares})
+{
+  const [link, setLink] =  useState(comWebsiteURL);
+  let newShare = parseInt(comShares) + 1;
+  
+  const handleCreate = async (e) =>
+    {
+      
+      e.preventDefault()
+        await fetch('http://localhost:8080/educationalresources', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'PATCH',
+            body: JSON.stringify({
+              'valResourceID': comResourceID,
+              'valVotes': newShare.toString()
+            })
+        });
+
+        await fetch('http://localhost:8080/groupresources', {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+          method: 'POST',
+          body: JSON.stringify({
+              'valGroupID': groupID,
+              'valResourceName': comResourceName,
+              'valWebsiteURL': link,
+              'valDescription': prevResourceDescription,
+              'valResourceCategory': prevResourceCategory,
+              'valPublicShare': "1",
+          })
+      });
+        
+      handleCloseS();
+      window.location.reload();
+    }
+
+    return (
+      <Dialog open={openS} onClose={handleCloseS}>
+        <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
+          <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Share Resource: {comResourceName}</DialogTitle>
+          <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
+          <div style={{margin:'1rem'}}>{comResourceName} will be added to {groupName}’s shared resources, and its information will be updated to suggest similar resources in the future.</div>
+          <div style={{margin:'1rem', borderTop: '1px solid #556cd6', paddingTop:'1rem'}}>By default, {comResourceName}'s homepage will be shared. If available, select a different link from the dropdown to share a specific page.</div>
+          <Accordion sx={{margin: '1rem', border: '1px solid #556cd6'}}>
+            <AccordionSummary expandIcon={<ExpandMoreIcon sx={{color: '#556cd6'}}/>}>
+            Pages
+            </AccordionSummary>
+            <AccordionDetails>
+              <FormControl style={{flex: '25%'}}>
+                <RadioGroup
+                aria-labelledby="demo-controlled-radio-buttons-group"
+                name="controlled-radio-buttons-group"
+                defaultValue={comWebsiteURL}
+                >
+                  <DisplayOtherPages homePage={comWebsiteURL} setLink={setLink}/>
+                </RadioGroup>
+              </FormControl>
+            </AccordionDetails>
+          </Accordion>
+          <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
+            <Button variant='contained' type='submit'>Confirm Share</Button>
+            <Button variant='contained' onClick={handleCloseS} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
+          </div>
+        </form>
+      </Dialog>
+    );
+}
+
+function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, prevResourceName, prevWebsiteURL, prevResourceCategory, prevResourceDescription}) {
+
   const [resourceName, setResourceName] = useState(prevResourceName);
   const [websiteURL, setWebsiteURL] = useState(prevWebsiteURL);
   const [resourceCategory, setResourceCategory] = useState(prevResourceCategory);
@@ -280,7 +444,6 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
               'valWebsiteURL': form.WebsiteURL.value,
               'valDescription': form.Description.value,
               'valResourceCatehory': form.ResourceCategory.value,
-              'valPublicShare': publicShare.toString()
             })
         });
         handleCloseM();
@@ -293,22 +456,6 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
           <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Modify Resource: {prevResourceName}</DialogTitle>
           <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
-          <div style={{display: 'flex', margin: '1rem', width: '90%', gap: '1rem'}}>
-            <FormControl style={{flex: '25%'}}>
-              <FormLabel id="demo-controlled-radio-buttons-group" style={{fontWeight: 'bold'}}>Visibility</FormLabel>
-              <RadioGroup
-                aria-labelledby="demo-controlled-radio-buttons-group"
-                name="controlled-radio-buttons-group"
-                defaultValue={prevPublicShare}
-              >
-                <FormControlLabel value="0" control={<Radio />} label="Group" onClick={() => setPublicShare("0")}/>
-                <FormControlLabel value="1" control={<Radio />} label="Community" onClick={() => setPublicShare("1")} />
-              </RadioGroup>
-            </FormControl>
-            <div style={{flex: '60%', marginLeft: '1rem', alignContent: 'center', color: '#2e3945'}}>
-              {displayDescription(publicShare.toString())}
-            </div>
-          </div>
           <div style={{margin: '1rem', display: 'flex', flexDirection: 'column'}}>
             <TextField required id="ResourceName" label="Resource Name" value={resourceName} onChange={(input) => setResourceName(input.target.value)}/>
             <br/>
@@ -396,6 +543,46 @@ function GenerateRows(data, updateRowClick){
   return returnedLine;
 }
 
+function GenerateCRows(data, updateCRowClick, category){
+
+  // Iterates through array to generate and return rows of the table.
+  if (resetCClick === true)
+  {
+    clickedCRow = 0;
+    resetCClick = false;
+  }
+  let returnedLine = [];
+  for (let i = 0; i < data.length; i++) {
+    if (data[i][3] === category) {
+      if (i == clickedCRow) {
+        returnedLine.push(
+          <TableRow style={{backgroundColor: '#f7f7f8'}}>
+            <TableCell style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][7]}</TableCell>
+            <TableCell style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[i][1]}</TableCell>
+            <TableCell style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}><a href={data[i][2]} target='_blank'>{data[i][2]}</a></TableCell>
+            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><InfoIcon style={{color: '#e8e8e8'}}/></TableCell>
+          </TableRow>
+        );
+      }
+      else {
+        returnedLine.push(
+          <TableRow>
+            <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[i][7]}</TableCell>
+            <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[i][1]}</TableCell>
+            <TableCell style={{textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis'}}><a href={data[i][2]} target='_blank'>{data[i][2]}</a></TableCell>
+            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => updateCRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
+          </TableRow>
+        );
+      }
+    }
+    else if (i == clickedCRow) {
+      clickedCRow = clickedCRow + 1;
+    }
+
+  }
+  return returnedLine;
+}
+
 function PrivateStatus(pub)
 {
   if (pub === 0)
@@ -405,6 +592,29 @@ function PrivateStatus(pub)
   else{
     return <>Community Resource</>
   }
+}
+
+function GenerateCategoryButtons(data, setcurrCat, currCat)
+{
+  let returnedLine = [];
+  for (let i = 0; i < data.length; i++)
+  {
+    if(currCat === data[i]) {
+      returnedLine.push(
+      <div key={i}>
+        <Button onClick={() => {resetCClick = true, setcurrCat(data[i])}} fullWidth sx={{border: '#ffffff solid 2px', borderRadius: 0, height: '3.62rem', backgroundColor: '#556cd6', fontWeight: 'bold', color: '#ffffff'}}>{data[i]}</Button>
+      </div>
+    )
+  }
+  else {
+    returnedLine.push(
+      <div key={i}>
+        <Button onClick={() => {resetCClick = true, setcurrCat(data[i])}} fullWidth sx={{border: '#ffffff solid 2px', borderRadius: 0, height: '3.62rem', backgroundColor: '#e8e8e8', color: '#1c1c1e'}}>{data[i]}</Button>
+      </div>
+    )
+  }
+  }
+  return returnedLine;
 }
 
 function GenerateCheckboxs(data, updateRowMask){
@@ -420,6 +630,84 @@ function GenerateCheckboxs(data, updateRowMask){
     )
   }
   return returnedLine;
+}
+
+function DisplayOtherPages({homePage, setLink}) {
+
+  const [safe, setSafe] = useState(false)
+  const [res, setRes] = useState([])
+
+  async function handleResGet()
+  {
+    let data = await fetch('http://localhost:8080/webpages', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        body: JSON.stringify({ 
+          'HomePage': homePage,
+          'Action': 'GET'
+        }),
+        method: 'POST'
+    })
+    setRes(await data.json());
+    setSafe(true)  
+  }
+
+  useEffect(() => {
+    handleResGet();
+  }, []);
+
+  //<FormControlLabel value="0" control={<Radio />} label="Group" onClick={() => setPublicShare("0")}/>
+  //<FormControlLabel value="1" control={<Radio />} label="Community" onClick={() => setPublicShare("1")} />
+
+  if (!safe) {
+    return (<CircularProgress />);
+  }
+
+  if (res.length === 0) {
+    console.log("Here1");
+    return (<> 
+    <FormControlLabel value={homePage} control={<Radio />} label={<a href={homePage} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{homePage}</a>} onClick={() => setLink(homePage)}/>
+    </>)
+  }
+  else {
+    let returnedLine = [];
+    returnedLine.push(<FormControlLabel value={homePage} control={<Radio />} label={<a href={homePage} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{homePage}</a>} onClick={() => setLink(homePage)}/>);
+    for (let i = 0; i < res.length; i++) {
+      returnedLine.push(<FormControlLabel value={res[0][1]} control={<Radio />} label={<a href={res[0][1]} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{res[0][1]}</a>} onClick={() => setLink(res[0][1])}/>);
+    }
+    return returnedLine;
+  }
+}
+
+function validCClick(resources, setOpenS, setOpenF){
+
+  if (resources[1] && resources[1].length > clickedCRow)
+  {
+    return(
+      <TableRow>
+        <div className="tb2-header">{"Description"}</div>
+        {resources[1][clickedCRow][4]}
+        <div style={{marginTop: '1rem', wordWrap: 'break-word', wordBreak: 'break-all'}}><a href={resources[1][clickedCRow][2]} target='_blank'>{resources[1][clickedCRow][2]}</a></div>
+        <div style={{marginTop: '1rem'}}><span style={{fontWeight: 'bold'}}>Community Shares: </span>{resources[1][clickedCRow][7]}</div>
+        <div style={{marginTop: '1rem', marginBottom: '1rem'}}>Date Added: {resources[1][clickedCRow][6]}</div>
+        <div className='button-format'>
+          <Button onClick={() => setOpenS(true)} variant="contained" color="secondary">+ Share with {groupName}</Button>
+          <Button onClick={() => setOpenF(true)} variant="contained" style={{backgroundColor: '#e8e8e8', color: '#556cd6', marginLeft: '1rem'}}>Feedback</Button>
+        </div>
+      </TableRow>
+    )
+  }
+  else 
+  {
+    return(
+      <div className="table-body-2">
+        <div className="tb2-empty">{"This Category is Empty"}</div>
+        There are currently no shared resources in this category. Do you know of any that we are missing? Consider sharing it to help grow our resources!
+      </div>
+    )
+  }
 }
 
 function validClick(resources, setOpenD, setOpenM){
@@ -518,8 +806,9 @@ if (resources[0] && categories[0])
               <Table style={{ tableLayout: 'fixed', width: '100%'}}>
                 <TableHead>
                   <TableRow>
-                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Name</TableCell>
-                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Website URL</TableCell>
+                    <TableCell style={{fontWeight: 'bold', width: '33%'}}>Name</TableCell>
+                    <TableCell style={{fontWeight: 'bold', width: '34%'}}>Website URL</TableCell>
+                    <TableCell style={{marginRight: '1.5rem', textAlign: 'right', fontWeight: 'bold', width: '33%'}}>▶</TableCell>
                   </TableRow>
                 </TableHead>
               </Table>
@@ -532,9 +821,9 @@ if (resources[0] && categories[0])
               </div>
             </div>
             <div className="right-table">
-            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+            <Table style={{ tableLayout: 'fixed', width: '100%', borderBottom: '1px solid #e8e8e8'}}>
                 <TableHead>
-                  <tableRow>
+                  <tableRow >
                     <TableCell style={{fontWeight: 'bold'}}>Details</TableCell>
                   </tableRow>
                 </TableHead>
@@ -550,7 +839,7 @@ if (resources[0] && categories[0])
         </div>
           {openC && <AddResourcePopUp openC={openC} handleCloseC={() => setOpenC(false)} groupID={groupID}/>}
           {openD && <DeleteResourcePopUp openD={openD} handleCloseD={() => setOpenD(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} resourceName={resources[1][clickedRow][2]}/>}
-          {openM && <ModifyResourcePopUp openM={openM} handleCloseM={() => setOpenM(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} prevResourceName={resources[1][clickedRow][2]} prevWebsiteURL={resources[1][clickedRow][3]} prevResourceCategory={resources[1][clickedRow][4]} prevResourceDescription={resources[1][clickedRow][5]} prevPublicShare={resources[1][clickedRow][6]}/>}
+          {openM && <ModifyResourcePopUp openM={openM} handleCloseM={() => setOpenM(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} prevResourceName={resources[1][clickedRow][2]} prevWebsiteURL={resources[1][clickedRow][3]} prevResourceCategory={resources[1][clickedRow][4]} prevResourceDescription={resources[1][clickedRow][5]}/>}
         </>
       )
     }
@@ -565,38 +854,86 @@ function GuestMessage() {
   )
 }
 
+
 function CommunityResources() 
 {
   let resources = useCommunityResources();
   const [updateVersion, setUpdateVersion] = useState(0);
-  const [openC, setOpenC] = React.useState(false);
+  const [openS, setOpenS] = React.useState(false);
+  const [openF, setOpenF] = React.useState(false);
+  const [currCat, setcurrCat] = React.useState("Practice Questions")
+  const [clickedTab, setTab] = React.useState(0);
+  const [displayFrequently, setDisplayFrequency] = useState(true);
 
- function updateRowMask(cat)
-{
-  if (maskedCat.size === categories[1].length)
-  {
-    resetClick = true;
-  }
-  const isPresent = maskedCat.has(cat);
-  if (isPresent)
-  {
-    maskedCat.delete(cat);
-  }
-  else
-  {
-    maskedCat.add(cat);
+  const handleChange = (click, newValue) => {
+    setTab(newValue);
+    setDisplayFrequency(newValue === 0);
   }
 
-  setUpdateVersion((current) => current +1);
-}
+  function updateCRowClick(row)
+  {
+    clickedCRow = row;
+    setUpdateVersion((current) => current +1);
+  }
 
-function updateRowClick(row)
-{
-  clickedRow = row;
-  setUpdateVersion((current) => current +1);
-}
+  function DisplayFrequently({resources, updateCRowClick, currCat})
+  {
+    return(
+      <>
+        <div className="middle-table">
+          <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+            <TableHead>
+              <TableRow>
+                <TableCell style={{fontWeight: 'bold', width: '33%'}}>Shares</TableCell>
+                <TableCell style={{fontWeight: 'bold', width: '33%'}}>Name</TableCell>
+                <TableCell style={{fontWeight: 'bold', width: '34%'}}>Website URL</TableCell>
+                <TableCell style={{marginRight: '1.5rem', textAlign: 'right', fontWeight: 'bold', width: '34%'}}>▶</TableCell>
+              </TableRow>
+            </TableHead>
+          </Table>
+          <div className="table-body-1">
+            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                <TableBody>
+                  {GenerateCRows(resources[1], updateCRowClick, currCat)}
+                </TableBody>
+            </Table>
+          </div>
+        </div>
+        <div className="right-table">
+          <Table style={{ tableLayout: 'fixed', width: '100%', borderBottom: '1px solid #e8e8e8'}}>
+            <TableHead>
+              <tableRow>
+                <TableCell style={{fontWeight: 'bold'}}>Details</TableCell>
+              </tableRow>
+            </TableHead>
+          </Table>
+          <div className="table-body-2">
+            <Table style={{tableLayout: 'fixed', width: '100%'}}>
+              <TableBody>
+                {validCClick(resources, setOpenS, setOpenF)}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      </>
+    );
+  }
 
-if (!resources[0] || !categories[0])
+   function DisplayRecommended()
+   {
+      return (
+        <div className="table-body-1">
+            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                <TableBody>
+                  <TableCell style={{fontWeight: 'bold', padding: '2rem', fontSize: '17px', backgroundColor: '#ffffff'}}>Recommended resources are currently unavailable for {groupName}. Recommendations are generated based on the public resources shared by your group members. Keep sharing resources with public visibility to unlock your recommendations!</TableCell>
+                </TableBody>
+            </Table>
+          </div>
+
+      )
+   }
+
+if (!resources[0])
 {
   return (
     <div style={{margin: '15rem', display: 'flex', justifyContent: 'center'}}>
@@ -605,61 +942,30 @@ if (!resources[0] || !categories[0])
   )
 }
 
-if (resources[0] && categories[0])
+if (resources[0])
     {
       return (
         <>
           <div className= "resources-group-header">
-            <header className="group-title">{groupName}</header>
-            <div className="button-format">
-              <Button onClick={() => setOpenC(true)} variant="contained" color="secondary">+ Share New Resource</Button>
-            </div>
+            <header className="group-title">Community Resources</header>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', marginRight: '2rem'}}>
+              <Tabs value={clickedTab} onChange={handleChange} aria-label="basic tabs example">
+              <Tab label="Frequently Shared"sx={{'&:hover': { backgroundColor: 'transparent'}}}/>
+              <Tab label="Recommended" sx={{'&:hover': { backgroundColor: 'transparent' }}}/>
+              </Tabs>
+            </Box>
           </div>
-          <div className="group-table">
+          <div className="community-table">
             <div className="left-table">
-              <Table>
-                    <TableCell>
-                      {GenerateCheckboxs(categories[1], updateRowMask)}
-                    </TableCell>
-              </Table>
+                <ButtonGroup style={{width: '100%', height: '100%'}} orientation="vertical" size = "large" varient="text" aria-label="Basic button group">
+                  {GenerateCategoryButtons(["Practice Questions", "Tutorials", "Computer Science Theory", "Visualization Tools", "Collaboration Tools", "Software Development Tools", "Career Development"], setcurrCat, currCat)}
+                </ButtonGroup>
             </div>
-            <div className="middle-table">
-              <Table style={{ tableLayout: 'fixed', width: '100%'}}>
-                <TableHead>
-                  <TableRow>
-                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Name</TableCell>
-                    <TableCell style={{fontWeight: 'bold', width: '50%'}}>Website URL</TableCell>
-                  </TableRow>
-                </TableHead>
-              </Table>
-              <div className="table-body-1">
-                <Table style={{ tableLayout: 'fixed', width: '100%'}}>
-                    <TableBody>
-                      {GenerateRows(resources[1], updateRowClick)}
-                    </TableBody>
-                </Table>
-              </div>
-            </div>
-            <div className="right-table">
-            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
-                <TableHead>
-                  <tableRow>
-                    <TableCell style={{fontWeight: 'bold'}}>Details</TableCell>
-                  </tableRow>
-                </TableHead>
-            </Table>
-            <div className="table-body-2">
-              <Table style={{tableLayout: 'fixed', width: '100%'}}>
-                <TableBody>
-                  {validClick(resources, setOpenD, setOpenM)}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+            {displayFrequently && <DisplayFrequently resources={resources} updateCRowClick={updateCRowClick} currCat={currCat}/>}
+            {!displayFrequently && <DisplayRecommended/>}
         </div>
-          {openC && <AddResourcePopUp openC={openC} handleCloseC={() => setOpenC(false)} groupID={groupID}/>}
-          {openD && <DeleteResourcePopUp openD={openD} handleCloseD={() => setOpenD(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} resourceName={resources[1][clickedRow][2]}/>}
-          {openM && <ModifyResourcePopUp openM={openM} handleCloseM={() => setOpenM(false)} groupID={groupID} groupResourceID={resources[1][clickedRow][1]} prevResourceName={resources[1][clickedRow][2]} prevWebsiteURL={resources[1][clickedRow][3]} prevResourceCategory={resources[1][clickedRow][4]} prevResourceDescription={resources[1][clickedRow][5]} prevPublicShare={resources[1][clickedRow][6]}/>}
+        {openS && <CommunitySharePopUp openS={openS} handleCloseS={() => setOpenS(false)} groupID={groupID} comResourceID={resources[1][clickedCRow][0]} comResourceName={resources[1][clickedCRow][1]} comWebsiteURL={resources[1][clickedCRow][2]} prevResourceCategory={resources[1][clickedCRow][3]} prevResourceDescription={resources[1][clickedCRow][4]} comShares={resources[1][clickedCRow][7]}/>}
+        {openF && <FeedbackPopUp openF={openF} handleCloseF={() => setOpenF(false)} resourceID={resources[1][clickedCRow][0]}/>}
         </>
       )
     }
@@ -703,8 +1009,8 @@ function Resources() {
     <div>
         <div class='main-title'>Resources</div>
         <ButtonGroup style={{marginLeft: '2.5%'}} size = "large" varient="text" aria-label="Basic button group">
-          <Button onClick={() => setClickedButton("group")} style={buttonStyle("group")}>Group</Button>
-          <Button onClick={() => setClickedButton("community")} style={buttonStyle("community")}>Community</Button>
+          <Button onClick={() => {resetClick = true, setClickedButton("group")}} style={buttonStyle("group")}>Group</Button>
+          <Button onClick={() => {resetCClick = true, setClickedButton("community")}} style={buttonStyle("community")}>Community</Button>
         </ButtonGroup>
         {<CurrentDisplay/>}
     </div>

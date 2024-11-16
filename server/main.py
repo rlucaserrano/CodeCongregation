@@ -44,7 +44,7 @@ def default():
 def AccessGroupResources():
 
     if request.method == "OPTIONS":
-        # Handle the CORS preflight request
+        # Handles CORS request
         response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
         response.status_code = 200
         return response
@@ -74,15 +74,62 @@ def AccessUserTable():
     user.Process()
     return user.Methods(request.method)
 
-
 @app.route('/educationalresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessEducationalResources():
+
+    
+    if request.method == "OPTIONS":
+        # Handles CORS request
+        response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
+        response.status_code = 200
+        return response
+
     # Accesses EducationalResources from database
-    resources = EducationalResources(request.json)
-    resources.Process()
+    data = None
+    if request.method != "GET":
+        data = request.get_json()
+
+    resources = EducationalResources(data)
+    #resources.Process()
     return (resources.Methods(request.method))
 
-    # made changes to increment userID by 1 for simplicity
+@app.route('/webpages', methods=["POST", "OPTIONS"])
+def AccessWebPages():
+
+    if request.method == "OPTIONS":
+        # Handles CORS request
+        response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
+        response.status_code = 200
+        return response
+    else:
+        data = request.get_json()
+        baseURL = data.get("HomePage", None)
+        action = data.get("Action", None)
+        print("ABC2")
+        if action == "GET":
+
+            result = Database.SearchDatabase(table="MGOLAN.Websites", rows=f"BaseURL = '{baseURL}'")
+            print(result)
+            return (result)
+
+@app.route('/feedback', methods=["POST", "OPTIONS"])
+def AccessFeedback():
+
+    if request.method == "OPTIONS":
+        # Handles CORS request
+        response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
+        response.status_code = 200
+        return response
+    else:
+        data = request.get_json()
+        description = data.get("valDescription", None)
+        category = data.get("valCategory", None)
+        resourceID = data.get("valResourceID", None)
+
+        result = Database.AddToDatabase(table="MGOLAN.Feedback", entry=[f"{resourceID}", f"'{category}'", f"'{description}'"])
+        return (jsonify({"result": str(result)}))
+
+# made changes to increment userID by 1 for simplicity
 @app.route('/add', methods=["POST"])
 def addUser():
     connection = Database.GetConnection()

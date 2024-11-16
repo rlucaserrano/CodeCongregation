@@ -40,13 +40,8 @@ class Database:
     def AlterQuery(userQuery):
         
         # Open connection and establish cursor
-        print("1")
         connection = Database.GetConnection()
         cursor = connection.cursor()
-
-        cursor.execute("ALTER SESSION SET DDL_LOCK_TIMEOUT = 5")
-        print("DDL lock timeout set to 5 seconds")
-        
 
         # Makes changes to database and commits changes
         print(userQuery)
@@ -58,7 +53,6 @@ class Database:
         # Close cursor and connection
         cursor.close()
         connection.close()
-        print("4")
 
     #========== Called by main.py ==========#
 
@@ -89,6 +83,7 @@ class Database:
         if order is not None:
             orderString = f" ORDER BY {order[0]} {order[1]}"
         # Returns result from internal function
+        print(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
         return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
 
     # Inserts entry into database table.
@@ -102,7 +97,6 @@ class Database:
 
         # Attempts to insert entry into table. Returns result.
         try:
-            print(f"INSERT INTO {table} VALUES ({attributeString})")
             Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
             return(True)
         except Exception as e:
@@ -130,7 +124,7 @@ class Database:
 
     # Modifies existing entry in database table
     @staticmethod
-    def ModifyDatabase(table, key1, value1, changes, key2, value2):
+    def ModifyDatabase(table, key1, value1, changes, key2=None, value2=None):
         # Creates a string of attribute changes.
         changesString = ""
         for c in changes:
