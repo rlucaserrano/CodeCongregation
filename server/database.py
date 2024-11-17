@@ -127,8 +127,10 @@ class Database:
     def ModifyDatabase(table, key1, value1, changes, key2=None, value2=None):
         # Creates a string of attribute changes.
         changesString = ""
-        for c in changes:
-            changesString = changesString + c[0] + " = " + c[1] + ", "
+        for i in range(0, len(changes), 2):
+            c1 = changes[i]
+            c2 = changes[i+1]
+            changesString = changesString + c1 + " = " + c2 + ", "
         changesString = changesString[:-2]
 
         # Attempts to update entry into table. Returns result.
