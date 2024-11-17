@@ -108,7 +108,7 @@ def AccessWebPages():
         print("ABC2")
         if action == "GET":
 
-            result = Database.SearchDatabase(table="MGOLAN.Websites", rows=f"BaseURL = '{baseURL}'")
+            result = Database.SearchDatabase(table="MGOLAN.Websites", rows=f"BaseURL = '{baseURL}'", distinct='yes')
             print(result)
             return (result)
 

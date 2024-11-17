@@ -675,7 +675,7 @@ function DisplayOtherPages({homePage, setLink}) {
     let returnedLine = [];
     returnedLine.push(<FormControlLabel value={homePage} control={<Radio />} label={<a href={homePage} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{homePage}</a>} onClick={() => setLink(homePage)}/>);
     for (let i = 0; i < res.length; i++) {
-      returnedLine.push(<FormControlLabel value={res[0][1]} control={<Radio />} label={<a href={res[0][1]} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{res[0][1]}</a>} onClick={() => setLink(res[0][1])}/>);
+      returnedLine.push(<FormControlLabel value={res[i][1]} control={<Radio />} label={<a href={res[i][1]} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{res[i][1]}</a>} onClick={() => setLink(res[i][1])}/>);
     }
     return returnedLine;
   }
