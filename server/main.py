@@ -14,6 +14,9 @@ from proc_and_sec import ProcAndSec
 from educationalresources import EducationalResources
 from flask import Flask, request, jsonify, make_response, Response
 import bcrypt
+import firebase_admin
+from firebase_admin import auth as firebase_auth
+from firebase_admin import credentials
 
 
 # Educational sources used to setup main.py
@@ -23,14 +26,15 @@ import bcrypt
 # from .env file
 load_dotenv()
 
+# Using firebase instead of google oauth
+cred = credentials.Certificate("./serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
 
 # Flask instance
 app = Flask(__name__)
-#CORS(app)  # Currently allowing all origins
-#CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
-#made an edit here to make sure CORS issue is solved
+
 CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True, methods=["GET", "POST", "PATCH", "DELETE","HEAD", "OPTIONS"])
-GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+
 
 secret = 'testSecret'
 
@@ -42,7 +46,6 @@ def default():
 
 @app.route('/groupresources', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS"])
 def AccessGroupResources():
-
     if request.method == "OPTIONS":
         # Handles CORS request
         response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
@@ -383,71 +386,81 @@ def remove():
     if (manager == []):
         print("Not a manager")
     else:
-        #If we allow deletion by typing (instead of selecting)
-        cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE (USERNAME = \'' + data["2"] + '\')')
-        userID = cursor.fetchall()
-        if(userID == []):
-            print("No such user exists")
-        else:
-            #Else skip to this (replacing userID with the JSON entry)
-            cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + str(userID[0][0]) + '\')')
-            connection.commit()
+        cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + data["2"] + '\')')
+        connection.commit()
     cursor.close()
     connection.close()
     return ""
 
 @app.route('/info', methods=["POST"])
 def info():
-    # decode the token received as plain text
-    token = request.data.decode("utf-8")  # read token as plain text
 
-    if not token:
-        print("Token is empty")
-        return jsonify({"error": "Token is missing"}), 400
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        return jsonify({"error": "Authorization header is missing"}), 400
 
-    print("Token is:", token)
-    print('============')
-    
+    token = auth_header.split(" ")[1] if " " in auth_header else auth_header
+
     try:
-        data = jwt.decode(token, key=secret, algorithms=['HS256'])
-        print("Decoded data:", data)
-        return jsonify(data)  # Directly return JSON object as JSON response
-    except jwt.DecodeError:
-        print("Invalid token.")
-        return jsonify({"error": "Invalid token"}), 401
-    except Exception as e:
-        print("An unexpected error occurred:", e)
-        return jsonify({"error": "Server error"}), 500
+        
+        decoded_token = firebase_auth.verify_id_token(token)
+        firebase_uid = decoded_token.get('uid')
+        email = decoded_token.get('email')
+        user_type = "Google"  
 
-#this commented out log works for logging in with unhashed passwords
-# @app.route('/log', methods=["POST"])
-# def findUser():
-#     connection = Database.GetConnection()
-#     verify = list(request.json.get('data').values())
-#     cursor = connection.cursor()
-#     cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE (USERNAME = \''+ verify[0] +'\' AND HASHEDPASSWORD = \'' + verify[1] + '\')') #Had to be done slightly differently
-#     results = cursor.fetchall()
-#     if (len(results) == 1):
-#         data = {
-#             'id': results[0][0],
-#             'user': results[0][1],
-#             'mail': results[0][2],
-#             'pass': results[0][3],
-#             'first': results[0][4],
-#             'last': results[0][5],
-#             'bio': results[0][6],
-#             'admin': results[0][7]
-#         }
-#         token = jwt.encode(payload=data, key=secret, algorithm='HS256')
-#         print("Generated token:", token)  # Debugging: Ensure token is generated correctly
-#         cursor.close()
-#         connection.close()
-#         return Response(token, mimetype='text/plain')  # Return token as plain text response
-#     else:
-#         cursor.close()
-#         connection.close()
-#         return jsonify({"error": "Invalid credentials"}), 401
+    except firebase_admin.auth.InvalidIdTokenError:
 
+        try:
+            decoded_token = jwt.decode(token, secret, algorithms=["HS256"])
+            user_id = decoded_token.get('id')
+            email = decoded_token.get('mail')
+            user_type = "Non-Google"  
+
+        except jwt.ExpiredSignatureError:
+            return jsonify({"error": "Token has expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"error": "Invalid token"}), 401
+        except Exception as e:
+            print("Unexpected error decoding JWT:", e)
+            return jsonify({"error": "Server error"}), 500
+
+   
+    connection = Database.GetConnection()
+    cursor = connection.cursor()
+    try:
+        if user_type == "Google":
+            cursor.execute('''SELECT USERID, USERNAME, FIRSTNAME, LASTNAME, BIO, ADMIN
+                              FROM MGOLAN.USERTABLE
+                              WHERE EMAIL = :1''', (email,))
+        else:
+            cursor.execute('''SELECT USERID, USERNAME, FIRSTNAME, LASTNAME, BIO, ADMIN
+                              FROM MGOLAN.USERTABLE
+                              WHERE USERID = :1''', (user_id,))
+
+        user_data = cursor.fetchone()
+        if user_data:
+            user_id, username, first_name, last_name, bio, admin = user_data
+            additional_info = {
+                "user_id": user_id,
+                "username": username,
+                "first_name": first_name,
+                "last_name": last_name,
+                "bio": bio,
+                "admin": admin
+            }
+        else:
+            return jsonify({"error": "User not found in database"}), 404
+
+    finally:
+        cursor.close()
+        connection.close()
+
+    return jsonify({
+        "status": "success",
+        "uid": firebase_uid if user_type == "Google" else user_id,
+        "email": email,
+        "additional_info": additional_info
+    }), 200
 
 @app.route('/log', methods=["POST"])
 def findUser():
@@ -462,14 +475,14 @@ def findUser():
 
     if result:
         user_id, db_username, db_hashed_password, email, admin, first_name, last_name, bio = result
-        # check if the entered password matches the stored hashed password
+        
         if bcrypt.checkpw(password.encode('utf-8'), db_hashed_password.encode('utf-8')):
-            # Create a JWT token with user data if the password matches
+            
             data = {
                 'id': user_id,
                 'user': db_username,
                 'mail': email,
-                'pass': db_hashed_password,  # avoid storing plain passwords
+                'pass': db_hashed_password,  
                 'first': first_name,
                 'last': last_name,
                 'bio': bio,
@@ -478,14 +491,14 @@ def findUser():
             token = jwt.encode(payload=data, key=secret, algorithm='HS256')
             cursor.close()
             connection.close()
-            return Response(token, mimetype='text/plain')  # return token as plain text
+            return Response(token, mimetype='text/plain')  
         else:
-            # unauthorized if the password does not match
+            
             cursor.close()
             connection.close()
             return jsonify({"error": "Invalid credentials"}), 401
     else:
-        # user not found in the database
+    
         cursor.close()
         connection.close()
         return jsonify({"error": "User not found"}), 404
@@ -512,46 +525,16 @@ def dev2():
         }
     )
 
-@app.route('/api/auth/google', methods=['POST'])
-def google_login():
-    token = request.json.get('token')
-    try:
-        # verify token with Google's OAuth2 library
-        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
-
-        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-            raise ValueError('Wrong issuer.')
-
-        # the token is verified -->   retrieve user information
-        user_id = idinfo['sub']
-        email = idinfo['email']
-        name = idinfo.get('name')
-
-        # save user information in database or session
-        # return the user information to the frontend
-        response = jsonify({'status': 'success', 'user_id': user_id, 'email': email, 'name': name})
-        # set a cookie with SameSite attribute
-        response.set_cookie('session_id', user_id, samesite='Strict')  # example cookie[replace]
-        return response
-    except ValueError:
-        # invalid token
-        return jsonify({'status': 'error', 'message': 'Invalid token'}), 400
-    except Exception as e:
-        # handle other exceptions
-        print(f"An error occurred: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 400
 
 @app.route('/api/calendar/events', methods=['GET'])
 def get_calendar_events():
     token = request.args.get('token')
     try:
-        # Verify the token
+       
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
 
-        # Retrieve the access token
         access_token = token
         
-        # Make a request to the Google Calendar API
         headers = {
             'Authorization': f'Bearer {access_token}'
         }
@@ -574,8 +557,154 @@ def test_db_connection():
         Database.TestConnection()
         return jsonify({"status": "connected"}), 200
     except Exception as e:
-        return jsonify({"status": "failed", "error": str(e)}), 500    
+        return jsonify({"status": "failed", "error": str(e)}), 500   
+
+# firebase stuff
+# @app.route('/check_profile', methods=['POST'])
+# def check_profile():
+#     email = request.json.get('email')
+#     if not email:
+#         return jsonify({"status": "error", "message": "Email is required"}), 400
+
+#     connection = Database.GetConnection()
+#     cursor = connection.cursor()
+#     try:
+#         cursor.execute('''SELECT USERNAME, HASHEDPASSWORD FROM MGOLAN.USERTABLE WHERE EMAIL = :1''', (email,))
+#         result = cursor.fetchone()
+        
+#         if result:
+#             username, hashed_password = result
+#             if username and hashed_password:
+#                 return jsonify({"status": "complete"})
+#             else:
+#                 return jsonify({"status": "incomplete"})
+#         else:
+#             return jsonify({"status": "incomplete"}), 200  
+#     finally:
+#         cursor.close()
+#         connection.close()
+@app.route('/check_profile', methods=['POST', 'OPTIONS'])
+def check_profile():
+    # Handle preflight CORS request
+    if request.method == 'OPTIONS':
+        return jsonify({"message": "Preflight check"}), 200
+
+    # Check for email in the request body
+    email = request.json.get('email')
+    if not email:
+        return jsonify({"status": "error", "message": "Email is required"}), 400
+
+    # Database connection and profile check logic
+    connection = Database.GetConnection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute('''SELECT USERNAME, HASHEDPASSWORD FROM MGOLAN.USERTABLE WHERE EMAIL = :1''', (email,))
+        result = cursor.fetchone()
+
+        if result:
+            username, hashed_password = result
+            if username and hashed_password:
+                return jsonify({"status": "complete"})
+            else:
+                return jsonify({"status": "incomplete"})
+        else:
+            return jsonify({"status": "incomplete"}), 200
+    finally:
+        cursor.close()
+        connection.close()
+
+@app.route('/api/auth/google', methods=['POST'])
+def google_login():
+    token = request.json.get('token')
+    try:
+        # Verify token with Google's OAuth2 library
+        idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
+
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise ValueError('Wrong issuer.')
+
+        # The token is verified, retrieve user information
+        email = idinfo['email']
+
+        # Check if the profile is complete by calling the /check_profile logic directly
+        connection = Database.GetConnection()
+        cursor = connection.cursor()
+        cursor.execute('''SELECT USERID, USERNAME, HASHEDPASSWORD FROM MGOLAN.USERTABLE WHERE EMAIL = :1''', (email,))
+        user = cursor.fetchone()
+        
+        if user:
+            user_id, username, hashed_password = user
+            # Check if user profile is complete
+            if username and hashed_password:
+                response = jsonify({'status': 'success', 'user_id': user_id, 'email': email, 'name': idinfo.get('name')})
+            else:
+                response = jsonify({'status': 'incomplete', 'user_id': user_id, 'email': email})
+        else:
+            # If the email is not found, treat it as a new user who needs to complete their profile
+            response = jsonify({'status': 'incomplete', 'email': email})
+        
+        cursor.close()
+        connection.close()
+
+        # Set a cookie or handle as needed
+        response.set_cookie('session_id', idinfo['sub'], samesite='Strict')
+        return response
+
+    except ValueError:
+        # Invalid token
+        return jsonify({'status': 'error', 'message': 'Invalid token'}), 400
+    except Exception as e:
+        # Handle other exceptions
+        print(f"An error occurred: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 400
+@app.route('/complete_profile', methods=['POST'])
+def complete_profile():
+    data = request.json.get('data')
+    email = data.get('email')
+    username = data.get('username')
+    password = data.get('hashedPassword')
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    google_uid = data.get('googleUID')
     
+    print("Email:", email)
+    print("Username:", username)
+    print("Password:", password)
+    print("Google UID:", google_uid)
+
+    if not all([email, username, password, google_uid]):
+        return jsonify({"status": "error", "message": "Email, username, password, and Google UID are required"}), 400
+
+
+    if not email or not username or not password or not google_uid:
+        return jsonify({"status": "error", "message": "Email, username, password, and Google UID are required"}), 400
+
+    hashed_password = ProcAndSec.HashAndSalt(password)
+
+    connection = Database.GetConnection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute('''INSERT INTO MGOLAN.USERTABLE (USERID, USERNAME, EMAIL, HASHEDPASSWORD, FIRSTNAME, LASTNAME, GOOGLE, ADMIN)
+                          VALUES (ALLIEMONTIAGUE.user_id_seq.NEXTVAL, :1, :2, :3, :4, :5, :6, 0)''',
+                       (username, email, hashed_password, first_name, last_name, 1))
+
+        cursor.execute("SELECT ALLIEMONTIAGUE.user_id_seq.CURRVAL FROM dual")
+        user_id = cursor.fetchone()[0]
+
+        cursor.execute('''INSERT INTO MGOLAN.GOOGLE (OWNERID, EMAIL, GOOGLEUID)
+                          VALUES (:1, :2, :3)''',
+                       (user_id, email, google_uid))
+
+        connection.commit()
+        return jsonify({"status": "success", "message": "Profile completed successfully"}), 200
+    except Exception as e:
+        print("Error completing profile:", e)
+        connection.rollback()
+        return jsonify({"status": "error", "message": "Failed to complete profile"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
 @app.after_request
 def set_cors_headers(response):
     response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'

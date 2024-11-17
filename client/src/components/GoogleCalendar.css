@@ -1,0 +1,34 @@
+.calendar-container {
+    max-width: 1200px; 
+    margin: auto;
+    padding-top: 80px;
+    background-color: #f0f4ff; 
+}
+
+.calendar-title {
+    text-align: center; 
+    margin-bottom: 20px; 
+    color: #556cd6; 
+}
+
+.calendar-controls {
+    margin-bottom: 20px; 
+}
+
+.calendar-paper {
+    margin-top: 20px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
+    border-radius: 12px; 
+    background-color: #ffffff; 
+}
+
+.calendar-arrow {
+    cursor: pointer;
+    transition: color 0.2s ease;
+    color: #556cd6; 
+}
+
+.calendar-arrow:hover {
+    color: #4051b5; 
+}

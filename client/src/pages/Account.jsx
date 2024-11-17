@@ -6,37 +6,63 @@ import '../components/Account.css';
 function Account() {
     const [safe, setSafe] = useState(false);
     const [data, setData] = useState({
-        pass: '', // Initialize password as empty
+        user_id: '', 
+        user: '',
+        pass: '',
+        mail: '',
+        first: '',
+        last: '',
+        bio: ''
     });
     const [view, setView] = useState('Settings');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [error, setError] = useState(null);
 
     async function handleInfGet() {
         const token = localStorage.getItem('token');
+        
+        if (!token) {
+            setError("Authentication token is missing. Please log in again.");
+            console.error("Token is missing");
+            return;
+        }
+
         try {
             const response = await fetch('http://localhost:8080/info', {
                 method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: token,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,  
+                },
+                body: JSON.stringify({})
             });
+
             if (response.ok) {
                 const info = await response.json();
-                // Exclude 'pass' from the data to prevent displaying the current password
-                setData({
-                    id: info.id,
-                    user: info.user,
-                    mail: info.mail,
-                    first: info.first,
-                    last: info.last,
-                    bio: info.bio,
-                    pass: '', // Ensure pass is empty
-                });
-                setSafe(true);
+                
+                // Check if both user_id and email data exist
+                if (info.additional_info && info.email) {
+                    setData({
+                        user_id: info.additional_info.user_id || '',
+                        user: info.additional_info.username || '',
+                        pass: '', 
+                        mail: info.email || '',
+                        first: info.additional_info.first_name || '',
+                        last: info.additional_info.last_name || '',
+                        bio: info.additional_info.bio || ''
+                    });
+                    setSafe(true);
+                } else {
+                    setError("User information is incomplete. Please try again.");
+                }
             } else {
-                console.error('Error fetching user info. Status:', response.status);
+                const errorData = await response.json();
+                setError(errorData.message || 'Error fetching user information.');
+                console.error('Error fetching user info. Status:', response.status, 'Message:', errorData.message);
             }
         } catch (error) {
             console.error('Error fetching user info:', error);
+            setError("An error occurred while fetching user information. Please try again.");
         }
     }
 
@@ -54,12 +80,14 @@ function Account() {
 
         // Prepare the data to be updated
         const updatedData = {
-            valUserID: data.id,
+            valUserID: data.user_id,
             valUserName: data.user,
+            valHashedPassword: data.pass || null, 
             valEmail: data.mail,
             valFirstName: data.first,
             valLastName: data.last,
             valBio: data.bio,
+            valAdmin: 0
         };
 
         // Include the password only if a new one has been entered
@@ -94,11 +122,19 @@ function Account() {
 
     function handleLogout() {
         localStorage.removeItem('token');
-        localStorage.removeItem('groupID'); // Also clear the currently selected group.
+        localStorage.removeItem('groupID'); 
         window.location.href = '/';
     }
 
-    if (!safe) return null;
+    if (!safe) {
+        return (
+            <div>
+                <h2>Account Information</h2>
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                <p>Loading user information...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="account-page">
@@ -118,56 +154,57 @@ function Account() {
                 {view === 'Settings' && (
                     <div className="settings-view">
                         <Box className="avatar-section">
-                            <Avatar className="avatar" sx={{ width: 100, height: 100 }}>A</Avatar>
+                            <Avatar className="avatar" sx={{ width: 100, height: 100 }}>{data.user.charAt(0).toUpperCase()}</Avatar>
                             <Button variant="outlined" className="change-picture">Change Picture</Button>
                         </Box>
                         <form className="account-form" onSubmit={handleSaveChanges}>
-                            <TextField
-                                label="Username"
-                                name="user"
-                                value={data.user || ''}
-                                onChange={handleInputChange}
-                                required
-                                fullWidth
+                            <TextField 
+                                label="Username" 
+                                name="user" 
+                                value={data.user || ''} 
+                                onChange={handleInputChange} 
+                                required 
+                                fullWidth 
                             />
-                            <TextField
-                                label="Password"
-                                name="pass"
-                                value={data.pass || ''} // Password field is empty
-                                type="password"
-                                onChange={handleInputChange}
-                                fullWidth
+                            <TextField 
+                                label="Password" 
+                                name="pass" 
+                                value={data.pass || ''} 
+                                type="password" 
+                                onChange={handleInputChange} 
+                                fullWidth 
+                                placeholder="Leave blank to keep current password"
                             />
-                            <TextField
-                                label="Email"
-                                name="mail"
-                                value={data.mail || ''}
-                                onChange={handleInputChange}
-                                required
-                                fullWidth
+                            <TextField 
+                                label="Email" 
+                                name="mail" 
+                                value={data.mail || ''} 
+                                onChange={handleInputChange} 
+                                required 
+                                fullWidth 
                             />
-                            <TextField
-                                label="First Name"
-                                name="first"
-                                value={data.first || ''}
-                                onChange={handleInputChange}
-                                fullWidth
+                            <TextField 
+                                label="First Name" 
+                                name="first" 
+                                value={data.first || ''} 
+                                onChange={handleInputChange} 
+                                fullWidth 
                             />
-                            <TextField
-                                label="Last Name"
-                                name="last"
-                                value={data.last || ''}
-                                onChange={handleInputChange}
-                                fullWidth
+                            <TextField 
+                                label="Last Name" 
+                                name="last" 
+                                value={data.last || ''} 
+                                onChange={handleInputChange} 
+                                fullWidth 
                             />
-                            <TextField
-                                label="Bio"
-                                name="bio"
-                                value={data.bio || ''}
-                                onChange={handleInputChange}
-                                multiline
-                                rows={3}
-                                fullWidth
+                            <TextField 
+                                label="Bio" 
+                                name="bio" 
+                                value={data.bio || ''} 
+                                onChange={handleInputChange} 
+                                multiline 
+                                rows={3} 
+                                fullWidth 
                             />
                             <Button variant="contained" type="submit" className="save-button">Save Changes</Button>
                             <Button variant="contained" color="error" onClick={handleLogout} className="logout-button">

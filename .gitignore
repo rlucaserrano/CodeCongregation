@@ -7,23 +7,83 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Python compiled files and cache
+__pycache__/
+*.py[cod]
+*.so
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Virtual Environments
+.venv/
+venv/
+functions/venv/
 
+# Environment variables
 .env
 *.env
 server/.env
 client/.env
+
+# Private keys and sensitive files
+*.pem
+*.key
+server/serviceAccountKey.json
+config.py
+secret_config.py
+
+# Temporary and backup files
+*.tmp
+*.sw?
+*.bak
+
+# Python dependency management files
+*.egg-info/
+pip-log.txt
+htmlcov/
+.tox/
+.coverage
+
+# Configuration and other generated files
+*.cfg
+*.conf
+*.ini
+
+# Node.js dependencies
+node_modules/
+dist/
+dist-ssr/
+# Node.js dependencies
+node_modules
+dist
+dist-ssr
+*.local
+client/node_modules/
+client/dist/
+
+# Python compiled files and cache
+__pycache__/
+*.py[cod]
+*.so
+# Virtual Environment
+.venv/
+venv/
+functions/venv/
+
+# IDE and editor-specific files
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+
+# OS-specific files
+.DS_Store
+
+# CRLF warning files
+*RECORD
+*py.typed
+
+# Ignore all *.dist-info directories within functions
+functions/*.dist-info/

@@ -138,7 +138,7 @@ function Groups() {
         let list = await mem.json()
         let items = Object.keys(list)
         setClicked(group)
-        setMembers(items) //To be reworked to highlight members invited, but not yet accepted
+        setMembers(list)
     }
 
     const [clicked, setClicked] = useState()
@@ -333,9 +333,9 @@ function Groups() {
                             {group[0][2] == clicked ?
                             <div>
                                 <div className='invite-buttons'> 
-                                    <p>Group members: </p>{members.length == 0 ? <b style={{display: 'flex', justifyContent: 'center', flexDirection: 'column', color: 'red'}}>This group currently has no other members</b> 
-                                    : members.map((member,index) => 
-                                    <p>{member}</p>)}
+                                    <p>Group members: </p>{Object.keys(members).length == 0 ? <b style={{display: 'flex', justifyContent: 'center', flexDirection: 'column', color: 'red'}}>This group currently has no other members</b> 
+                                    : Object.keys(members).map((member) =>
+                                    <p style = {members[member][3] == 1 ? {border: '2px solid black', borderRadius: '5px'} : {border: '2px solid black', borderRadius: '5px', backgroundColor: 'lightgoldenrodyellow'}}>{member}</p>)}
                                 </div>
                                 <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', backgroundColor: 'lightgray', borderRadius: '12px', gap: '15px'}}>
                                     <Button style={{backgroundColor: 'lightblue', color: 'black', border: '2px solid black'}} onClick={handleChoose(group[0][2])}>Select</Button>
@@ -373,10 +373,11 @@ function Groups() {
                         <div className='invite-buttons'>
                             <p>Group members: </p>
                             <div style={{overflow: 'scroll', display: 'flex', flexDirection: 'row', gap: '10px'}}>
-                                {members.length == 0 ? <b style={{display: 'flex', justifyContent: 'center', flexDirection: 'column', color: 'red'}}>This group currently has no other members</b> :
-                                members.map((member,index) => 
+                                {Object.keys(members).length == 0 ? <b style={{display: 'flex', justifyContent: 'center', flexDirection: 'column', color: 'red'}}>This group currently has no other members</b> :
+                                Object.keys(members).map((member) =>
                                 <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                                    <Button style={member == toRemove ? {maxHeight: '20px', color: 'yellow', border: '2px solid yellow'} : {maxHeight: '20px'}} onClick={handleSelect(member)}>{member}</Button>
+                                    {members[member][3] == 1 ? <Button style={members[member][0] == toRemove ? {maxHeight: '20px', color: 'red', backgroundColor: 'white', border: '2px solid red', borderRadius: '5px'} : {maxHeight: '20px', color: 'black', backgroundColor: 'white', border: '2px solid black', borderRadius: '5px'}} onClick={handleSelect(members[member][0])}>{member}</Button>
+                                    : <Button style={members[member][0] == toRemove ? {maxHeight: '20px', color: 'red', backgroundColor: 'lightgoldenrodyellow', border: '2px solid red', borderRadius: '5px'} : {maxHeight: '20px', color: 'black', backgroundColor: 'lightgoldenrodyellow', border: '2px solid black', borderRadius: '5px'}} onClick={handleSelect(members[member][0])}>{member}</Button>}
                                 </div>)}
                             </div>
                         </div>
