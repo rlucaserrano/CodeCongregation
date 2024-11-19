@@ -25,15 +25,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
-
-import BuildIcon from '@mui/icons-material/Build'; //Practice Questions
-import SchoolIcon from '@mui/icons-material/School'; //Tutorials
-import VisibilityIcon from '@mui/icons-material/Visibility'; //Visualization Materials
-import BookIcon from '@mui/icons-material/Book'; //Computer Science Theory
-import LocalLibraryIcon from '@mui/icons-material/LocalLibrary'; //Misc/Other
 import { DialogContentText, IconButton, TableBody } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
-import { CheckBox, Terminal } from '@mui/icons-material';
 
 
 
@@ -48,6 +41,9 @@ import { CheckBox, Terminal } from '@mui/icons-material';
 // 8. https://www.geeksforgeeks.org/how-to-disable-a-button-in-reactjs/
 // 9. https://mui.com/material-ui/react-button-group/
 // 10. https://legacy.reactjs.org/docs/hooks-effect.html
+// 11. https://stackoverflow.com/questions/49421792/how-to-use-material-uinext-textfield-error-props
+// 12. https://stackoverflow.com/questions/30970068/js-regex-url-validation
+// 13. https://www.geeksforgeeks.org/how-to-get-the-length-of-a-string-in-bytes-in-javascript/
 
 
 // Global resources. Will need to be updated for proper guest display and study group navigation.
@@ -132,7 +128,6 @@ function useCommunityResources() {
   return [safe, res];
 }
 
-// Taken, with slight modification, from Groups. 
 function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, resourceName}) {
 
   const handleCreate = async (e) =>
@@ -168,7 +163,6 @@ function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, res
     );
 }
 
-
 function AddResourcePopUp({openC, handleCloseC, groupID}) {
 
   const [publicShare, setPublicShare] = useState("0");
@@ -176,16 +170,46 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
   const [websiteURL, setWebsiteURL] = useState("");
   const [resourceCategory, setResourceCategory] = useState("");
   const [comCategory, setComCategory] = useState("");
+  const [invalidURL, setInvalidURL] = useState("");
+  const [invalidName, setInvalidName] = useState("");
+  const [invalidDescription, setInvalidDescription] = useState("");
+  const [invalidCategory, setInvalidCategory] = useState("");
   
   function displayCreateButton() {
   
-    if (resourceName != "" && websiteURL != "" && resourceCategory != "" && comCategory != "")
+    if (resourceName != "" && websiteURL != "" && resourceCategory != "" && comCategory != "" && invalidURL == "" && invalidName == "" && invalidDescription == "" && invalidCategory == "")
     {
       return (<Button variant='contained' type='submit'>Share</Button>);
     }
     else {
       
       return (<Button variant='contained' style={{color: '#556cd6', background: '#ffffff', border: 'solid 1px #556cd6'}} disabled={true}>Share</Button>);
+    }
+  }
+
+  function checkWebsiteURL(url) {
+    
+    if (!url.match((/^(https?:\/\/)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/))) {
+      setInvalidURL("Invalid input - please copy and paste the full website url.");
+    }
+    else if (new Blob([url]).size > 300) {
+      setInvalidURL("Invalid input - provided url is too long. Please double check accuracy.");
+    }
+    else{
+      setInvalidURL("");
+    }
+  }
+
+  function checkInput(input, size, setter) {
+    if (new Blob([input]).size > size) {
+      setter("Invalid input - please reduce length.");
+    }
+    else if (!input.match((/^([a-zA-Z0-9_!? ]*)$/)))
+    {
+      setter("Invalid input - only letters, numbers, spaces, and special characters !?_ are allowed.");
+    }
+    else {
+      setter("");
     }
   }
 
@@ -240,9 +264,9 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
             </div>
           </div>
           <div style={{margin: '0.5rem', display: 'flex', flexDirection: 'column'}}>
-            <TextField required id="ResourceName" label="Resource Name" onChange={(input) => setResourceName(input.target.value)}/>
+            <TextField required id="ResourceName" label="Resource Name" onChange={(input) => {setResourceName(input.target.value), checkInput(input.target.value, 100, setInvalidName)}} error={invalidName !== ""} helperText={invalidName}/>
             <br/>
-            <TextField required id="WebsiteURL" label="Website URL" onChange={(input) => setWebsiteURL(input.target.value)}/>
+            <TextField required id="WebsiteURL" label="Website URL" onChange={(input) => {setWebsiteURL(input.target.value), checkWebsiteURL(input.target.value)}} error={invalidURL !== ""} helperText={invalidURL}/>
             <div style={{fontSize: 'small', marginTop: '1rem', marginBottom: '0.75rem'}}>Select the category that best describes this resource. Optionally, you can change the displayed category name to fit the needs of your group:</div>
             <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
               <FormControl style={{flex: 1}}>
@@ -263,10 +287,10 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
                   <MenuItem value={"Career Development"}>Career Development</MenuItem>
               </Select>
               </FormControl>
-              <TextField style={{flex: 1.25}} required id="ResourceCategory" value={resourceCategory} label="Displayed Category Name" onChange={(input) => setResourceCategory(input.target.value)}/>
+              <TextField style={{flex: 1.25}} required id="ResourceCategory" value={resourceCategory} label="Displayed Category Name" onChange={(input) => {setResourceCategory(input.target.value), checkInput(input.target.value, 300, setInvalidCategory)}} error={invalidCategory !== ""} helperText={invalidCategory}/>
             </div>
             <br/>
-            <TextField id="Description" label="Description" multiline minRows={3}/>
+            <TextField id="Description" label="Description" multiline minRows={3} onChange={(input) => checkInput(input.target.value, 300, setInvalidDescription)} error={invalidDescription !== ""} helperText={invalidDescription}/>
           </div>
           <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
             {displayCreateButton()}
@@ -414,16 +438,46 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
   const [websiteURL, setWebsiteURL] = useState(prevWebsiteURL);
   const [resourceCategory, setResourceCategory] = useState(prevResourceCategory);
   const [resourceDescription, setResourceDescription] = useState(prevResourceDescription);
+  const [invalidURL, setInvalidURL] = useState("");
+  const [invalidName, setInvalidName] = useState("");
+  const [invalidDescription, setInvalidDescription] = useState("");
+  const [invalidCategory, setInvalidCategory] = useState("");
 
   function displayModifyButton() {
   
-    if (resourceName != "" && websiteURL != "" && resourceCategory != "")
+    if (resourceName != "" && websiteURL != "" && resourceCategory != "" && invalidURL == "" && invalidName == "" && invalidDescription == "" && invalidCategory == "")
     {
       return (<Button variant='contained' type='submit'>Modify</Button>);
     }
     else {
       
       return (<Button variant='contained' style={{color: '#556cd6', background: '#ffffff', border: 'solid 1px #556cd6'}} disabled={true}>Modify</Button>);
+    }
+  }
+
+  function checkWebsiteURL(url) {
+    
+    if (!url.match((/^(https?:\/\/)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/))) {
+      setInvalidURL("Invalid input - please copy and paste the full website url.");
+    }
+    else if (new Blob([url]).size > 300) {
+      setInvalidURL("Invalid input - provided url is too long. Please double check accuracy.");
+    }
+    else{
+      setInvalidURL("");
+    }
+  }
+
+  function checkInput(input, size, setter) {
+    if (new Blob([input]).size > size) {
+      setter("Invalid input - please reduce length.");
+    }
+    else if (!input.match((/^([a-zA-Z0-9_!? ]*)$/)))
+    {
+      setter("Invalid input - only letters, numbers, spaces, and special characters !?_ are allowed.");
+    }
+    else {
+      setter("");
     }
   }
 
@@ -457,13 +511,13 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
           <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Modify Resource: {prevResourceName}</DialogTitle>
           <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
           <div style={{margin: '1rem', display: 'flex', flexDirection: 'column'}}>
-            <TextField required id="ResourceName" label="Resource Name" value={resourceName} onChange={(input) => setResourceName(input.target.value)}/>
+            <TextField required id="ResourceName" label="Resource Name" value={resourceName} onChange={(input) => {setResourceName(input.target.value), checkInput(input.target.value, 100, setInvalidName)}} error={invalidName !== ""} helperText={invalidName}/>
             <br/>
-            <TextField required id="WebsiteURL" label="Website URL" value={websiteURL} onChange={(input) => setWebsiteURL(input.target.value)}/>
+            <TextField required id="WebsiteURL" label="Website URL" value={websiteURL} onChange={(input) => {setWebsiteURL(input.target.value), checkWebsiteURL(input.target.value)}} error={invalidURL !== ""} helperText={invalidURL}/>
             <br/>
-            <TextField required id="ResourceCategory" label="Resource Category" value={resourceCategory} onChange={(input) => setResourceCategory(input.target.value)}/>
+            <TextField required id="ResourceCategory" label="Resource Category" value={resourceCategory} onChange={(input) => {setResourceCategory(input.target.value), checkInput(input.target.value, 300, setInvalidCategory)}} error={invalidCategory !== ""} helperText={invalidCategory}/>
             <br/>
-            <TextField id="Description" value ={resourceDescription} label="Description" onChange={(input) => setResourceDescription(input.target.value)} multiline minRows={4}/>
+            <TextField id="Description" value ={resourceDescription} label="Description" onChange={(input) => {setResourceDescription(input.target.value), checkInput(input.target.value, 300, setInvalidDescription)}} error={invalidDescription !== ""} helperText={invalidDescription} multiline minRows={4}/>
           </div>
           <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
             {displayModifyButton()}
@@ -685,19 +739,32 @@ function validCClick(resources, setOpenS, setOpenF){
 
   if (resources[1] && resources[1].length > clickedCRow)
   {
-    return(
-      <TableRow>
-        <div className="tb2-header">{"Description"}</div>
-        {resources[1][clickedCRow][4]}
-        <div style={{marginTop: '1rem', wordWrap: 'break-word', wordBreak: 'break-all'}}><a href={resources[1][clickedCRow][2]} target='_blank'>{resources[1][clickedCRow][2]}</a></div>
-        <div style={{marginTop: '1rem'}}><span style={{fontWeight: 'bold'}}>Community Shares: </span>{resources[1][clickedCRow][7]}</div>
-        <div style={{marginTop: '1rem', marginBottom: '1rem'}}>Date Added: {resources[1][clickedCRow][6]}</div>
-        <div className='button-format'>
-          <Button onClick={() => setOpenS(true)} variant="contained" color="secondary">+ Share with {groupName}</Button>
-          <Button onClick={() => setOpenF(true)} variant="contained" style={{backgroundColor: '#e8e8e8', color: '#556cd6', marginLeft: '1rem'}}>Feedback</Button>
-        </div>
-      </TableRow>
-    )
+     if (user) {
+      return(
+        <TableRow>
+          <div className="tb2-header">{"Description"}</div>
+          {resources[1][clickedCRow][4]}
+          <div style={{marginTop: '1rem', wordWrap: 'break-word', wordBreak: 'break-all'}}><a href={resources[1][clickedCRow][2]} target='_blank'>{resources[1][clickedCRow][2]}</a></div>
+          <div style={{marginTop: '1rem'}}><span style={{fontWeight: 'bold'}}>Community Shares: </span>{resources[1][clickedCRow][7]}</div>
+          <div style={{marginTop: '1rem', marginBottom: '1rem'}}>Date Added: {resources[1][clickedCRow][6]}</div>
+          <div className='button-format'>
+            <Button onClick={() => setOpenS(true)} variant="contained" color="secondary">+ Share with {groupName}</Button>
+            <Button onClick={() => setOpenF(true)} variant="contained" style={{backgroundColor: '#e8e8e8', color: '#556cd6', marginLeft: '1rem'}}>Feedback</Button>
+          </div>
+        </TableRow>
+      )
+     }
+     else {
+      return(
+        <TableRow>
+          <div className="tb2-header">{"Description"}</div>
+          {resources[1][clickedCRow][4]}
+          <div style={{marginTop: '1rem', wordWrap: 'break-word', wordBreak: 'break-all'}}><a href={resources[1][clickedCRow][2]} target='_blank'>{resources[1][clickedCRow][2]}</a></div>
+          <div style={{marginTop: '1rem'}}><span style={{fontWeight: 'bold'}}>Community Shares: </span>{resources[1][clickedCRow][7]}</div>
+          <div style={{marginTop: '1rem', marginBottom: '1rem'}}>Date Added: {resources[1][clickedCRow][6]}</div>
+        </TableRow>
+      )
+     }
   }
   else 
   {
@@ -848,9 +915,20 @@ if (resources[0] && categories[0])
 
 function GuestMessage() {
   return (
-    <div className= "resources-group-header">
-    <header className="group-title">Group Resources </header>
-  </div>
+    <>
+      <div className= "resources-group-header">
+        <header className="group-title">Welcome, Guest!</header>
+      </div>
+          <Table style={{background: '#ffffff', fontWeight: 'bold', border: 'solid 1px #1c1c1e', marginLeft: '2.5%', marginRight: '2.5%', height: '10rem', display: 'flex', justifyContent: 'center', width: '95%', alignItems: 'center'}}>
+                After signing up, join or create your first group to start sharing resources. Meanwhile, check out our community resources to begin learning!
+          </Table>
+          <div className="table-body-1">
+            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                <TableBody>
+                </TableBody>
+            </Table>
+        </div>
+    </>
   )
 }
 
@@ -921,7 +999,18 @@ function CommunityResources()
 
    function DisplayRecommended()
    {
-      return (
+      if (guest === true)
+        {
+          return (
+            <div className="table-body-1">
+              <Table style={{background: '#ffffff', fontWeight: 'bold', border: 'solid 1px #1c1c1e', marginLeft: '2.5%', marginRight: '2.5%', height: '10rem', display: 'flex', justifyContent: 'center', width: '95%', alignItems: 'center'}}>
+                After signing up, join or create your first group to start sharing resources. Meanwhile, check out our community resources to begin learning!
+              </Table>
+            </div>
+          )
+        }  
+    
+    return (
         <div className="table-body-1">
             <Table style={{ tableLayout: 'fixed', width: '100%'}}>
                 <TableBody>
@@ -929,7 +1018,6 @@ function CommunityResources()
                 </TableBody>
             </Table>
           </div>
-
       )
    }
 
@@ -1018,226 +1106,3 @@ function Resources() {
 }
 
 export default Resources;
-
-/*
-  const [safe, setSafe] = useState(false)
-  const [res, setRes] = useState()
-  async function handleResGet()
-@@ -62,92 +324,83 @@ function Resources() {
-  {
-    return (
-      <html>
-        <header>
-          <h1>Resources (TBD)</h1>
-          <p>Here you will find frequently shared resources. Websites and other materials for you and your friends to study and practice with.</p>
-          <h2>Legend:</h2>
-          <Table style={{display: 'flex', flexDirection: 'column', height: 20}}>
-            <p><SchoolIcon/>Tutorials</p>
-            <p><BuildIcon/> Practice Questions</p>
-            <p><VisibilityIcon/> Visualizations</p>
-            <p><BookIcon/> Computer Science Theory</p>
-            <p><LocalLibraryIcon/> Other</p>
-          </Table>
-        <h3>Currently displaying resources for: *Group Name*</h3>
-        <p>Select a type of educational resource to study:</p>
-        </header>
-        <GuestMessage />
-        <h2 style={{ textAlign: 'left', marginBottom: '0.20' }}>Frequently Shared Resources</h2>
-        <hr />
-        <p style={{ textAlign: 'left', marginTop: '0' }}>Resources are sorted into categories and ordered according to how often they are shared among study groups.
-        </p>
-      <div>
-          <Accordion sx={{width: '100%'}}>
-            <AccordionSummary expandIcon={'v'}>
-            Tutorials
-            Practice Questions
-            </AccordionSummary>
-            <AccordionDetails>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Resource Icon</TableCell>
-                    <TableCell>Resource Name</TableCell>
-                    <TableCell align='right'>Resource Link</TableCell>
-                    <TableCell align='right'>Votes</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
-                    <TableCell align='right'>Number of Shares</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{handleImage(res[4][2])}</TableCell>
-                    <TableCell>{res[4][0]}</TableCell>
-                    <TableCell align='right'><a href={res[4][1]} target='_blank'>{res[4][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[4][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell>{handleImage(res[0][2])}</TableCell>
-                    <TableCell>{res[0][0]}</TableCell>
-                    <TableCell align='right'><a href={res[0][1]} target='_blank'>{res[0][1]}</a></TableCell>
-                    <TableCell align='right'>{res[0][3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{handleImage(res[5][2])}</TableCell>
-                    <TableCell>{res[5][0]}</TableCell>
-                    <TableCell align='right'><a href={res[5][1]} target='_blank'>{res[5][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[5][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell>{handleImage(res[1][2])}</TableCell>
-                    <TableCell>{res[1][0]}</TableCell>
-                    <TableCell align='right'><a href={res[1][1]} target='_blank'>{res[1][1]}</a></TableCell>
-                    <TableCell align='right'>{res[1][3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{handleImage(res[6][2])}</TableCell>
-                    <TableCell>{res[6][0]}</TableCell>
-                    <TableCell align='right'><a href={res[6][1]} target='_blank'>{res[6][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[6][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell>{handleImage(res[2][2])}</TableCell>
-                    <TableCell>{res[2][0]}</TableCell>
-                    <TableCell align='right'><a href={res[2][1]} target='_blank'>{res[2][1]}</a></TableCell>
-                    <TableCell align='right'>{res[2][3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{handleImage(res[3][2])}</TableCell>
-                    <TableCell>{res[3][0]}</TableCell>
-                    <TableCell align='right'><a href={res[3][1]} target='_blank'>{res[3][1]}</a></TableCell>
-                    <TableCell align='right'>{res[3][3]}</TableCell>
-                  </TableRow>
-                </TableHead>
-              </Table>
-            </AccordionDetails>
-          </Accordion>
-          <Accordion sx={{width: '100%'}}>
-            <AccordionSummary expandIcon={'v'}>
-            Practice Questions
-            Tutorials
-            </AccordionSummary>
-            <AccordionDetails>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Resource Icon</TableCell>
-                    <TableCell>Resource Name</TableCell>
-                    <TableCell align='right'>Resource Link</TableCell>
-                    <TableCell align='right'>Votes</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
-                    <TableCell align='right'>Number of Shares</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[0][2]}</TableCell>
-                    <TableCell>{res[0][0]}</TableCell>
-                    <TableCell align='right'><a href={res[0][1]} target='_blank'>{res[0][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[0][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[1][2]}</TableCell>
-                    <TableCell>{res[1][0]}</TableCell>
-                    <TableCell align='right'><a href={res[1][1]} target='_blank'>{res[1][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[1][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell>{handleImage(res[4][2])}</TableCell>
-                    <TableCell>{res[4][0]}</TableCell>
-                    <TableCell align='right'><a href={res[4][1]} target='_blank'>{res[4][1]}</a></TableCell>
-                    <TableCell align='right'>{res[4][3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[2][2]}</TableCell>
-                    <TableCell>{res[2][0]}</TableCell>
-                    <TableCell align='right'><a href={res[2][1]} target='_blank'>{res[2][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[2][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell>{handleImage(res[5][2])}</TableCell>
-                    <TableCell>{res[5][0]}</TableCell>
-                    <TableCell align='right'><a href={res[5][1]} target='_blank'>{res[5][1]}</a></TableCell>
-                    <TableCell align='right'>{res[5][3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[3][2]}</TableCell>
-                    <TableCell>{res[3][0]}</TableCell>
-                    <TableCell align='right'><a href={res[3][1]} target='_blank'>{res[3][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[3][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell>{handleImage(res[6][2])}</TableCell>
-                    <TableCell>{res[6][0]}</TableCell>
-                    <TableCell align='right'><a href={res[6][1]} target='_blank'>{res[6][1]}</a></TableCell>
-                    <TableCell align='right'>{res[6][3]}</TableCell>
-                  </TableRow>
-                </TableHead>
-              </Table>
-@@ -161,22 +414,22 @@ function Resources() {
-            <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Resource Icon</TableCell>
-                    <TableCell>Resource Name</TableCell>
-                    <TableCell align='right'>Resource Link</TableCell>
-                    <TableCell align='right'>Votes</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
-                    <TableCell align='right'>Number of Shares</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[7][2]}</TableCell>
-                    <TableCell>{handleImage(res[7][2])}</TableCell>
-                    <TableCell>{res[7][0]}</TableCell>
-                    <TableCell align='right'><a href={res[7][1]} target='_blank'>{res[7][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[7][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell align='right'>{res[7][3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[8][2]}</TableCell>
-                    <TableCell>{handleImage(res[8][2])}</TableCell>
-                    <TableCell>{res[8][0]}</TableCell>
-                    <TableCell align='right'><a href={res[8][1]} target='_blank'>{res[8][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[8][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell align='right'>{res[8][3]}</TableCell>
-                  </TableRow>
-                </TableHead>
-              </Table>
-@@ -190,39 +443,32 @@ function Resources() {
-            <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Resource Icon</TableCell>
-                    <TableCell>Resource Name</TableCell>
-                    <TableCell align='right'>Resource Link</TableCell>
-                    <TableCell align='right'>Votes</TableCell>
-                    <TableCell></TableCell>
-                    <TableCell>Name</TableCell>
-                    <TableCell align='right'>Link</TableCell>
-                    <TableCell align='right'>Number of Shares</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[9][2]}</TableCell>
-                    <TableCell>{handleImage(res[9][2])}</TableCell>
-                    <TableCell>{res[9][0]}</TableCell>
-                    <TableCell align='right'><a href={res[9][1]} target='_blank'>{res[9][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[9][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell align='right'>{res[9][3]}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>{res[10][2]}</TableCell>
-                    <TableCell>{handleImage(res[10][2])}</TableCell>
-                    <TableCell>{res[10][0]}</TableCell>
-                    <TableCell align='right'><a href={res[10][1]} target='_blank'>{res[10][1]}</a></TableCell>
-                    <TableCell align='right'><Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↑</Button>{res[10][3]}<Button variant='contained' sx={{minWidth:25, width:25, minHeight:25, height:25}}>↓</Button></TableCell>
-                    <TableCell align='right'>{res[10][3]}</TableCell>
-                  </TableRow>
-                </TableHead>
-              </Table>
-            </AccordionDetails>
-          </Accordion>
-          <Accordion sx={{width: '100%'}}>
-            <AccordionSummary expandIcon={'v'}>
-            Add your own resources
-            </AccordionSummary>
-            <AccordionDetails>
-              <p>Save the resources you want to study here: <Button variant='outlined' sx={{minWidth:25, width:25, minHeight:25, height:25}}>+</Button></p>
-            </AccordionDetails>
-          </Accordion>
-      </div>
-      </html>
-    ); 
-    
-); 
-  }
-}
-  */
