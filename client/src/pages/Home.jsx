@@ -1,9 +1,10 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import '../components/Home.css';
 
 function Home() {
   return (
+    <div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
     <Box className="home-container">
       <Typography variant="h3" className="home-title">
         Welcome to CoderCongregation!
@@ -16,6 +17,10 @@ function Home() {
         </Typography>
       </Typography>
     </Box>
+    {localStorage.getItem("token") == null ?
+    <Button style={{maxWidth: '200px', width: '200px', color: 'black', backgroundColor: 'white', border: '2px solid black'}} onClick={() => window.location.href = '/login'}>Log In Now!</Button>
+    : <></>}
+    </div>
   );
 }
 

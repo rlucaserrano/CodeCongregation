@@ -4,8 +4,6 @@ import Button from '@mui/material/Button';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemText from '@mui/material/ListItemText';
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
 import Box from '@mui/material/Box';
 import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
@@ -15,27 +13,25 @@ import { green, purple, red } from '@mui/material/colors';
 import '../components/Messages.css';
 
 function Messages() {
-    const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [notificationsOpen, setNotificationsOpen] = useState(false);
-    const [view, setView] = useState('Group Messages');
-    const [openDM, setOpenDM] = useState(false);
-    const [openNew, setOpenNew] = useState(false);
-    const [openLeave, setOpenLeave] = useState(false);
-    const [openRem, setOpenRem] = useState(false);
+    const [safe, setSafe] = useState(false) //Safe to render
+
+    const [userID, setUser] = useState() //User's ID
+    
+    const [groupName, setName] = useState() //Display group names
+    
+    const [members, setMembers] = useState() //Get the other group members
+    
+    const [sidebarOpen, setSidebarOpen] = useState(false); //Left sidebar
+
+    const [notificationsOpen, setNotificationsOpen] = useState(false); //Right sidebar (notifications)
+
+    const [view, setView] = useState('Group Messages'); //Messages
+
+    const [openDM, setOpenDM] = useState(false); //Open pop-up to DM a user in the group
 
     const handleClickOpenDM = () => setOpenDM(true);
-    const handleCloseDM = () => setOpenDM(false);
-    const handleClickOpenNew = () => setOpenNew(true);
-    const handleCloseNew = () => setOpenNew(false);
-    const handleClickOpenLeave = () => setOpenLeave(true);
-    const handleCloseLeave = () => setOpenLeave(false);
-    const handleClickOpenRem = () => setOpenRem(true);
-    const handleCloseRem = () => setOpenRem(false);
 
-    const [safe, setSafe] = useState(false)
-    const [userID, setUser] = useState()
-    const [groupID, setGroup] = useState()
-    const [members, setMembers] = useState()
+    const handleCloseDM = () => setOpenDM(false);
 
     async function handleMembers()
     {
@@ -51,7 +47,16 @@ function Messages() {
         })
         let info = await data.json();
         setUser(info.id)
-        setGroup(group)
+        let name = await fetch('http://localhost:8080/groupname', {
+            headers: {
+                'Accept': 'text/html',
+                'Content-Type': 'text/html'
+            },
+            method: 'POST',
+            body: group
+        })
+        let setting = await name.text();
+        setName(setting) //Appear only in messages or all pages? (LocalStorage)
         const formData = new FormData();
         formData.append("0", group)
         formData.append("1", info.id)
@@ -69,15 +74,6 @@ function Messages() {
         let list = await mem.json()
         setMembers(list)
         setSafe(true)
-    }
-
-    useEffect(() => {
-        handleMembers()
-    }, [])
-
-    const test = (name) => () =>
-    {
-        console.log(name)
     }
 
     const handleRequest = (id, col) => () =>
@@ -105,73 +101,14 @@ function Messages() {
         window.location.reload() //Reload the page
     }
 
-    //Uncertain about if these buttons should be included if not. Also want to change so its obvious if the user is a group manager (like in the "Groups" Page)
-    /*async function handleInvite(e)
+    const test = (name) => () => //While we get the Discord API working
     {
-        e.preventDefault()
-        const form = e.target;
-        const formData = new FormData();
-        formData.append("0", groupID)
-        formData.append("1", userID)
-        formData.append("2", form.Name.value)
-        const formJson = Object.fromEntries(formData);
-        await fetch('http://localhost:8080/sendinvite', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
+        console.log(name)
     }
 
-    const handleLeave = () => {
-        leave();
-    };
-
-    async function leave()
-    {
-        const formData = new FormData();
-        formData.append("0", groupID)
-        formData.append("1", userID)
-        const formJson = Object.fromEntries(formData);
-        await fetch('http://localhost:8080/leave', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
-        localStorage.removeItem('groupID');
-        window.location.href = '/groups'
-    }
-
-    async function handleRemove(e)
-    {
-        e.preventDefault()
-        const form = e.target;
-        const formData = new FormData();
-        formData.append("0", groupID)
-        formData.append("1", userID)
-        formData.append("2", form.Name.value)
-        const formJson = Object.fromEntries(formData);
-        await fetch('http://localhost:8080/remuser', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
-        window.location.reload()
-    }*/
+    useEffect(() => {
+        handleMembers()
+    }, [])
 
     if (safe == true) 
     {
@@ -190,7 +127,7 @@ function Messages() {
                     )}
                 </aside>
                 <div className="content">
-                    <h1 className="messages-header">Messages</h1>
+                    <h1 className="messages-header">Messages for {groupName}</h1>
                     {view === 'Group Messages' && (
                         <div className="group-messages-view">
                             <TextField label="Filter by user" fullWidth className="filter-input" />
@@ -220,7 +157,7 @@ function Messages() {
                     {view === 'Group Members' && (
                         <div className="group-members-view">
                             <h2>Group Members</h2>
-                            {members.length == 0 ? <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}}><b style={{color: 'red'}}>This group currently has no other members</b></div> : 
+                            {Object.keys(members).length == 0 ? <div style={{display: 'flex', justifyContent: 'center', flexDirection: 'row'}}><b style={{color: 'red'}}>This group currently has no other members</b></div> : 
                             <List style = {{overflow: 'scroll', display: 'flex', alignItems: 'center', flexDirection: 'row'}}>
                                 {Object.keys(members).map((member) =>
                                     <div style={members[member][3] == 1 ? {display: 'flex', flexDirection: 'row'} : {display: 'flex', flexDirection: 'row', backgroundColor: 'lightgoldenrodyellow'}} key={member}>
@@ -234,41 +171,6 @@ function Messages() {
                                     </div>
                                 )}
                             </List>}
-                            {/*<Button style={{backgroundColor: 'blue', border: '2px solid gold'}} onClick={handleClickOpenNew}>Invite</Button>
-                            <Dialog open={openNew} onClose={handleCloseNew}>
-                            <form method='post' onSubmit={handleInvite} style={{border: '2px solid black', minWidth: 500, width: 500, display: 'flex', flexDirection: 'column'}}>
-                                <DialogTitle>Look up by username</DialogTitle>
-                                <p>Note: This will only work if you are the group manager!</p>
-                                <TextField required id="Name" label="Username"/>
-                                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-                                    <Button variant='contained' onClick={handleCloseNew} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}} type='submit'>Send</Button>
-                                    <Button variant='contained' onClick={handleCloseNew} style={{textTransform: 'none', minWidth: 125, maxWidth: 125, backgroundColor: '#ff3b30'}}>Cancel</Button>
-                                </div>
-                            </form>
-                            </Dialog>
-                            <Button style={{backgroundColor: 'crimson', border: '2px solid black'}} onClick={handleClickOpenLeave}>Leave</Button>
-                            <Dialog open={openLeave} onClose={handleCloseLeave}>
-                            <div style={{border: '2px solid black', minWidth: 500, width: 500, display: 'flex', flexDirection: 'column'}}>
-                                <DialogTitle>Are you sure you want to leave?</DialogTitle>
-                                <p>Note: You will not be allowed to return to the group again without another invite.</p>
-                                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-                                    <Button variant='contained' onClick={handleLeave} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}}>Yes, I am sure.</Button>
-                                    <Button variant='contained' onClick={handleCloseLeave} style={{textTransform: 'none', minWidth: 125, maxWidth: 125, backgroundColor: '#ff3b30'}}>No, cancel</Button>
-                                </div>
-                            </div>
-                            </Dialog>
-                            <Button style={{backgroundColor: 'darkred', border: '2px solid gold'}} onClick={handleClickOpenRem}>Remove</Button>
-                            <Dialog open={openRem} onClose={handleCloseRem}>
-                            <form method='post' onSubmit={handleRemove} style={{border: '2px solid black', minWidth: 500, width: 500, display: 'flex', flexDirection: 'column'}}>
-                                <DialogTitle>Remove user from group/Revoke invite</DialogTitle>
-                                <p>Note: This will only work if you are the group manager!</p>
-                                <TextField required id="Name" label="Username"/>
-                                <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
-                                    <Button variant='contained' onClick={handleCloseRem} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}} type='submit'>Remove</Button>
-                                    <Button variant='contained' onClick={handleCloseRem} style={{textTransform: 'none', minWidth: 125, maxWidth: 125, backgroundColor: '#ff3b30'}}>Cancel</Button>
-                                </div>
-                            </form>
-                            </Dialog>*/}
                         </div>
                     )}
                 </div>

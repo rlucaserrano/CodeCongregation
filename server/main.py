@@ -252,6 +252,17 @@ def findGroup():
     groups.sort()
     return groups
 
+@app.route('/groupname', methods=["POST"]) #Display group name on pages
+def findName():
+    connection = Database.GetConnection()
+    id = (request.data).decode("utf-8")
+    cursor = connection.cursor()
+    cursor.execute('SELECT GROUPNAME FROM MGOLAN.STUDYGROUPS WHERE (GROUPID = \'' + id +'\')')
+    results = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return results[0][0]
+
 @app.route('/invite', methods=["POST"])
 def findInvite():
     connection = Database.GetConnection()
@@ -334,7 +345,7 @@ def friendReq():
     connection.close()
     return ""
 
-@app.route('/sendinvite', methods=["POST"])
+@app.route('/sendinvite', methods=["POST"]) #Return status of invite request
 def sendInvite():
     connection = Database.GetConnection()
     data = request.json.get('data')
@@ -343,23 +354,32 @@ def sendInvite():
     manager = cursor.fetchall()
     if (manager == []):
         print("Not a manager")
+        cursor.close()
+        connection.close()
+        return "1"
     else:
         cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE (USERNAME = \'' + data["2"] + '\')')
         userID = cursor.fetchall()
         if(userID == []):
             print("No such user exists")
+            cursor.close()
+            connection.close()
+            return "2"
         else:
             cursor.execute('SELECT USERID FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + str(userID[0][0]) + '\')')
             sent = cursor.fetchall()
             if(sent != []):
                 print("Invite already sent/accepted")
+                cursor.close()
+                connection.close()
+                return "3"
             else:
                 cursor.execute('INSERT INTO MGOLAN.GROUPMEMBERS VALUES(\'' + data["0"] + '\',\'' + str(userID[0][0]) + '\',0,0)')
                 connection.commit()
                 print("Invited")
-    cursor.close()
-    connection.close()
-    return ""
+                cursor.close()
+                connection.close()
+                return "0"
 
 @app.route('/leave', methods=["POST"])
 def leave():
@@ -383,15 +403,8 @@ def remove():
     if (manager == []):
         print("Not a manager")
     else:
-        #If we allow deletion by typing (instead of selecting)
-        cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE (USERNAME = \'' + data["2"] + '\')')
-        userID = cursor.fetchall()
-        if(userID == []):
-            print("No such user exists")
-        else:
-            #Else skip to this (replacing userID with the JSON entry)
-            cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + str(userID[0][0]) + '\')')
-            connection.commit()
+        cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + data["2"] + '\')')
+        connection.commit()
     cursor.close()
     connection.close()
     return ""
