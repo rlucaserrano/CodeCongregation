@@ -8,17 +8,35 @@ import '../components/Groups.css';
 import GroupsIcon from '@mui/icons-material/Groups';
 
 function Groups() {
-    const [safe, setSafe] = useState(false)
+    const [safe, setSafe] = useState(false) //Safe to render
 
-    const [userID, setUser] = useState()
+    const [userID, setUser] = useState() //User's ID
 
-    const [groupID, setGroupID] = useState()
+    const [groupID, setGroupID] = useState() //Group's ID (if already selected)
 
-    const [toRemove, setToRemove] = useState()
+    const [groups, setGroups] = useState() //Groups they are already members of.
 
-    const [groups, setGroups] = useState()
+    const [invites, setInvites] = useState() //Recieved invites to other groups
+        
+    const [openGroup, setOpenGroup] = useState(); //Currently opened/clicked group
 
-    const [invites, setInvites] = useState()
+    const [members, setMembers] = useState([]) //Display members of the clicked group
+
+    const [openNew, setOpenNew] = useState(false); //Open pop-up to invite new user to group
+
+    const [openLeave, setOpenLeave] = useState(false); //Open pop-up to leave the group
+
+    const [openRem, setOpenRem] = useState(false); //Open pop-up to remove someone from group
+    
+    const [toRemove, setToRemove] = useState() //Which user to remove
+
+    const [openMessage, setOpenMessage] = useState(false); //Open pop-up to display invite message
+
+    const [message, setMessage] = useState() //Invite status messages
+
+    const [openC, setOpenC] = useState(false); //Open pop-up to create new group
+    
+    const [error, setError] = useState(false) //Open pop-up display error when creating new groups
 
     async function handleID()
     {
@@ -57,63 +75,6 @@ function Groups() {
         setSafe(true)
     }
 
-    useEffect(() => {
-        handleID()
-      }, [])
-
-    async function handleCreate(e)
-    {
-        e.preventDefault()
-        const form = e.target;
-        const formData = new FormData();
-        const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
-        formData.append("0", id)
-        formData.append("1", form.Name.value)
-        formData.append("2", id)
-        formData.append("3", 0) //What would be the default? Temporary or permanent?
-        formData.append("4", form.Desc.value)
-        const formJson = Object.fromEntries(formData);
-        await fetch('http://localhost:8080/addgroup', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
-
-        const groupStart = new FormData();
-        groupStart.append("0", id)
-        groupStart.append("1", userID)
-        groupStart.append("2", 1)
-        groupStart.append("3", 1)
-        const groupJson = Object.fromEntries(groupStart);
-        await fetch('http://localhost:8080/addmem', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-              },
-            method: 'POST',
-            body: JSON.stringify({
-                data: groupJson
-            })
-        })
-        localStorage.setItem("groupID", id)
-        window.location.href = '/'
-    }
-
-    const [openC, setOpenC] = React.useState(false);
-
-    const handleOpenC = () => {
-        setOpenC(true);
-    };
-
-    const handleCloseC = () => {
-        setOpenC(false);
-    };
-
     const handleView = (id) => () =>
     {
         view(id)
@@ -136,19 +97,218 @@ function Groups() {
             })
         })
         let list = await mem.json()
-        let items = Object.keys(list)
-        setClicked(group)
+        setOpenGroup(group)
         setMembers(list)
     }
-
-    const [clicked, setClicked] = useState()
-    const [members, setMembers] = useState([])
 
     const handleChoose = (id) => () =>
     {
         localStorage.setItem('groupID', id)
         window.location.href = '/'
     }
+
+    const handleClickOpenNew = (id) => 
+    {
+        setOpenGroup(id);
+        setOpenNew(true);
+    };
+
+    async function handleInvite(e)
+    {
+        e.preventDefault()
+        const form = e.target;
+        const formData = new FormData();
+        formData.append("0", openGroup)
+        formData.append("1", userID)
+        formData.append("2", form.Name.value)
+        const formJson = Object.fromEntries(formData);
+        handleCloseNew()
+        let send = await fetch('http://localhost:8080/sendinvite', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        let response = await send.text()
+        if (response == 0)
+        {
+            setMessage("Invite sent!")
+        }
+        else if (response == 1)
+        {
+            setMessage("You are not a manager for this group!") //How it is set up, this shouldn't happen, but just in case.
+        }
+        else if (response == 2)
+        {
+            setMessage("That user does not exist!")
+        }
+        else if (response == 3)
+        {
+            setMessage("An invite has already been sent!")
+        }
+        setOpenGroup()
+        setOpenMessage(true)
+    }
+
+    const handleCloseMessage = () => 
+    {
+        setMessage()
+        setOpenMessage(false);
+    }
+    
+    const handleCloseNew = () => 
+    {
+        setOpenGroup();
+        setOpenNew(false);
+    }
+
+    const handleClickOpenLeave = (id) => 
+    {
+        setOpenGroup(id);
+        setOpenLeave(true);
+    };
+
+    const handleLeave = () => {
+        leave();
+    };
+
+    async function leave()
+    {
+        const formData = new FormData();
+        formData.append("0", openGroup)
+        formData.append("1", userID)
+        const formJson = Object.fromEntries(formData);
+        await fetch('http://localhost:8080/leave', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        if (openGroup == groupID)
+        {
+            localStorage.removeItem('groupID');
+        }
+        window.location.reload()
+    }
+
+    const handleCloseLeave = () => 
+    {
+        setOpenGroup();
+        setOpenLeave(false);
+    };
+
+    const handleClickOpenRem = (id) => 
+    {
+        setOpenGroup(id);
+        setOpenRem(true);
+    }
+
+    const handleSelect = (id) => () =>
+    {
+        setToRemove(id)
+    }
+
+    const handleRemove = () => {
+        remove();
+    };
+
+    async function remove()
+    {
+        const formData = new FormData();
+        formData.append("0", openGroup)
+        formData.append("1", userID)
+        formData.append("2", toRemove)
+        const formJson = Object.fromEntries(formData);
+        handleCloseRem()
+        await fetch('http://localhost:8080/remuser', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        setToRemove()
+        setOpenGroup()
+    }
+
+    const handleCloseRem = () => 
+    {
+        setOpenGroup();
+        setToRemove();
+        setOpenRem(false);
+    }
+
+    const handleOpenC = () => {
+        setOpenC(true);
+    };
+
+    async function handleCreate(e)
+    {
+        e.preventDefault()
+        try {
+            const form = e.target;
+            const formData = new FormData();
+            const id = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER);
+            formData.append("0", id)
+            formData.append("1", (form.Name.value).replaceAll("'","\'"))
+            formData.append("2", id)
+            formData.append("3", 0) //What would be the default? Temporary or permanent?
+            formData.append("4", (form.Desc.value).replaceAll("'","\'")) //Very basic solution to the problem, should work for all other queries as well.
+            const formJson = Object.fromEntries(formData);
+            await fetch('http://localhost:8080/addgroup', {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                method: 'POST',
+                body: JSON.stringify({
+                    data: formJson
+                })
+            })
+
+            const groupStart = new FormData();
+            groupStart.append("0", id)
+            groupStart.append("1", userID)
+            groupStart.append("2", 1)
+            groupStart.append("3", 1)
+            const groupJson = Object.fromEntries(groupStart);
+            await fetch('http://localhost:8080/addmem', {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                method: 'POST',
+                body: JSON.stringify({
+                    data: groupJson
+                })
+            })
+            localStorage.setItem("groupID", id)
+            window.location.href = '/'
+        }
+        catch(err) {
+            setError(true)
+        }
+    }
+
+    const handleCloseError = () => 
+    {
+        setError(false);
+    }
+
+    const handleCloseC = () => {
+        setOpenC(false);
+    };
 
     const handleAccept = (id) => () =>
     {
@@ -198,123 +358,9 @@ function Groups() {
         window.location.reload() //Reload the page
     }
 
-    const handleClickOpenNew = (id) => 
-    {
-        setOpenGroup(id);
-        setOpenNew(true);
-    };
-    const handleCloseNew = () => 
-    {
-        setOpenGroup();
-        setOpenNew(false);
-    }
-    const handleClickOpenLeave = (id) => 
-    {
-        setOpenGroup(id);
-        setOpenLeave(true);
-    };
-    const handleCloseLeave = () => 
-    {
-        setOpenGroup();
-        setOpenLeave(false);
-    };
-    const handleClickOpenRem = (id) => 
-    {
-        setOpenGroup(id);
-        setOpenRem(true);
-    }
-    const handleCloseRem = () => 
-    {
-        setOpenGroup();
-        setToRemove();
-        setOpenRem(false);
-    }
-
-    const [openNew, setOpenNew] = useState(false);
-    const [openLeave, setOpenLeave] = useState(false);
-    const [openRem, setOpenRem] = useState(false);
-    const [openGroup, setOpenGroup] = useState();
-
-    async function handleInvite(e)
-    {
-        e.preventDefault()
-        const form = e.target;
-        const formData = new FormData();
-        formData.append("0", openGroup)
-        formData.append("1", userID)
-        formData.append("2", form.Name.value)
-        const formJson = Object.fromEntries(formData);
-        handleCloseNew()
-        await fetch('http://localhost:8080/sendinvite', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
-        setClicked()
-    }
-
-    const handleLeave = () => {
-        leave();
-    };
-
-    async function leave()
-    {
-        const formData = new FormData();
-        formData.append("0", openGroup)
-        formData.append("1", userID)
-        const formJson = Object.fromEntries(formData);
-        await fetch('http://localhost:8080/leave', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
-        if (openGroup == groupID)
-        {
-            localStorage.removeItem('groupID');
-        }
-        window.location.reload()
-    }
-
-    const handleSelect = (id) => () =>
-    {
-        setToRemove(id)
-    }
-
-    const handleRemove = () => {
-        remove();
-    };
-
-    async function remove()
-    {
-        const formData = new FormData();
-        formData.append("0", openGroup)
-        formData.append("1", userID)
-        formData.append("2", toRemove)
-        const formJson = Object.fromEntries(formData);
-        handleCloseRem()
-        await fetch('http://localhost:8080/remuser', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-                },
-            method: 'POST',
-            body: JSON.stringify({
-                data: formJson
-            })
-        })
-        setToRemove()
-        setClicked()
-    }
+    useEffect(() => {
+        handleID()
+    }, [])
 
     if (safe == true) 
     {
@@ -325,12 +371,12 @@ function Groups() {
                     {groups.length == 0 ? <div style={{display: 'flex', alignItems: 'center', flexDirection: 'column'}}><b style={{color: 'red'}}>You currently have no groups available</b></div> : 
                     <List style = {{overflow: 'scroll', height: 600, maxHeight: 600, display: 'flex', flexDirection: 'column'}}>
                         {groups.map((group, index) =>
-                        <div className = {(group[0][2] == localStorage.getItem("groupID") ? 'groups-current' : 'groups-select')}>
-                            <div key={index} onClick={handleView(group[0][2])}>
+                        <div key={index} className = {(group[0][2] == localStorage.getItem("groupID") ? 'groups-current' : 'groups-select')}>
+                            <div onClick={handleView(group[0][2])}>
                                 <h2 style={{marginLeft: '10px'}}>{group[0][0]} {group[1] == 1 ? <GroupsIcon/> : <></>}</h2>
                                 <p style={{marginLeft: '10px'}}>{group[0][1]}</p>
                             </div>
-                            {group[0][2] == clicked ?
+                            {group[0][2] == openGroup ?
                             <div>
                                 <div className='invite-buttons'> 
                                     <p>Group members: </p>{Object.keys(members).length == 0 ? <b style={{display: 'flex', justifyContent: 'center', flexDirection: 'column', color: 'red'}}>This group currently has no other members</b> 
@@ -386,6 +432,14 @@ function Groups() {
                             <Button variant='contained' onClick={handleCloseRem} style={{textTransform: 'none', minWidth: 125, maxWidth: 125, backgroundColor: '#ff3b30'}}>Cancel</Button>
                         </div>
                     </Dialog>
+                    <Dialog open={openMessage} onClose={handleCloseMessage}>
+                        <div style={{border: '2px solid black', minWidth: 500, width: 500, display: 'flex', flexDirection: 'column'}}>
+                            <DialogTitle style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>{message}</DialogTitle>
+                            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                                <Button variant='contained' onClick={handleCloseMessage} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}}>OK</Button>
+                            </div>
+                        </div>
+                    </Dialog>
                     <div className="input-container">
                     <Button variant='outlined' onClick={handleOpenC}>Create New Group</Button>
                         <Dialog open={openC} onClose={handleCloseC}>
@@ -400,6 +454,14 @@ function Groups() {
                         </form>
                         </Dialog>
                     </div>
+                    <Dialog open={error} onClose={handleCloseError}>
+                        <div style={{border: '2px solid black', minWidth: 500, width: 500, display: 'flex', flexDirection: 'column'}}>
+                            <DialogTitle style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>An unexpected error has occured when creating a new group. Please try again.</DialogTitle>
+                            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                                <Button variant='contained' onClick={handleCloseError} style={{textTransform: 'none', minWidth: 125, maxWidth: 125}}>OK</Button>
+                            </div>
+                        </div>
+                    </Dialog>
                 </div>
                 <div className="groups-box">
                     <h2 className='title'>Pending Invites</h2>
