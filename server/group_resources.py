@@ -178,7 +178,9 @@ class GroupResources:
                             break
                     
                     baseURL = self.valWebsiteURL[:index_final+1]
-                    if baseURL != self.valWebsiteURL:
+                    if (len(Database.SearchDatabase(table="MGOLAN.EducationalResources", rows=f"BaseURL = '{baseURL}'")) == 0):
+                        Database.AddToDatabase(table = "MGOLAN.Websites", entry = [ f"'{baseURL}'", f"'{baseURL}'"])
+                    if (baseURL != self.valWebsiteURL and (len(Database.SearchDatabase(table="MGOLAN.EducationalResources", rows=f"PageURL = '{self.valWebsiteURL}'")) == 0)):
                         Database.AddToDatabase(table = "MGOLAN.Websites", entry = [ f"'{baseURL}'", f"'{self.valWebsiteURL}'"])
 
                     result2 = Database.SearchDatabase(table="MGOLAN.EducationalResources", rows=f"WebsiteURL = '{baseURL}'")
@@ -190,7 +192,7 @@ class GroupResources:
                             return jsonify({"ERROR": "Inserted into Group Resources, but not Community resources"}), 406
                     else:
                         updatedShare = int(result2[0][7]) + 1
-                        result3 = Database.ModifyDatabase(table = "MGOLAN.EducationalResources", key1 = "WebsiteURL", value1 = baseURL, changes = ["Votes", str(updatedShare)])
+                        result3 = Database.ModifyDatabase(table = "MGOLAN.EducationalResources", key1 = "WebsiteURL", value1 = baseURL, changes = [("Votes", str(updatedShare))])
                         print("here1")
                         if result3 == True:
                             print("here2")
@@ -214,7 +216,7 @@ class GroupResources:
                     result2 = Database.SearchDatabase(table="MGOLAN.EducationalResources", rows=f"WebsiteURL = '{baseURL}'")
                     if len(result2) > 0:
                         updatedShare = int(result2[0][7]) + 1
-                        result3 = Database.ModifyDatabase(table = "MGOLAN.EducationalResources", key1 = "WebsiteURL", value1 = baseURL, changes = ["Votes", str(updatedShare)])
+                        result3 = Database.ModifyDatabase(table = "MGOLAN.EducationalResources", key1 = "WebsiteURL", value1 = baseURL, changes = [("Votes", str(updatedShare))])
 
                 return jsonify({"SUCCESS": "Resource added"}), 200
             else:
