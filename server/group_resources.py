@@ -178,9 +178,9 @@ class GroupResources:
                             break
                     
                     baseURL = self.valWebsiteURL[:index_final+1]
-                    if (len(Database.SearchDatabase(table="MGOLAN.EducationalResources", rows=f"BaseURL = '{baseURL}'")) == 0):
+                    if (len(Database.SearchDatabase(table="MGOLAN.Websites", rows=f"BaseURL = '{baseURL}'")) == 0):
                         Database.AddToDatabase(table = "MGOLAN.Websites", entry = [ f"'{baseURL}'", f"'{baseURL}'"])
-                    if (baseURL != self.valWebsiteURL and (len(Database.SearchDatabase(table="MGOLAN.EducationalResources", rows=f"PageURL = '{self.valWebsiteURL}'")) == 0)):
+                    if (baseURL != self.valWebsiteURL and (len(Database.SearchDatabase(table="MGOLAN.Websites", rows=f"PageURL = '{self.valWebsiteURL}'")) == 0)):
                         Database.AddToDatabase(table = "MGOLAN.Websites", entry = [ f"'{baseURL}'", f"'{self.valWebsiteURL}'"])
 
                     result2 = Database.SearchDatabase(table="MGOLAN.EducationalResources", rows=f"WebsiteURL = '{baseURL}'")
