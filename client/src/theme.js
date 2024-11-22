@@ -1,5 +1,8 @@
 import { createTheme } from '@mui/material/styles';
 import { grey, blueGrey, lightBlue } from '@mui/material/colors';
+import { SketchPicker } from 'react-color';
+import Button from '@mui/material/Button';
+
 
 // create a theme
 const theme = createTheme({

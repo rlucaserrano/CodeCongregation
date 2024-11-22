@@ -1,0 +1,83 @@
+.create-button {
+    background-color: #556cd6;
+    color: white;
+    border-radius: 12px;
+    text-transform: none;
+    font-weight: 500;
+    padding: 10px 20px;
+   
+}
+
+.create-button:hover {
+    background-color: rgba(85, 108, 214, 0.7);
+}
+
+.dropdown-menu {
+    padding: 5px 0;
+    display: flex;
+}
+
+.dropdown-item {
+    padding: 10px 20px;
+    font-size: 1rem;
+    color: #333;
+    transition: background-color 0.2s ease;
+    display: flex;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    display: flex;
+}
+
+.dialog {
+    max-width: 500px;
+    margin: auto;
+}
+
+.dialog-input {
+    margin-bottom: 15px;
+}
+.dialog-select {
+    margin-bottom: 15px;
+  }
+
+.dialog-cancel {
+    color: rgb(237, 236, 236);
+}
+
+.dialog-submit {
+    background-color: #556cd6;
+    color: white;
+}
+
+.dialog-submit:hover {
+    background-color: rgba(85, 108, 214, 0.7);
+}
+
+.dialog-select {
+    margin-bottom: 15px;
+}
+.menu-container .MuiPaper-root {
+    display: flex; /* Ensure the dropdown menu is a flex container */
+    flex-direction: column; /* Stack menu items vertically */
+    padding: 0; /* Adjust padding for better spacing */
+  }
+  
+.menu-paper .MuiPaper-root {
+    display: flex; /* Ensures the menu container is a flexbox */
+    flex-direction: column; /* Stacks menu items in a column */
+    padding: 0; /* Removes extra padding if needed */
+    background-color: white; /* Optional: Adjust background color */
+  }
+  
+  .menu-item {
+    display: block; /* Ensures items behave as flex items */
+    flex-direction: row; /* Ensures alignment for icons and text */
+    justify-content: flex-start; /* Align text to the left */
+    padding: 10px 15px; /* Adjust padding for visual clarity */
+  }
+  
+  .menu-item:hover {
+    background-color: rgba(0, 0, 0, 0.1); /* Optional: Add hover effect */
+  }

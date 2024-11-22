@@ -233,78 +233,39 @@ class Users:
             return jsonify({"SUCCESS": "User modified"}), 200
         else:
             return jsonify({"ERROR": "Program encountered an unknown issue"}), 406
-        # End debug logging for UpdateUser
+       
 
+  
     def CheckForUser(self):
-        if (self.colUserID is not None or self.colUserName is not None or self.colEmail is not None or self.colHashedPassword is not None or self.colFirstName is not None or self.colLastName is not None or self.colBio is not None or self.colAdmin is not None):
-            return jsonify({"ERROR": "HEAD method does not take column parameters"}), 400
-        elif self.valUserName is not None or self.valEmail is not None or self.valHashedPassword is not None or self.valFirstName is not None or self.valLastName is not None or self.valBio is not None or self.valAdmin is not None:
-            return jsonify({"ERROR": "HEAD method does not accept UserName, Email, HashedPassword, FirstName, LastName, Bio, or Admin parameters"}), 400
-        elif self.valUserID is None:
+        if self.valUserID is None:
             return jsonify({"ERROR": "HEAD method requires UserID parameter"}), 400
-        elif len(Database.SearchDatabase(table="UserTable", rows=f"UserID = '{self.valUserID}'")) <= 0:
-            return jsonify({"Result": "Invalid UserID"}), 404
-        else:
-            return jsonify({"Result": "Valid UserID"}), 200
 
-
-        # def Methods(self, method):
+        try:
+            result = Database.SearchDatabase(table="UserTable", rows=f"UserID = '{self.valUserID}'")
+            if len(result) > 0:
+                return jsonify({"Result": "Valid UserID"}), 200
+            else:
+                return jsonify({"Result": "Invalid UserID"}), 404
+        except Exception as e:
+            print(f"Error in CheckForUser: {e}")
+            return jsonify({"ERROR": "Internal server error"}), 500
+    def AddToGoogleTable(self, user_id, email, google_uid):
+        """
+        Add a new entry to the GOOGLE table for a user logging in with Google.
+        """
+        google_data = {
+            "OWNERID": user_id,
+            "EMAIL": email,
+            "GOOGLEUID": google_uid
+        }
         
-    #     # Internal function calls.
-    #     try:
-    #         if method == "GET":
-    #             return self.GetUser()
-    #         elif method == "POST":
-    #             result = self.AddUser()
-    #             # FIXME Sends Welcom Email. Remove second condition once testing is complete.
-    #             if result[1] == 200 and self.valEmail == "codecongregation@gmail.com":
-    #                 self.valFirstName = self.valFirstName[1:-1]
-    #                 emailObject = Email()
-    #                 emailMessage = emailObject.ConstructEmail(name=self.valFirstName, emailType=1)
-    #                 emailObject.SendEmail(email=emailMessage, userEmail=self.valEmail)
-    #                 emailObject.CloseConnection
-    #             return result
-    #         elif method == "DELETE":
-    #             return self.DeleteUser()
-    #         elif method == "PATCH":
-    #             return self.UpdateUser()
-    #         elif method == "HEAD":
-    #             return self.CheckForUser()
-    #         elif method == "OPTIONS":
-    #             # Retrieves viable methods
-    #             return jsonify({"Options": "GET, POST, DELETE, HEAD, PATCH, OPTIONS"}), 200
-    #         else:
-    #             # Catchall error response
-    #             return jsonify({"ERROR": "Invalid method selection"}), 405
-    #     except:
-    #         # Catchall error response
-    #             return jsonify({"ERROR": "Invalid method selection"}), 405
+        result = Database.AddToDatabase(
+            table="GOOGLE",
+            entry=[
+                google_data["OWNERID"], google_data["EMAIL"], google_data["GOOGLEUID"]
+            ]
+        )
     
-    # def Process(self):
-    #     if self.valUserID is not None:
-    #         if not ProcAndSec.CheckValidString(self.valUserID):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #     if self.valUserName is not None:
-    #         if not ProcAndSec.CheckValidString(self.valUserName):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #     if self.valFirstName is not None:
-    #         if not ProcAndSec.CheckValidString(self.valFirstName):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #     if self.valLastName is not None:
-    #         if not ProcAndSec.CheckValidString(self.valLastName):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #     if self.valBio is not None:
-    #         if not ProcAndSec.CheckValidString(self.valBio):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #     if self.valAdmin is not None:
-    #         if not ProcAndSec.CheckValidString(self.valAdmin):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #     if self.order is not None:
-    #         if not ProcAndSec.CheckValidString(self.order[0]):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #         if not ProcAndSec.CheckValidString(self.order[1]):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-    #     if self.distinct is not None:
-    #         if not ProcAndSec.CheckValidString(self.distinct):
-    #             return jsonify({"ERROR": "Invalid characters in string"}), 409
-        
+        return result
+
+   

@@ -1,110 +1,235 @@
-import React, { useState } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
+
+import React, { useState, useEffect,  useContext } from "react";
+import { UserContext } from "../context/UserContext";
+import { Calendar as BigCalendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
+import CreateButton from '../components/CreateButton';
+import {
+  Box,
+  Grid,
+  Typography,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  Collapse,
+  Checkbox,
+} from "@mui/material";
+import {
+  Menu as MenuIcon,
+  ExpandLess,
+  ExpandMore,
+} from "@mui/icons-material";
+import { Calendar as MiniCalendar } from "react-calendar";
+import "react-calendar/dist/Calendar.css";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { Container, Paper, Typography, Button, Switch, Grid } from "@mui/material";
-import { ArrowBackIos, ArrowForwardIos } from "@mui/icons-material";
-import TextField from '@mui/material/TextField';
 import "../components/Calendar.css";
 
 const localizer = momentLocalizer(moment);
 
 const CalendarPage = () => {
-    const [currentDate, setCurrentDate] = useState(new Date());
-    const [showOnlyScheduled, setShowOnlyScheduled] = useState(false);
-    const [openT, setOpenT] = useState(false);
-    const [openN, setOpenN] = useState(false);
+    const [calendars, setCalendars] = useState([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [myCalendarsOpen, setMyCalendarsOpen] = useState(true);
+  const [otherCalendarsOpen, setOtherCalendarsOpen] = useState(true);
+  const { userId } = useContext(UserContext);
 
-    const events = [
-        { start: new Date(), end: new Date(moment().add(1, "hours")), title: "Sample Event" },
-        { start: new Date(moment().add(1, "days")), end: new Date(moment().add(1, "days").add(1, "hours")), title: "Another Event" }
-    ];
+//   const [calendars, setCalendars] = useState([
+//     { id: 1, name: "Personal Calendar", isVisible: true, events: [] },
+//     { id: 2, name: "Tasks", isVisible: true, events: [] },
+//   ]);
 
-    const goToPreviousMonth = () => {
-        setCurrentDate(moment(currentDate).subtract(1, "months").toDate());
+  const toggleDrawer = () => setDrawerOpen(!drawerOpen);
+  const toggleMyCalendars = () => setMyCalendarsOpen(!myCalendarsOpen);
+  const toggleOtherCalendars = () => setOtherCalendarsOpen(!otherCalendarsOpen);
+
+  const handleMiniCalendarChange = (date) => setCurrentDate(date);
+  // fetch calendars dynamically from  backend +  create default ones if needed
+  useEffect(() => {
+    const fetchAndCreateDefaultCalendars = async () => {
+      if (!userId) {
+        console.error("userId is null. Cannot fetch calendars.");
+        return;
+      }
+  
+      try {
+        // fetch user's calendars
+        const response = await fetch(`/calendars?ownerId=${userId}`); // userId is mapped to ownerId
+        if (!response.ok) {
+          throw new Error(`Failed to fetch calendars: ${response.status}`);
+        }
+  
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Invalid response type: Expected JSON");
+        }
+  
+        const data = await response.json();
+  
+        // check for default calendars
+        const hasPersonalCalendar = data.calendars.some(
+          (calendar) => calendar.name === "Personal Calendar"
+        );
+        const hasTaskCalendar = data.calendars.some(
+          (calendar) => calendar.name === "Tasks"
+        );
+  
+        // create missing default calendars
+        if (!hasPersonalCalendar || !hasTaskCalendar) {
+          const missingCalendars = [];
+          if (!hasPersonalCalendar) {
+            missingCalendars.push({ name: "Personal Calendar", ownerId: userId });
+          }
+          if (!hasTaskCalendar) {
+            missingCalendars.push({ name: "Tasks", ownerId: userId });
+          }
+  
+          await Promise.all(
+            missingCalendars.map((calendar) =>
+              fetch("/calendars", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(calendar),
+              })
+            )
+          );
+  
+          // re-fetch updated calendars
+          const updatedResponse = await fetch(`/calendars?ownerId=${userId}`);
+          if (updatedResponse.ok) {
+            const updatedData = await updatedResponse.json();
+            setCalendars(
+              updatedData.calendars.map((cal) => ({
+                id: cal.CALENDARID,
+                name: cal.CALENDARNAME,
+                isVisible: true,
+                events: [],
+              }))
+            );
+          }
+        } else {
+          // Set existing calendars
+          setCalendars(
+            data.calendars.map((cal) => ({
+              id: cal.CALENDARID,
+              name: cal.CALENDARNAME,
+              isVisible: true,
+              events: [],
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching or creating default calendars:", error);
+      }
     };
+  
+    fetchAndCreateDefaultCalendars();
+  }, [userId]);
+  
 
-    const goToNextMonth = () => {
-        setCurrentDate(moment(currentDate).add(1, "months").toDate());
-    };
-
-    const integrateWithGoogleCalendar = () => {
-        window.open("https://calendar.google.com", "_blank");
-    };
-
-    const handleSliderChange = () => {
-        setShowOnlyScheduled(!showOnlyScheduled);
-    };
-
-    const getMinAndMaxTimes = (events) => {
-        if (events.length === 0) return { minTime: new Date(0, 0, 0, 0, 0), maxTime: new Date(0, 0, 0, 23, 59) };
-
-        const times = events.flatMap(event => [event.start, event.end]);
-        const minTime = new Date(Math.min(...times.map(time => time.getTime())));
-        const maxTime = new Date(Math.max(...times.map(time => time.getTime())));
-
-        return { minTime, maxTime };
-    };
-
-    const { minTime, maxTime } = showOnlyScheduled ? getMinAndMaxTimes(events) : { minTime: new Date(0, 0, 0, 0, 0), maxTime: new Date(0, 0, 0, 23, 59) };
-
-    return (
-        <Container className="calendar-container">
-            <Typography variant="h4" className="calendar-title">Calendar</Typography>
-            <Grid container spacing={2} alignItems="center" justifyContent="space-between" className="calendar-controls">
-                <Grid item>
-                    <Button variant="contained" onClick={integrateWithGoogleCalendar}>
-                        Integrate with Google Calendar
-                    </Button>
-                </Grid>
-                <Grid item>
-                    <Button onClick={() => setOpenT(true)} variant="contained" color="secondary">Add Task</Button>
-                    <Dialog open={openT} onClose={() => setOpenT(false)}>
-                        <DialogTitle>Add a new task:</DialogTitle>
-                        <TextField id="TaskTime" type="datetime-local" defaultValue="" fullWidth />
-                        <TextField id="TaskDesc" label="Task Description" fullWidth />
-                        <Button variant='contained' onClick={() => setOpenT(false)}>Done</Button>
-                    </Dialog>
-                </Grid>
-                <Grid item>
-                    <Button onClick={() => setOpenN(true)} variant="contained" color="secondary">Add New Calendar</Button>
-                    <Dialog open={openN} onClose={() => setOpenN(false)}>
-                        <DialogTitle>Create a new calendar:</DialogTitle>
-                        <TextField id="CalName" label="Calendar Name" fullWidth />
-                        <Button variant='contained' onClick={() => setOpenN(false)}>Done</Button>
-                    </Dialog>
-                </Grid>
-                <Grid item>
-                    <Button variant="outlined" color="default">Make Calendar Public</Button>
-                </Grid>
-                <Grid item>
-                    <ArrowBackIos onClick={goToPreviousMonth} className="calendar-arrow" />
-                    <ArrowForwardIos onClick={goToNextMonth} className="calendar-arrow" />
-                </Grid>
-                <Grid item>
-                    <Typography>Show only scheduled times</Typography>
-                    <Switch checked={showOnlyScheduled} onChange={handleSliderChange} />
-                </Grid>
-            </Grid>
-
-            <Paper className="calendar-paper">
-                <Calendar
-                    localizer={localizer}
-                    events={events}
-                    startAccessor="start"
-                    endAccessor="end"
-                    defaultView="month"
-                    date={currentDate}
-                    onNavigate={(date) => setCurrentDate(date)}
-                    style={{ height: 500 }}
-                    min={minTime}
-                    max={maxTime}
-                />
-            </Paper>
-        </Container>
+  const addEvent = (newEvent) => {
+    setCalendars((prevCalendars) =>
+      prevCalendars.map((cal) =>
+        cal.id === newEvent.calendarId
+          ? { ...cal, events: [...cal.events, newEvent] }
+          : cal
+      )
     );
+  };
+
+  const addTask = (newTask) => {
+    setCalendars((prevCalendars) =>
+      prevCalendars.map((cal) =>
+        cal.name === "Tasks"
+          ? { ...cal, events: [...cal.events, newTask] }
+          : cal
+      )
+    );
+  };
+  
+  const visibleEvents = calendars
+    .filter((cal) => cal.isVisible)
+    .flatMap((cal) => cal.events);
+
+  return (
+    <Box className="calendar-container">
+      {/* Header */}
+      <Grid container alignItems="center" className="calendar-header">
+        <Grid item>
+          <IconButton onClick={toggleDrawer}>
+            <MenuIcon />
+          </IconButton>
+        </Grid>
+        <Grid item xs>
+          <Typography variant="h5">Calendar</Typography>
+        </Grid>
+        <Grid item>
+          <CreateButton
+            calendars={calendars}
+            onEventSubmit={addEvent}
+            onTaskSubmit={addTask}
+          />
+        </Grid>
+      </Grid>
+
+      {/* Drawer */}
+      <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer}>
+        <Box className="drawer-content">
+          <Box className="mini-calendar">
+            <MiniCalendar
+              value={currentDate}
+              onChange={handleMiniCalendarChange}
+              minDetail="month"
+              next2Label={null}
+              prev2Label={null}
+            />
+          </Box>
+          <List className="drawer-list">
+            {/* My Calendars */}
+            <ListItem button onClick={toggleMyCalendars}>
+              <ListItemText primary="My Calendars" />
+              {myCalendarsOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItem>
+            <Collapse in={myCalendarsOpen} timeout="auto" unmountOnExit>
+              {calendars.map((calendar) => (
+                <ListItem key={calendar.id} className="drawer-list-item">
+                  <Checkbox
+                    checked={calendar.isVisible}
+                    onChange={() =>
+                      setCalendars((prevCalendars) =>
+                        prevCalendars.map((cal) =>
+                          cal.id === calendar.id
+                            ? { ...cal, isVisible: !cal.isVisible }
+                            : cal
+                        )
+                      )
+                    }
+                  />
+                  <ListItemText primary={calendar.name} />
+                </ListItem>
+              ))}
+            </Collapse>
+          </List>
+        </Box>
+      </Drawer>
+
+      {/* Main Calendar */}
+      <Box className="calendar-content">
+        <BigCalendar
+          localizer={localizer}
+          events={visibleEvents}
+          startAccessor="start"
+          endAccessor="end"
+          defaultView="month"
+          date={currentDate}
+          onNavigate={(date) => setCurrentDate(date)}
+          style={{ height: "80vh" }}
+        />
+      </Box>
+    </Box>
+  );
 };
 
 export default CalendarPage;

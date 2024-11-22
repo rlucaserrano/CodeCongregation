@@ -12,6 +12,7 @@ from users import Users
 from group_resources import GroupResources
 from proc_and_sec import ProcAndSec
 from educationalresources import EducationalResources
+from calendars import Calendars
 from flask import Flask, request, jsonify, make_response, Response
 import bcrypt
 
@@ -149,6 +150,8 @@ def addUser():
     cursor.close()
     connection.close()
     return jsonify({"SUCCESS": "User added"}), 200
+
+   
 
 @app.route('/update_user', methods=["PATCH"])
 def update_user():
@@ -432,36 +435,6 @@ def info():
         print("An unexpected error occurred:", e)
         return jsonify({"error": "Server error"}), 500
 
-#this commented out log works for logging in with unhashed passwords
-# @app.route('/log', methods=["POST"])
-# def findUser():
-#     connection = Database.GetConnection()
-#     verify = list(request.json.get('data').values())
-#     cursor = connection.cursor()
-#     cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE (USERNAME = \''+ verify[0] +'\' AND HASHEDPASSWORD = \'' + verify[1] + '\')') #Had to be done slightly differently
-#     results = cursor.fetchall()
-#     if (len(results) == 1):
-#         data = {
-#             'id': results[0][0],
-#             'user': results[0][1],
-#             'mail': results[0][2],
-#             'pass': results[0][3],
-#             'first': results[0][4],
-#             'last': results[0][5],
-#             'bio': results[0][6],
-#             'admin': results[0][7]
-#         }
-#         token = jwt.encode(payload=data, key=secret, algorithm='HS256')
-#         print("Generated token:", token)  # Debugging: Ensure token is generated correctly
-#         cursor.close()
-#         connection.close()
-#         return Response(token, mimetype='text/plain')  # Return token as plain text response
-#     else:
-#         cursor.close()
-#         connection.close()
-#         return jsonify({"error": "Invalid credentials"}), 401
-
-
 @app.route('/log', methods=["POST"])
 def findUser():
     connection = Database.GetConnection()
@@ -475,9 +448,9 @@ def findUser():
 
     if result:
         user_id, db_username, db_hashed_password, email, admin, first_name, last_name, bio = result
-        # check if the entered password matches the stored hashed password
+        # check if the entered pass matches the stored hashed pass
         if bcrypt.checkpw(password.encode('utf-8'), db_hashed_password.encode('utf-8')):
-            # Create a JWT token with user data if the password matches
+            # Create a JWT token with user data if the pass matches
             data = {
                 'id': user_id,
                 'user': db_username,
@@ -493,7 +466,7 @@ def findUser():
             connection.close()
             return Response(token, mimetype='text/plain')  # return token as plain text
         else:
-            # unauthorized if the password does not match
+            # unauth if the pass does not match
             cursor.close()
             connection.close()
             return jsonify({"error": "Invalid credentials"}), 401
@@ -513,17 +486,30 @@ def getRes():
     connection.close()
     return toReturn
 
-@app.route("/api/dev2", methods=['GET'])
-def dev2():
-    return jsonify(
-        {
-            "dev2": [
-                'helloworld',
-                'helloworld2',
-                'helloworld3'
-            ]
-        }
-    )
+@app.route('/calendars', methods=['GET', 'POST'])
+def manage_calendars():
+    data = request.get_json()
+    calendars = Calendars(data)
+    
+    if request.method == 'GET':
+        return calendars.get_calendars()
+    elif request.method == 'POST':
+        return calendars.add_calendar()
+
+@app.route('/events', methods=['GET', 'POST', 'PATCH', 'DELETE'])
+def manage_events():
+    data = request.get_json()
+    events = Calendars(data)
+
+    if request.method == 'GET':
+        return events.get_events()
+    elif request.method == 'POST':
+        return events.add_event()
+    elif request.method == 'PATCH':
+        return events.update_event()
+    elif request.method == 'DELETE':
+        return events.delete_event()
+
 
 @app.route('/api/auth/google', methods=['POST'])
 def google_login():
@@ -535,36 +521,117 @@ def google_login():
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('Wrong issuer.')
 
-        # the token is verified -->   retrieve user information
+        # extract user info
         user_id = idinfo['sub']
         email = idinfo['email']
         name = idinfo.get('name')
 
-        # save user information in database or session
-        # return the user information to the frontend
-        response = jsonify({'status': 'success', 'user_id': user_id, 'email': email, 'name': name})
-        # set a cookie with SameSite attribute
-        response.set_cookie('session_id', user_id, samesite='Strict')  # example cookie[replace]
-        return response
+        # check if user in database
+        connection = Database.GetConnection()
+        cursor = connection.cursor()
+        cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE EMAIL = :1', (email,))
+        result = cursor.fetchone()
+
+        if result:
+            # existing user
+            db_user_id = result[0]
+        else:
+            # create a new user
+            cursor.execute(
+                '''INSERT INTO MGOLAN.USERTABLE (USERID, EMAIL, FIRSTNAME, LASTNAME)
+                   VALUES (ALLIEMONTIAGUE.user_id_seq.NEXTVAL, :1, :2, :3) RETURNING USERID INTO :4''',
+                (email, name.split()[0], name.split()[-1], db_user_id)
+            )
+            db_user_id = cursor.fetchone()[0]
+            connection.commit()
+
+        cursor.close()
+        connection.close()
+
+        # Create JWT token
+        data = {
+            'id': db_user_id,
+            'email': email,
+            'name': name
+        }
+        token = jwt.encode(payload=data, key=secret, algorithm='HS256')
+
+        # Respond with token and user data
+        return jsonify({
+            'status': 'success',
+            'token': token,
+            'user': {
+                'id': db_user_id,
+                'email': email,
+                'name': name
+            }
+        }), 200
     except ValueError:
-        # invalid token
         return jsonify({'status': 'error', 'message': 'Invalid token'}), 400
     except Exception as e:
-        # handle other exceptions
         print(f"An error occurred: {e}")
-        return jsonify({'status': 'error', 'message': str(e)}), 400
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/complete_profile', methods=['POST'])
+def complete_profile():
+    data = request.json.get('data')
+    email = data.get('email')
+    username = data.get('username')
+    password = data.get('hashedPassword')
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    google_uid = data.get('googleUID')
+    
+    print("Email:", email)
+    print("Username:", username)
+    print("Password:", password)
+    print("Google UID:", google_uid)
+
+    if not all([email, username, password, google_uid]):
+        return jsonify({"status": "error", "message": "Email, username, password, and Google UID are required"}), 400
+
+
+    if not email or not username or not password or not google_uid:
+        return jsonify({"status": "error", "message": "Email, username, password, and Google UID are required"}), 400
+
+    hashed_password = ProcAndSec.HashAndSalt(password)
+
+    connection = Database.GetConnection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute('''INSERT INTO MGOLAN.USERTABLE (USERID, USERNAME, EMAIL, HASHEDPASSWORD, FIRSTNAME, LASTNAME, GOOGLE, ADMIN)
+                          VALUES (ALLIEMONTIAGUE.user_id_seq.NEXTVAL, :1, :2, :3, :4, :5, :6, 0)''',
+                       (username, email, hashed_password, first_name, last_name, 1))
+
+        cursor.execute("SELECT ALLIEMONTIAGUE.user_id_seq.CURRVAL FROM dual")
+        user_id = cursor.fetchone()[0]
+
+        cursor.execute('''INSERT INTO MGOLAN.GOOGLE (OWNERID, EMAIL, GOOGLEUID)
+                          VALUES (:1, :2, :3)''',
+                       (user_id, email, google_uid))
+
+        connection.commit()
+        return jsonify({"status": "success", "message": "Profile completed successfully"}), 200
+    except Exception as e:
+        print("Error completing profile:", e)
+        connection.rollback()
+        return jsonify({"status": "error", "message": "Failed to complete profile"}), 500
+    finally:
+        cursor.close()
+        connection.close()
+
 
 @app.route('/api/calendar/events', methods=['GET'])
 def get_calendar_events():
     token = request.args.get('token')
     try:
-        # Verify the token
+     
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
 
-        # Retrieve the access token
+
         access_token = token
         
-        # Make a request to the Google Calendar API
+       
         headers = {
             'Authorization': f'Bearer {access_token}'
         }

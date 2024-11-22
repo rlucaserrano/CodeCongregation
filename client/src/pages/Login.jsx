@@ -1,71 +1,119 @@
-import React, { useState } from 'react';
-import { GoogleLogin } from '@react-oauth/google';
+
+import React, { useState, useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import { auth, provider } from "../components/googleSignIn/config";
+import { signInWithPopup } from "firebase/auth";
 import '../components/Login.css';
+import { useNavigate } from 'react-router-dom';
+
+const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly';
+const CLIENT_ID =import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
 
 const Login = () => {
     const [formError, setFormError] = useState('');
     const [showExtraOptions, setShowExtraOptions] = useState(false);
+    const navigate = useNavigate();
 
-    // Handle Google OAuth login success
-    const handleLoginSuccess = (credentialResponse) => {
-        fetch('http://localhost:8080/api/auth/google', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ token: credentialResponse.credential }),
-        })
-        .then(response => response.json())
-        /*
-        .then(data => {
-            if (data.status === 'success') {
-                // Store the token and user info for further authentication
-                localStorage.setItem('google_token', credentialResponse.credential);
-                localStorage.setItem('info', JSON.stringify(data.user_info));
-                window.location.href = '/';
-            } else if (data.status === 'incomplete') {
-                // Store user_id if profile completion is needed
-                localStorage.setItem('user_id', data.user_id);
-                window.location.href = '/complete-profile';  // Redirect to complete profile page
-            } else {
-                setFormError(data.message || 'Google login error occurred.');
-                console.error('Google login error:', data.message);
+    const handleGoogleSignIn = async () => {
+        try {
+            //  Google API client is loaded
+            if (typeof gapi === 'undefined') {
+                await new Promise(resolve => {
+                    const script = document.createElement("script");
+                    script.src = "https://apis.google.com/js/api.js";
+                    script.onload = resolve;
+                    document.body.appendChild(script);
+                });
             }
-        })
-        .catch(error => {
-            setFormError('Error during Google login. Please try again later.');
-            console.error('Error during Google login:', error);
-        });
+
+            // Google Calendar API
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
+                });
+            });
+
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+
+            if (user) {
+                const idToken = await user.getIdToken(); 
+                localStorage.setItem("token", idToken);  
+                localStorage.setItem("uid", user.uid);
+                localStorage.setItem("email", user.email);
+                localStorage.setItem("displayName", user.displayName);
+
+                // google Calendar token client
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: (response) => {
+                        if (response.error) {
+                            throw response;
+                        }
+
+                        // save access token and expiry in local storage
+                        const expiresIn = response.expires_in * 1000; 
+                        const expiryTime = new Date().getTime() + expiresIn;
+                        localStorage.setItem("google_access_token", response.access_token);
+                        localStorage.setItem("google_token_expiry", expiryTime.toString());
+                    },
+                });
+
+                const tokenExpiry = localStorage.getItem("google_token_expiry");
+                if (!tokenExpiry || new Date().getTime() > Number(tokenExpiry)) {
+                    tokenClient.requestAccessToken();
+                }
+
+                // check if user already has an account associated
+                const userExists = await checkUserExists(user.uid);
+                if (userExists) {
+                    navigate('/groups');
+                } else {
+                    navigate('/complete-profile');
+                }
+            }
+        } catch (error) {
+            console.error("Google Sign-In error:", error);
+        }
     };
-    */
-        .then(data => {
-            if (data.status === 'success') {
-                // Store the token and user info for further authentication
-                localStorage.setItem('token', credentialResponse.credential);
-                localStorage.setItem('info', JSON.stringify(data.user_info));
-                window.location.href = '/account';  // Redirect to account page
-            } else if (data.status === 'incomplete') {
-                // Store user_id if profile completion is needed
-                localStorage.setItem('user_id', data.user_id);
-                window.location.href = '/complete-profile';  // Redirect to complete profile page
+
+    // check if  user already exists in your backend
+    const checkUserExists = async (userId) => {
+        try {
+            const response = await fetch(`http://localhost:8080/users`, {
+                method: 'HEAD',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({ valUserID: userId }), //  `valUserID` HEAD method
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                return data.Result === "Valid UserID"; // backend returns Valid UserID on success
+            } else if (response.status === 404) {
+                console.error("User not found.");
+                return false;
             } else {
-                setFormError(data.message || 'Google login error occurred.');
-                console.error('Google login error:', data.message);
+                console.error("Error checking user existence:", response.status);
+                return false;
             }
-        })
-        .catch(error => {
-            setFormError('Error during Google login. Please try again later.');
-            console.error('Error during Google login:', error);
-        });
+        } catch (error) {
+            console.error("Error checking user existence:", error);
+            return false;
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setFormError('');  // Clear previous errors
+        setFormError('');  
     
         const form = e.target;
         const username = form.Username.value;
@@ -81,27 +129,32 @@ const Login = () => {
             });
     
             if (response.ok) {
-                const token = await response.text();
-                console.log("Received token from server:", token); // Log the token from the server
+                const token = await response.text(); // JWT token returned from the backend
                 if (token) {
-                    localStorage.setItem('token', token);  // Store the JWT token
-                    console.log("Stored token in localStorage:", localStorage.getItem('token')); // Verify storage
-                    window.location.href = '/groups';     // Redirect to groups page
+                    localStorage.setItem('token', token);  
+    
+                    
+                    const payload = JSON.parse(atob(token.split('.')[1])); 
+                    const userId = payload.id; //  token includes `id` for userId
+    
+                    localStorage.setItem('userId', userId); // save userId to localStorage
+                    console.log(`User ID set to localStorage: ${userId}`);
+    
+                    window.location.href = '/groups';    
                 } else {
                     setFormError("Token is empty. Please try again.");
-                    console.error("Empty token received");
                 }
             } else {
                 const errorData = await response.json();
                 setFormError(errorData.error || 'Login failed. Please try again.');
-                console.error('Login failed:', errorData);
             }
         } catch (error) {
             setFormError('An error occurred during login. Please try again.');
             console.error('Error during login:', error);
         }
     };
-    // Handle redirection for guests and new account creation
+    
+
     const handleGuest = () => {
         window.location.href = '/';
     };
@@ -109,6 +162,39 @@ const Login = () => {
     const handleNew = () => {
         window.location.href = '/create';
     };
+
+    useEffect(() => {
+        const handleInfGet = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                console.error("Token is empty");
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8080/info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({ somePayloadData: "example" })
+                });
+
+                if (!response.ok) {
+                    console.error(`Error fetching user info. Status: ${response.status}`);
+                    return;
+                }
+
+                const data = await response.json();
+                console.log("User Info:", data);
+            } catch (error) {
+                console.error("Error during fetch:", error);
+            }
+        };
+
+        handleInfGet();
+    }, []);
 
     return (
         <Box className="login-container">
@@ -122,11 +208,8 @@ const Login = () => {
                 <Button variant='contained' type='submit'>Sign In</Button>
             </Box>
             <div className="google-login">
-                <GoogleLogin
-                    onSuccess={handleLoginSuccess}
-                    onError={() => setFormError('Google login failed. Please try again.')}
-                    uxMode="popup"
-                />
+                <button onClick={handleGoogleSignIn}>Sign-in with Google</button>
+                {formError && <p>{formError}</p>}
             </div>
             <Box className="login-actions">
                 <Typography 
