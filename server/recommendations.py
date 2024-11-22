@@ -3,6 +3,11 @@ import numpy
 from sklearn.metrics.pairwise import cosine_similarity
 from database import Database
 
+''' This file is used to recommend resources to study groups based on their previous public resource sharing activity. 
+Specifically, a cosine similarity matrix is generated based on overlap in link sharing behavior.
+ Next, all the groups sufficiently similar ( > 0.4) to the current group are collected. 
+ Finally, the publicly shared resources of similar groups are suggested to the current group. '''
+
 # 1. https://www.w3schools.com/python/python_classes.asp
 # 2. https://www.geeksforgeeks.org/python-find-dictionary-matching-value-in-list/
 # 3. https://www.geeksforgeeks.org/complexity-cheat-sheet-for-python-operations/
