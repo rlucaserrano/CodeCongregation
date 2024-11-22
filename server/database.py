@@ -143,6 +143,7 @@ class Database:
                 return(True)
             except Exception as e:
                 return(False)
+    
     @staticmethod
     def TestConnection():
         try:

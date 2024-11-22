@@ -27,3 +27,15 @@ dist-ssr
 *.env
 server/.env
 client/.env
+
+# Ignore Python virtual environment
+venv/
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore system-specific files
+.DS_Store
+Thumbs.db

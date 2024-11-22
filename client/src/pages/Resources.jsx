@@ -28,22 +28,23 @@ import MenuItem from '@mui/material/MenuItem';
 import { DialogContentText, IconButton, TableBody } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 
+/* This page */
 
-
-// Sources used to create Resources.jsx
-// 1. https://mui.com/material-ui/
-// 2. https://www.w3schools.com/js/js_loop_for.asp
-// 3. https://www.robinwieruch.de/react-checkbox/
-// 4. https://www.geeksforgeeks.org/how-to-declare-global-variables-in-javascript/
-// 5. https://www.w3schools.com/js/js_set_methods.asp
-// 6. https://mui.com/material-ui/react-dialog/
-// 7. https://mui.com/material-ui/react-radio-button/
-// 8. https://www.geeksforgeeks.org/how-to-disable-a-button-in-reactjs/
-// 9. https://mui.com/material-ui/react-button-group/
-// 10. https://legacy.reactjs.org/docs/hooks-effect.html
-// 11. https://stackoverflow.com/questions/49421792/how-to-use-material-uinext-textfield-error-props
-// 12. https://stackoverflow.com/questions/30970068/js-regex-url-validation
-// 13. https://www.geeksforgeeks.org/how-to-get-the-length-of-a-string-in-bytes-in-javascript/
+/* Sources used to create Resources.jsx
+1. https://mui.com/material-ui/
+2. https://www.w3schools.com/js/js_loop_for.asp
+3. https://www.robinwieruch.de/react-checkbox/
+4. https://www.geeksforgeeks.org/how-to-declare-global-variables-in-javascript/
+5. https://www.w3schools.com/js/js_set_methods.asp
+6. https://mui.com/material-ui/react-dialog/
+7. https://mui.com/material-ui/react-radio-button/
+8. https://www.geeksforgeeks.org/how-to-disable-a-button-in-reactjs/
+9. https://mui.com/material-ui/react-button-group/
+10. https://legacy.reactjs.org/docs/hooks-effect.html
+11. https://stackoverflow.com/questions/49421792/how-to-use-material-uinext-textfield-error-props
+12. https://stackoverflow.com/questions/30970068/js-regex-url-validation
+13. https://www.geeksforgeeks.org/how-to-get-the-length-of-a-string-in-bytes-in-javascript/ 
+*/
 
 
 // Global resources. Will need to be updated for proper guest display and study group navigation.
@@ -54,10 +55,12 @@ let groupName = "Swamp Scripters"
 let maskedCat = new Set();
 let clickedRow = 0;
 let clickedCRow = 0;
+let clickedRRow = 0;
 let resetClick = false;
 let resetCClick = false;
+let resetRClick = false;
 
-function displayDescription(vis) {
+function DisplayVisDescription(vis) {
   
   if (vis === '0')
   {
@@ -128,6 +131,34 @@ function useCommunityResources() {
   return [safe, res];
 }
 
+function useRecResources(currGroupID) {
+
+  const [safe, setSafe] = useState(false)
+  const [res, setRes] = useState()
+
+  async function handleResGet()
+  {
+    let data = await fetch('http://localhost:8080/recommendations', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        body: JSON.stringify({ 
+          'valGroupID': currGroupID,
+        }),
+        method: 'POST'
+    })
+    setRes(await data.json());
+    setSafe(true)  
+  }
+
+  useEffect(() => {
+    handleResGet();
+  }, []);
+
+  return [safe, res];
+}
+
 function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, resourceName}) {
 
   const handleCreate = async (e) =>
@@ -175,7 +206,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
   const [invalidDescription, setInvalidDescription] = useState("");
   const [invalidCategory, setInvalidCategory] = useState("");
   
-  function displayCreateButton() {
+  function DisplayCreateButton() {
   
     if (resourceName != "" && websiteURL != "" && resourceCategory != "" && comCategory != "" && invalidURL == "" && invalidName == "" && invalidDescription == "" && invalidCategory == "")
     {
@@ -187,7 +218,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
     }
   }
 
-  function checkWebsiteURL(url) {
+  function CheckWebsiteURL(url) {
     
     if (!url.match((/^(https?:\/\/)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/))) {
       setInvalidURL("Invalid input - please copy and paste the full website url.");
@@ -200,7 +231,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
     }
   }
 
-  function checkInput(input, size, setter) {
+  function CheckInput(input, size, setter) {
     if (new Blob([input]).size > size) {
       setter("Invalid input - please reduce length.");
     }
@@ -249,10 +280,10 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
           <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
           <div style={{display: 'flex', margin: '0.5rem', width: '90%', gap: '1rem'}}>
             <FormControl style={{flex: '25%'}}>
-              <FormLabel id="demo-controlled-radio-buttons-group" style={{fontWeight: 'bold'}}>Visibility</FormLabel>
+              <FormLabel id="vis-controlled-radio-buttons-group" style={{fontWeight: 'bold'}}>Visibility</FormLabel>
               <RadioGroup
-                aria-labelledby="demo-controlled-radio-buttons-group"
-                name="controlled-radio-buttons-group"
+                aria-labelledby="vis-controlled-radio-buttons-group"
+                name="vis-controlled-radio-buttons-group"
                 defaultValue={"0"}
               >
                 <FormControlLabel value="0" control={<Radio />} label="Group" onClick={() => setPublicShare("0")}/>
@@ -260,40 +291,39 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
               </RadioGroup>
             </FormControl>
             <div style={{flex: '60%', marginLeft: '1rem', alignContent: 'center', color: '#2e3945'}}>
-              {displayDescription(publicShare)}
+              {DisplayVisDescription(publicShare)}
             </div>
           </div>
           <div style={{margin: '0.5rem', display: 'flex', flexDirection: 'column'}}>
-            <TextField required id="ResourceName" label="Resource Name" onChange={(input) => {setResourceName(input.target.value), checkInput(input.target.value, 100, setInvalidName)}} error={invalidName !== ""} helperText={invalidName}/>
+            <TextField required id="ResourceName" label="Resource Name" onChange={(input) => {setResourceName(input.target.value), CheckInput(input.target.value, 100, setInvalidName)}} error={invalidName !== ""} helperText={invalidName}/>
             <br/>
-            <TextField required id="WebsiteURL" label="Website URL" onChange={(input) => {setWebsiteURL(input.target.value), checkWebsiteURL(input.target.value)}} error={invalidURL !== ""} helperText={invalidURL}/>
-            <div style={{fontSize: 'small', marginTop: '1rem', marginBottom: '0.75rem'}}>Select the category that best describes this resource. Optionally, you can change the displayed category name to fit the needs of your group:</div>
-            <div style={{display: 'flex', alignItems: 'center', gap: '1rem'}}>
-              <FormControl style={{flex: 1}}>
-              <InputLabel required id="demo-simple-select-label">Resource Category</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value={comCategory}
-                label="Please select "
-                onChange={(click) => {setComCategory(click.target.value); setResourceCategory(click.target.value)}}
-              >
-                  <MenuItem value={"Practice Questions"}>Practice Questions</MenuItem>
-                  <MenuItem value={"Tutorials"}>Tutorials</MenuItem>
-                  <MenuItem value={"Computer Science Theory"}>Computer Science Theory</MenuItem>
-                  <MenuItem value={"Visualization Tools"}>Visualization Tools</MenuItem>
-                  <MenuItem value={"Collaboration Tools"}>Collaboration Tools</MenuItem>
-                  <MenuItem value={"Software Development Tools"}>Software Development Tools</MenuItem>
-                  <MenuItem value={"Career Development"}>Career Development</MenuItem>
-              </Select>
-              </FormControl>
-              <TextField style={{flex: 1.25}} required id="ResourceCategory" value={resourceCategory} label="Displayed Category Name" onChange={(input) => {setResourceCategory(input.target.value), checkInput(input.target.value, 300, setInvalidCategory)}} error={invalidCategory !== ""} helperText={invalidCategory}/>
-            </div>
+            <TextField required id="WebsiteURL" label="Website URL" onChange={(input) => {setWebsiteURL(input.target.value), CheckWebsiteURL(input.target.value)}} error={invalidURL !== ""} helperText={invalidURL}/>
             <br/>
-            <TextField id="Description" label="Description" multiline minRows={3} onChange={(input) => checkInput(input.target.value, 300, setInvalidDescription)} error={invalidDescription !== ""} helperText={invalidDescription}/>
+            <FormControl style={{flex: 1}}>
+            <InputLabel required id="resource-category-label">Resource Category</InputLabel>
+            <Select
+              labelId="resource-category-label"
+              id="resource-category-select"
+              value={comCategory}
+              label="Please select"
+              onChange={(click) => {setComCategory(click.target.value); setResourceCategory(click.target.value)}}
+            >
+                <MenuItem value={"Practice Questions"}>Practice Questions</MenuItem>
+                <MenuItem value={"Tutorials"}>Tutorials</MenuItem>
+                <MenuItem value={"Computer Science Theory"}>Computer Science Theory</MenuItem>
+                <MenuItem value={"Visualization Tools"}>Visualization Tools</MenuItem>
+                <MenuItem value={"Collaboration Tools"}>Collaboration Tools</MenuItem>
+                <MenuItem value={"Software Development Tools"}>Software Development Tools</MenuItem>
+                <MenuItem value={"Career Development"}>Career Development</MenuItem>
+            </Select>
+            </FormControl>
+            <br/>
+            <TextField style={{flex: 1.25}} required id="ResourceCategory" value={resourceCategory} label="Displayed Category (Customizable)" onChange={(input) => {setResourceCategory(input.target.value), CheckInput(input.target.value, 300, setInvalidCategory)}} error={invalidCategory !== ""} helperText={invalidCategory}/>
+            <br/>
+            <TextField id="Description" label="Description" multiline minRows={3} onChange={(input) => CheckInput(input.target.value, 300, setInvalidDescription)} error={invalidDescription !== ""} helperText={invalidDescription}/>
           </div>
           <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
-            {displayCreateButton()}
+            {DisplayCreateButton()}
             <Button variant='contained' onClick={handleCloseC} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
           </div>
         </form>
@@ -306,7 +336,7 @@ function FeedbackPopUp({openF, handleCloseF, resourceID}) {
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   
-  function displaySubmitButton() {
+  function DisplaySubmitButton() {
   
     if (description != "" && category != "")
     {
@@ -350,13 +380,75 @@ function FeedbackPopUp({openF, handleCloseF, resourceID}) {
             <br/>
           </div>
           <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
-            {displaySubmitButton()}
+            {DisplaySubmitButton()}
             <Button variant='contained' onClick={handleCloseF} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
           </div>
         </form>
       </Dialog>
     );
 
+}
+
+function RecSharePopUp({openRecS, handleCloseRecS, groupID, comResourceID, comResourceName, comWebsiteURL, prevResourceCategory, prevResourceDescription, comShares})
+{
+  let newShare = parseInt(comShares) + 1;
+
+  console.log(comResourceID)
+  console.log(comResourceName)
+  console.log(comWebsiteURL)
+  console.log(prevResourceCategory)
+  console.log(prevResourceDescription)
+  console.log(comShares)
+  
+  const handleCreate = async (e) =>
+    {
+      
+      e.preventDefault()
+        await fetch('http://localhost:8080/educationalresources', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'PATCH',
+            body: JSON.stringify({
+              'valResourceID': comResourceID,
+              'valVotes': newShare.toString()
+            })
+        });
+
+        await fetch('http://localhost:8080/groupresources', {
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+          method: 'POST',
+          body: JSON.stringify({
+              'valGroupID': groupID,
+              'valResourceName': comResourceName,
+              'valWebsiteURL': comWebsiteURL,
+              'valDescription': prevResourceDescription,
+              'valResourceCategory': prevResourceCategory,
+              'valPublicShare': "1",
+          })
+      });
+        
+      handleCloseRecS();
+      window.location.reload();
+    }
+
+    return (
+      <Dialog open={openRecS} onClose={handleCloseRecS}>
+        <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
+          <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Share Resource: {comResourceName}</DialogTitle>
+          <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
+          <div style={{margin:'2rem'}}>{comResourceName} will be added to {groupName}’s shared resources, and its information will be updated to suggest similar resources in the future.</div>
+          <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
+            <Button variant='contained' type='submit'>Confirm Share</Button>
+            <Button variant='contained' onClick={handleCloseRecS} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
+          </div>
+        </form>
+      </Dialog>
+    );
 }
 
 function CommunitySharePopUp({openS, handleCloseS, groupID, comResourceID, comResourceName, comWebsiteURL, prevResourceCategory, prevResourceDescription, comShares})
@@ -414,8 +506,8 @@ function CommunitySharePopUp({openS, handleCloseS, groupID, comResourceID, comRe
             <AccordionDetails>
               <FormControl style={{flex: '25%'}}>
                 <RadioGroup
-                aria-labelledby="demo-controlled-radio-buttons-group"
-                name="controlled-radio-buttons-group"
+                aria-labelledby="pages-radio-buttons-group"
+                name="pages-buttons-group"
                 defaultValue={comWebsiteURL}
                 >
                   <DisplayOtherPages homePage={comWebsiteURL} setLink={setLink}/>
@@ -443,7 +535,7 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
   const [invalidDescription, setInvalidDescription] = useState("");
   const [invalidCategory, setInvalidCategory] = useState("");
 
-  function displayModifyButton() {
+  function DisplayModifyButton() {
   
     if (resourceName != "" && websiteURL != "" && resourceCategory != "" && invalidURL == "" && invalidName == "" && invalidDescription == "" && invalidCategory == "")
     {
@@ -455,7 +547,7 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
     }
   }
 
-  function checkWebsiteURL(url) {
+  function CheckWebsiteURL(url) {
     
     if (!url.match((/^(https?:\/\/)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/))) {
       setInvalidURL("Invalid input - please copy and paste the full website url.");
@@ -468,7 +560,7 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
     }
   }
 
-  function checkInput(input, size, setter) {
+  function CheckInput(input, size, setter) {
     if (new Blob([input]).size > size) {
       setter("Invalid input - please reduce length.");
     }
@@ -511,16 +603,16 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
           <DialogTitle style={{color: '#556cd6', fontWeight: 'bold', display: 'flex', justifyContent: 'center'}}>Modify Resource: {prevResourceName}</DialogTitle>
           <div style={{borderBottom: '2px solid #e8e8e8'}}></div>
           <div style={{margin: '1rem', display: 'flex', flexDirection: 'column'}}>
-            <TextField required id="ResourceName" label="Resource Name" value={resourceName} onChange={(input) => {setResourceName(input.target.value), checkInput(input.target.value, 100, setInvalidName)}} error={invalidName !== ""} helperText={invalidName}/>
+            <TextField required id="ResourceName" label="Resource Name" value={resourceName} onChange={(input) => {setResourceName(input.target.value), CheckInput(input.target.value, 100, setInvalidName)}} error={invalidName !== ""} helperText={invalidName}/>
             <br/>
-            <TextField required id="WebsiteURL" label="Website URL" value={websiteURL} onChange={(input) => {setWebsiteURL(input.target.value), checkWebsiteURL(input.target.value)}} error={invalidURL !== ""} helperText={invalidURL}/>
+            <TextField required id="WebsiteURL" label="Website URL" value={websiteURL} onChange={(input) => {setWebsiteURL(input.target.value), CheckWebsiteURL(input.target.value)}} error={invalidURL !== ""} helperText={invalidURL}/>
             <br/>
-            <TextField required id="ResourceCategory" label="Resource Category" value={resourceCategory} onChange={(input) => {setResourceCategory(input.target.value), checkInput(input.target.value, 300, setInvalidCategory)}} error={invalidCategory !== ""} helperText={invalidCategory}/>
+            <TextField required id="ResourceCategory" label="Resource Category" value={resourceCategory} onChange={(input) => {setResourceCategory(input.target.value), CheckInput(input.target.value, 300, setInvalidCategory)}} error={invalidCategory !== ""} helperText={invalidCategory}/>
             <br/>
-            <TextField id="Description" value ={resourceDescription} label="Description" onChange={(input) => {setResourceDescription(input.target.value), checkInput(input.target.value, 300, setInvalidDescription)}} error={invalidDescription !== ""} helperText={invalidDescription} multiline minRows={4}/>
+            <TextField id="Description" value ={resourceDescription} label="Description" onChange={(input) => {setResourceDescription(input.target.value), CheckInput(input.target.value, 300, setInvalidDescription)}} error={invalidDescription !== ""} helperText={invalidDescription} multiline minRows={4}/>
           </div>
           <div style={{gap: '1rem', marginBottom: '1rem', justifyContent: 'center', display: 'flex'}}>
-            {displayModifyButton()}
+            {DisplayModifyButton()}
             <Button variant='contained' onClick={handleCloseM} type='button' style={{backgroundColor: '#e8e8e8', color: '#FF0000'}}>Cancel</Button>
           </div>
         </form>
@@ -559,7 +651,7 @@ function useGroupResourceCategories(currGroupID) {
   return [safe, res];
 }
 
-function GenerateRows(data, updateRowClick){
+function GenerateGroupRows(data, UpdateGroupRowClick){
 
   // Iterates through array to generate and return rows of the table.
   if (resetClick === true)
@@ -584,7 +676,7 @@ function GenerateRows(data, updateRowClick){
           <TableRow>
             <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[i][2]}</TableCell>
             <TableCell style={{textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis'}}><a href={data[i][3]} target='_blank'>{data[i][3]}</a></TableCell>
-            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => updateRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
+            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => UpdateGroupRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
           </TableRow>
         );
       }
@@ -597,7 +689,62 @@ function GenerateRows(data, updateRowClick){
   return returnedLine;
 }
 
-function GenerateCRows(data, updateCRowClick, category){
+function GenerateRecRows(data, UpdateRecRowClick) 
+{
+   // Iterates through array to generate and return rows of the table.
+   
+   if (resetRClick === true)
+    {
+      clickedRRow = 0;
+      resetRClick = false;
+    }
+
+   if (data[0] === false)
+   {
+    return (
+      <div style={{display: 'flex', justifyContent: 'center', paddingTop: '1rem'}}>
+        <CircularProgress />
+      </div>);
+   }
+
+   if (data[1].Result == "Error: Group does not have public resources" || data[1].Result == "Error: No sufficently similar groups")
+   {
+    return (<></>)
+   }
+   else if (data[0] === true)
+   {
+    let returnedLine = [];
+    for (let i = 0; i < data[1].Result.length; i++) 
+      {
+        if (i ==clickedRRow)
+        {
+          returnedLine.push(
+            <TableRow style={{backgroundColor: '#f7f7f8'}}>
+              <TableCell style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[1].Result[i][4]}</TableCell>
+              <TableCell style={{textAlign: 'left', overflow: 'hidden', fontWeight: 'bold'}}>{data[1].Result[i][1]}</TableCell>
+              <TableCell style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}><a href={data[1].Result[i][0]} target='_blank'>{data[1].Result[i][0]}</a></TableCell>
+              <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><InfoIcon style={{color: '#e8e8e8'}}/></TableCell>
+            </TableRow>
+          );
+        }
+        else
+        {
+          returnedLine.push(
+            <TableRow>
+              <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[1].Result[i][4]}</TableCell>
+              <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[1].Result[i][1]}</TableCell>
+              <TableCell style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}><a href={data[1].Result[i][0]} target='_blank'>{data[1].Result[i][0]}</a></TableCell>
+              <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => UpdateRecRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
+            </TableRow>
+          );
+        }   
+      }
+    return returnedLine;
+   }
+}
+
+
+function GenerateComRows(data, UpdateComRowClick, category){
 
   // Iterates through array to generate and return rows of the table.
   if (resetCClick === true)
@@ -624,7 +771,7 @@ function GenerateCRows(data, updateCRowClick, category){
             <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[i][7]}</TableCell>
             <TableCell style={{textAlign: 'left', overflow: 'hidden'}}>{data[i][1]}</TableCell>
             <TableCell style={{textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis'}}><a href={data[i][2]} target='_blank'>{data[i][2]}</a></TableCell>
-            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => updateCRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
+            <TableCell style={{textAlign: 'right', overflow: 'hidden'}}><IconButton onClick={() => UpdateComRowClick(i)}><InfoIcon style={{color: '#e8e8e8'}}/></IconButton></TableCell>
           </TableRow>
         );
       }
@@ -671,13 +818,13 @@ function GenerateCategoryButtons(data, setcurrCat, currCat)
   return returnedLine;
 }
 
-function GenerateCheckboxs(data, updateRowMask){
+function GenerateGroupCheckboxs(data, UpdateRowMask){
   let returnedLine = [];
   for (let i = 0; i < data.length; i++)
   {
     returnedLine.push(
       <div key={i}>
-        <label><input type="checkbox" defaultChecked onChange={() => updateRowMask(data[i][0])} />{data[i]}</label>
+        <label><input type="checkbox" defaultChecked onChange={() => UpdateRowMask(data[i][0])} />{data[i]}</label>
         <br />
         <br />
       </div>
@@ -712,8 +859,6 @@ function DisplayOtherPages({homePage, setLink}) {
     handleResGet();
   }, []);
 
-  //<FormControlLabel value="0" control={<Radio />} label="Group" onClick={() => setPublicShare("0")}/>
-  //<FormControlLabel value="1" control={<Radio />} label="Community" onClick={() => setPublicShare("1")} />
 
   if (!safe) {
     return (<CircularProgress />);
@@ -735,7 +880,52 @@ function DisplayOtherPages({homePage, setLink}) {
   }
 }
 
-function validCClick(resources, setOpenS, setOpenF){
+function RecRowDetails(resources, setOpenRecS){
+
+  console.log(resources)
+  if (!resources[1])
+  {
+    return (
+      <div style={{display: 'flex', justifyContent: 'center', paddingTop: '1rem'}}>
+      Loading . . .
+      </div>);
+  }
+
+  if (resources[1].Result == "Error: Group does not have public resources")
+  {
+    return(
+      <div className="table-body-2">
+        <div className="tb2-empty">{"Recommendations Not Available"}</div>
+        We cannot recommend any resources to your group until you start sharing resources publicly.
+      </div>
+    )
+  }
+  else if (resources[1].Result == "Error: No sufficently similar groups")
+  {
+    return(
+      <div className="table-body-2">
+        <div className="tb2-empty">{"Recommendations Not Available"}</div>
+        We cannot recommend any resources to your group because your sharing activity is not sufficiently similar to that of any other groups.
+      </div>
+    )
+  }
+  else
+  {
+      return(
+        <TableRow>
+          <div className="tb2-header">{"Description"}</div>
+          {resources[1].Result[clickedRRow][3]}
+          <div style={{marginTop: '1rem', wordWrap: 'break-word', wordBreak: 'break-all'}}><a href={resources[1].Result[clickedRRow][0]} target='_blank'>{resources[1].Result[clickedRRow][0]}</a></div>
+          <div style={{marginTop: '1rem'}}><span style={{fontWeight: 'bold'}}>Community Shares: </span>{resources[1].Result[clickedRRow][4]}</div>
+          <div className='button-format'>
+            <Button onClick={() => setOpenRecS(true)} variant="contained" color="secondary">+ Share with {groupName}</Button>
+          </div>
+        </TableRow>
+      )
+  }
+}
+
+function ComRowDetails(resources, setOpenS, setOpenF){
 
   if (resources[1] && resources[1].length > clickedCRow)
   {
@@ -777,7 +967,7 @@ function validCClick(resources, setOpenS, setOpenF){
   }
 }
 
-function validClick(resources, setOpenD, setOpenM){
+function GroupRowDetails(resources, setOpenD, setOpenM){
 
   if (resources[1] && resources[1].length > clickedRow)
   {
@@ -817,7 +1007,7 @@ function GroupResources() {
  const [openD, setOpenD] = React.useState(false);
  const [openM, setOpenM] = React.useState(false);
 
- function updateRowMask(cat)
+ function UpdateRowMask(cat)
 {
   if (maskedCat.size === categories[1].length)
   {
@@ -836,7 +1026,7 @@ function GroupResources() {
   setUpdateVersion((current) => current +1);
 }
 
-function updateRowClick(row)
+function UpdateGroupRowClick(row)
 {
   clickedRow = row;
   setUpdateVersion((current) => current +1);
@@ -865,7 +1055,7 @@ if (resources[0] && categories[0])
             <div className="left-table">
               <Table>
                     <TableCell>
-                      {GenerateCheckboxs(categories[1], updateRowMask)}
+                      {GenerateGroupCheckboxs(categories[1], UpdateRowMask)}
                     </TableCell>
               </Table>
             </div>
@@ -882,7 +1072,7 @@ if (resources[0] && categories[0])
               <div className="table-body-1">
                 <Table style={{ tableLayout: 'fixed', width: '100%'}}>
                     <TableBody>
-                      {GenerateRows(resources[1], updateRowClick)}
+                      {GenerateGroupRows(resources[1], UpdateGroupRowClick)}
                     </TableBody>
                 </Table>
               </div>
@@ -898,7 +1088,7 @@ if (resources[0] && categories[0])
             <div className="table-body-2">
               <Table style={{tableLayout: 'fixed', width: '100%'}}>
                 <TableBody>
-                  {validClick(resources, setOpenD, setOpenM)}
+                  {GroupRowDetails(resources, setOpenD, setOpenM)}
                 </TableBody>
               </Table>
             </div>
@@ -948,16 +1138,92 @@ function CommunityResources()
     setDisplayFrequency(newValue === 0);
   }
 
-  function updateCRowClick(row)
+  function UpdateComRowClick(row)
   {
     clickedCRow = row;
     setUpdateVersion((current) => current +1);
   }
 
-  function DisplayFrequently({resources, updateCRowClick, currCat})
+  function DisplayFrequently({resources, UpdateComRowClick, currCat})
   {
     return(
+        <div className="community-table">
+            <div className="left-table">
+                <ButtonGroup style={{width: '100%', height: '100%'}} orientation="vertical" size = "large" varient="text" aria-label="Basic button group">
+                  {GenerateCategoryButtons(["Practice Questions", "Tutorials", "Computer Science Theory", "Visualization Tools", "Collaboration Tools", "Software Development Tools", "Career Development"], setcurrCat, currCat)}
+                </ButtonGroup>
+            </div>
+          <div className="middle-table">
+            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+              <TableHead>
+                <TableRow>
+                  <TableCell style={{fontWeight: 'bold', width: '33%'}}>Shares</TableCell>
+                  <TableCell style={{fontWeight: 'bold', width: '33%'}}>Name</TableCell>
+                  <TableCell style={{fontWeight: 'bold', width: '34%'}}>Website URL</TableCell>
+                  <TableCell style={{marginRight: '1.5rem', textAlign: 'right', fontWeight: 'bold', width: '34%'}}>▶</TableCell>
+                </TableRow>
+              </TableHead>
+            </Table>
+            <div className="table-body-1">
+              <Table style={{ tableLayout: 'fixed', width: '100%'}}>
+                  <TableBody>
+                    {GenerateComRows(resources[1], UpdateComRowClick, currCat)}
+                  </TableBody>
+              </Table>
+            </div>
+          </div>
+          <div className="right-table">
+            <Table style={{ tableLayout: 'fixed', width: '100%', borderBottom: '1px solid #e8e8e8'}}>
+              <TableHead>
+                <tableRow>
+                  <TableCell style={{fontWeight: 'bold'}}>Details</TableCell>
+                </tableRow>
+              </TableHead>
+            </Table>
+            <div className="table-body-2">
+              <Table style={{tableLayout: 'fixed', width: '100%'}}>
+                <TableBody>
+                  {ComRowDetails(resources, setOpenS, setOpenF)}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+      </div>
+    );
+  }
+
+   function DisplayRecommended(UpdateComRowClick)
+   {
+    let resources = useRecResources(groupID)
+    const [updateVersion, setUpdateVersion] = useState(0);
+    const [openRecS, setOpenRecS] = React.useState(false);
+
+
+    function UpdateRecRowClick(row)
+    {
+      clickedRRow = row;
+      setUpdateVersion((current) => current +1);
+    }
+    
+    if (guest === true)
+        {
+          return (
+            <div className="table-body-1">
+              <Table style={{background: '#ffffff', fontWeight: 'bold', border: 'solid 1px #1c1c1e', marginLeft: '2.5%', marginRight: '2.5%', height: '10rem', display: 'flex', justifyContent: 'center', width: '95%', alignItems: 'center'}}>
+                After signing up, join or create your first group to start sharing resources. Meanwhile, check out our community resources to begin learning!
+              </Table>
+            </div>
+          )
+        } 
+    
+
+    
+    return (
       <>
+      <div className="community-table">
+          <div className="left-table-rec">
+            <div style={{margin: '1rem'}}> Resources are recommended if they have been found useful by groups similar to yours. Similarity is determined by analyzing each group's public sharing activity.</div>
+          </div>
         <div className="middle-table">
           <Table style={{ tableLayout: 'fixed', width: '100%'}}>
             <TableHead>
@@ -972,7 +1238,7 @@ function CommunityResources()
           <div className="table-body-1">
             <Table style={{ tableLayout: 'fixed', width: '100%'}}>
                 <TableBody>
-                  {GenerateCRows(resources[1], updateCRowClick, currCat)}
+                {GenerateRecRows(resources, UpdateRecRowClick)}
                 </TableBody>
             </Table>
           </div>
@@ -988,37 +1254,15 @@ function CommunityResources()
           <div className="table-body-2">
             <Table style={{tableLayout: 'fixed', width: '100%'}}>
               <TableBody>
-                {validCClick(resources, setOpenS, setOpenF)}
+                {RecRowDetails(resources, setOpenRecS)}
               </TableBody>
             </Table>
           </div>
         </div>
+      </div>
+      {openRecS && <RecSharePopUp openRecS={openRecS} handleCloseRecS={() => setOpenRecS(false)} groupID={groupID} comResourceID={resources[1].Result[clickedRRow][5]} comResourceName={resources[1].Result[clickedRRow][1]} comWebsiteURL={resources[1].Result[clickedRRow][0]} prevResourceCategory={resources[1].Result[clickedRRow][2]} prevResourceDescription={resources[1].Result[clickedRRow][3]} comShares={resources[1].Result[clickedRRow][4]}/>}
       </>
-    );
-  }
-
-   function DisplayRecommended()
-   {
-      if (guest === true)
-        {
-          return (
-            <div className="table-body-1">
-              <Table style={{background: '#ffffff', fontWeight: 'bold', border: 'solid 1px #1c1c1e', marginLeft: '2.5%', marginRight: '2.5%', height: '10rem', display: 'flex', justifyContent: 'center', width: '95%', alignItems: 'center'}}>
-                After signing up, join or create your first group to start sharing resources. Meanwhile, check out our community resources to begin learning!
-              </Table>
-            </div>
-          )
-        }  
-    
-    return (
-        <div className="table-body-1">
-            <Table style={{ tableLayout: 'fixed', width: '100%'}}>
-                <TableBody>
-                  <TableCell style={{fontWeight: 'bold', padding: '2rem', fontSize: '17px', backgroundColor: '#ffffff'}}>Recommended resources are currently unavailable for {groupName}. Recommendations are generated based on the public resources shared by your group members. Keep sharing resources with public visibility to unlock your recommendations!</TableCell>
-                </TableBody>
-            </Table>
-          </div>
-      )
+  );
    }
 
 if (!resources[0])
@@ -1043,15 +1287,8 @@ if (resources[0])
               </Tabs>
             </Box>
           </div>
-          <div className="community-table">
-            <div className="left-table">
-                <ButtonGroup style={{width: '100%', height: '100%'}} orientation="vertical" size = "large" varient="text" aria-label="Basic button group">
-                  {GenerateCategoryButtons(["Practice Questions", "Tutorials", "Computer Science Theory", "Visualization Tools", "Collaboration Tools", "Software Development Tools", "Career Development"], setcurrCat, currCat)}
-                </ButtonGroup>
-            </div>
-            {displayFrequently && <DisplayFrequently resources={resources} updateCRowClick={updateCRowClick} currCat={currCat}/>}
-            {!displayFrequently && <DisplayRecommended/>}
-        </div>
+            {displayFrequently && <DisplayFrequently resources={resources} UpdateComRowClick={UpdateComRowClick} currCat={currCat}/>}
+            {!displayFrequently && <DisplayRecommended UpdateComRowClick={UpdateComRowClick}/>}
         {openS && <CommunitySharePopUp openS={openS} handleCloseS={() => setOpenS(false)} groupID={groupID} comResourceID={resources[1][clickedCRow][0]} comResourceName={resources[1][clickedCRow][1]} comWebsiteURL={resources[1][clickedCRow][2]} prevResourceCategory={resources[1][clickedCRow][3]} prevResourceDescription={resources[1][clickedCRow][4]} comShares={resources[1][clickedCRow][7]}/>}
         {openF && <FeedbackPopUp openF={openF} handleCloseF={() => setOpenF(false)} resourceID={resources[1][clickedCRow][0]}/>}
         </>
@@ -1081,7 +1318,7 @@ function Resources() {
     }
   }
 
-  function buttonStyle(button)
+  function ButtonStyle(button)
   {
     if (button === clickedButton)
     {
@@ -1097,8 +1334,8 @@ function Resources() {
     <div>
         <div class='main-title'>Resources</div>
         <ButtonGroup style={{marginLeft: '2.5%'}} size = "large" varient="text" aria-label="Basic button group">
-          <Button onClick={() => {resetClick = true, setClickedButton("group")}} style={buttonStyle("group")}>Group</Button>
-          <Button onClick={() => {resetCClick = true, setClickedButton("community")}} style={buttonStyle("community")}>Community</Button>
+          <Button onClick={() => {resetClick = true, setClickedButton("group")}} style={ButtonStyle("group")}>Group</Button>
+          <Button onClick={() => {resetCClick = true, resetRClick = true, setClickedButton("community")}} style={ButtonStyle("community")}>Community</Button>
         </ButtonGroup>
         {<CurrentDisplay/>}
     </div>
