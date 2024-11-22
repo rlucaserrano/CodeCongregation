@@ -50,7 +50,7 @@ import InfoIcon from '@mui/icons-material/Info';
 // Global resources. Will need to be updated for proper guest display and study group navigation.
 let guest = false;
 let user = true;
-let groupID = "1";
+let groupID = "30";
 let groupName = "Swamp Scripters"
 let maskedCat = new Set();
 let clickedRow = 0;
