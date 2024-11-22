@@ -1,34 +1,108 @@
 .calendar-container {
-    max-width: 1200px; 
-    margin: auto;
-    padding-top: 80px;
-    background-color: #f0f4ff; 
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #b0b5de;
+    color: rgba(255, 255, 255, 0.87);
+    overflow: hidden;
 }
 
-.calendar-title {
-    text-align: center; 
-    margin-bottom: 20px; 
-    color: #556cd6; 
+.calendar-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #99a2e4;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.calendar-content {
+    flex-grow: 1;
+    padding: 20px; /* padding around the calendar */
+    overflow: auto; /* prev content from being cut off */
+}
+.react-big-calendar {
+    height: calc(100% - 40px); /* adjust height to fit within the page */
+    margin: 0 auto; 
+    max-width: 100%; 
+    overflow: hidden; 
+}
+.MuiDrawer-paper {
+    width: 250px; /*fixed width*/
+    max-width: 80%; 
+    background-color: #99a2e4; 
+    color: #99a2e4;
+    overflow-y: auto;
+   
+}
+.drawer-content {
+    background-color: #99a2e4;
+    height: 100%;
+    color: white;
+    display: flex;
+    flex-direction: column; 
+    padding: 10px; 
 }
 
-.calendar-controls {
-    margin-bottom: 20px; 
+.drawer-list {
+    display: flex;
+    flex-direction: column; 
+    gap: 10px; 
 }
 
-.calendar-paper {
-    margin-top: 20px;
-    padding: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); 
-    border-radius: 12px; 
-    background-color: #ffffff; 
+.drawer-list-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
 }
 
-.calendar-arrow {
-    cursor: pointer;
-    transition: color 0.2s ease;
-    color: #556cd6; 
+.drawer-list-item:hover {
+    background-color: rgba(255, 255, 255, 0.2); 
 }
 
-.calendar-arrow:hover {
-    color: #4051b5; 
+.mini-calendar {
+    background-color: transparent;
+    padding: 2px;
+    border-radius: 1px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(10px); 
 }
+
+.mini-calendar .react-calendar {
+    background-color: transparent; 
+    box-shadow: none; 
+    border: 1px  #99a2e4; 
+}
+
+.mini-calendar .react-calendar__tile {
+    color: #1c1c1e; 
+    border-radius: 6px; 
+}
+
+.mini-calendar .react-calendar__tile--active {
+    
+    color: #ffffff; 
+}
+.mini-calendar .react-calendar__navigation {
+    background-color: transparent; 
+    border: none; 
+}
+
+.mini-calendar .react-calendar__navigation button {
+    background: none; 
+    color: #ffffff; 
+    font-weight: bold;
+    font-size: 1rem; 
+    border: none; 
+    padding: 5px; 
+}
+
+.mini-calendar .react-calendar__navigation button:enabled:hover {
+    background: rgba(255, 255, 255, 0.2); /*  hover effect for buttons */
+}
+
+.mini-calendar .react-calendar__navigation button:disabled {
+    color: rgba(255, 255, 255, 0.4); 
+}
+

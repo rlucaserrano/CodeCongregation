@@ -68,7 +68,7 @@ button:focus-visible {
 .account-page {
   flex-grow: 1;
   display: flex;
-  flex-direction: row; /* ensures sidebar and content are side by side */
+  flex-direction: row; 
 }
 
 .sidebar {

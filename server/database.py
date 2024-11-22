@@ -1,4 +1,6 @@
 import oracledb
+import psycopg2
+from psycopg2 import sql
 from config import Config
 
 # Educational sources used to setup database.py 
@@ -13,7 +15,22 @@ class Database:
     # Establishes a connection with the database.
     @staticmethod 
     def GetConnection():
-        return oracledb.connect(user=Config.ORACLE_USER, password=Config.ORACLE_PASSWORD, dsn=f"{Config.ORACLE_HOST}:{Config.ORACLE_PORT}/{Config.ORACLE_SID}")
+         return oracledb.connect(user=Config.ORACLE_USER, password=Config.ORACLE_PASSWORD, dsn=f"{Config.ORACLE_HOST}:{Config.ORACLE_PORT}/{Config.ORACLE_SID}")
+        # try:
+        #     connection = psycopg2.connect(
+        #     dbname=Config.POSTGRES_DB,
+        #     user=Config.POSTGRES_USER,
+        #     password=Config.POSTGRES_PASSWORD,
+        #     host=Config.POSTGRES_HOST,
+        #     port=Config.POSTGRES_PORT
+        # )
+        #     print(f"Connected to the PostgreSQL database at {Config.POSTGRES_HOST}:{Config.POSTGRES_PORT}/{Config.POSTGRES_DB}")
+        # except Exception as e:
+           # print(f"Failed to connect to PostgreSQL: {e}")
+         #   raise
+        # except Exception as e:
+        #     print(f"Error connecting to the PostgreSQL database: {e}")
+        #     raise
 
     # Conducts a selection query
     @staticmethod 

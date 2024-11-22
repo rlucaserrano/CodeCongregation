@@ -1,31 +1,42 @@
 nav {
     background-color: rgba(255, 255, 255, 0.7); /* translucent bg */
-    padding: 5px 20px; /* reduce padding */
+    padding: 5px 10px; /* reduce padding */
     position: fixed;
     top: 0;
     left: 0;
+    right: 0;
     width: 100%;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
     backdrop-filter: blur(10px); /* glass effect */
     z-index: 1000;
     display: flex;
-    justify-content: flex-start;
+    /* justify-content: flex-start; */
+    justify-content: space-between;
     align-items: center; 
     height: 50px; 
 }
 
 .nav-container {
-    max-width: 1280px;
+    flex: 1;
+    max-width: 100%;
     width: 100%;
-    margin: 0 auto;
     display: flex;
+    padding: 0 30px;
     justify-content: space-between;
-    align-items: center;
+     align-items: center; 
 }
 
-.nav-left, .nav-right {
+.nav-left {
     display: flex;
     align-items: center;
+    justify-content: flex-start;
+}
+.nav-right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; 
+    gap: 10px; 
+    margin-left: auto; 
 }
 
 .logo {
@@ -36,7 +47,7 @@ nav {
     text-decoration: none;
     transition: color 0.3s ease;
     display: flex;
-    align-items: center;
+    align-items: left;
     height: 100%;
 }
 

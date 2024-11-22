@@ -11,7 +11,7 @@ function Create() {
         e.preventDefault();
         const form = e.target;
 
-        // Capture form values
+        
         const username = form.Username.value;
         const password = form.Password.value;
         const confirmPassword = form.ConfirmPassword.value;
@@ -19,22 +19,22 @@ function Create() {
         const firstName = form.FirstName.value || null;
         const lastName = form.LastName.value || null;
 
-        // Simple client-side password confirmation check
+        
         if (password !== confirmPassword) {
             setFormError("Passwords do not match.");
             return;
         }
 
-        // Clear previous error messages
+        
         setFormError('');
 
         const formData = {
             username: username,
             email: email,
-            hashedPassword: password,  // assuming you'll hash on the server
+            hashedPassword: password,  //  hash on the server
             firstName: firstName,
             lastName: lastName,
-            admin: 0  // Assuming new users aren't admin by default
+            admin: 0  
         };
 
         try {
@@ -51,7 +51,7 @@ function Create() {
                 const result = await response.json();
                 // Store the user_id provided by the server
                 //localStorage.setItem('user_id', result.user_id);
-                window.location.href = '/login'; //Redirect to login page. "add" returns a success message, not ID.
+                window.location.href = '/groups'; 
             } else {
                 const errorData = await response.json();
                 console.error('Error creating account:', errorData);
@@ -69,7 +69,7 @@ function Create() {
     }
 
     function handleGoogleSignUp() {
-        // Redirect to Google OAuth endpoint or handle Google Sign-in logic here
+        // redirect to Google OAuth endpoint or handle Google Sign-in logic here
         window.location.href = 'http://localhost:8080/google-auth';
     }
 
