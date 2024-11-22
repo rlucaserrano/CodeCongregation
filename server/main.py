@@ -12,6 +12,7 @@ from users import Users
 from group_resources import GroupResources
 from proc_and_sec import ProcAndSec
 from educationalresources import EducationalResources
+from recommendations import Recommendations
 from calendars import Calendars
 from flask import Flask, request, jsonify, make_response, Response
 import bcrypt
@@ -27,10 +28,7 @@ load_dotenv()
 
 # Flask instance
 app = Flask(__name__)
-#CORS(app)  # Currently allowing all origins
-#CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
-#made an edit here to make sure CORS issue is solved
-CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True, methods=["GET", "POST", "PATCH", "DELETE","HEAD", "OPTIONS"])
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True, methods=["GET", "POST", "PATCH", "DELETE","HEAD", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
 GOOGLE_CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
 secret = 'testSecret'
@@ -129,6 +127,24 @@ def AccessFeedback():
 
         result = Database.AddToDatabase(table="MGOLAN.Feedback", entry=[f"{resourceID}", f"'{category}'", f"'{description}'"])
         return (jsonify({"result": str(result)}))
+
+
+@app.route('/recommendations', methods=["POST", "OPTIONS"])
+def AccessRecommendations():
+
+    if request.method == "OPTIONS":
+        # Handles CORS request
+        response = jsonify({"Options": "GET, POST, DELETE, OPTIONS"})
+        response.status_code = 200
+        return response
+    else:
+        data = request.get_json()
+        groupID = data.get('valGroupID', None)
+
+        result = Recommendations.GetRecommendations(int(groupID))
+        response = jsonify({"Result": result})
+        response.status_code = 200
+        return response
 
 # made changes to increment userID by 1 for simplicity
 @app.route('/add', methods=["POST"])

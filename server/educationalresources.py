@@ -119,6 +119,7 @@ class EducationalResources:
         if len(changes) <= 0:
              return jsonify({"ERROR": "PATCH method requires at least one parameter other than ResourceID"}), 400 
         else: # Updates database.
+            print(changes)
             result = Database.ModifyDatabase(table = "MGOLAN.EducationalResources", key1 = "ResourceID", value1 = self.valResourceID, changes = changes)
             if result == True:
                 return jsonify({"SUCCESS": "Resource modified"}), 200

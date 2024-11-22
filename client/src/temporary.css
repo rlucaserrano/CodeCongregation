@@ -188,6 +188,21 @@
     border: 1px solid #1c1c1e;
   }
 
+  .community-table .left-table-rec {
+    
+    max-height: 25rem;
+    min-height: 25rem;
+    max-width: 15%;
+    max-width: 15%;
+    background-color: #ffffff;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    gap: 0;
+    border: 1px solid #1c1c1e;
+  }
+
 
   .right-table .table-body-2 {
     padding: 1rem;
