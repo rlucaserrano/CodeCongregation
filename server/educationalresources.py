@@ -2,7 +2,8 @@ from flask import jsonify
 from database import Database
 from proc_and_sec import ProcAndSec
 
-''' Handles database requests from the frontend. 
+''' 
+Handles database requests from the frontend. 
 Organizes frontend values, processes values, and calls appropriate database.py functions. 
 '''
 
