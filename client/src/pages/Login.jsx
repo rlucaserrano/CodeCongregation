@@ -85,6 +85,7 @@ const Login = () => {
                 console.log("Received token from server:", token); // Log the token from the server
                 if (token) {
                     localStorage.setItem('token', token);  // Store the JWT token
+                    localStorage.setItem('userFirst', username[0]); // Store the first Letter for the avatar
                     console.log("Stored token in localStorage:", localStorage.getItem('token')); // Verify storage
                     window.location.href = '/groups';     // Redirect to groups page
                 } else {

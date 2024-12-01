@@ -94,7 +94,9 @@ function Account() {
 
     function handleLogout() {
         localStorage.removeItem('token');
-        localStorage.removeItem('groupID'); // Also clear the currently selected group.
+        localStorage.removeItem('groupName');
+        localStorage.removeItem('userFirst'); //First Letter for the avatar
+        localStorage.removeItem('groupID'); //Also clear the currently selected group.
         window.location.href = '/';
     }
 

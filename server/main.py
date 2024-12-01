@@ -227,7 +227,7 @@ def update_user():
         connection.close()
 
 
-@app.route('/addgroup', methods=["POST"])
+@app.route('/addgroup', methods=["POST"]) #Handle creation of a new group
 def addGroup():
     connection = Database.GetConnection()
     addNew = request.json.get('data')
@@ -238,7 +238,7 @@ def addGroup():
     connection.close()
     return ""
 
-@app.route('/addmem', methods=["POST"])
+@app.route('/addmem', methods=["POST"]) #Handle addition of a user to a group
 def addMember():
     connection = Database.GetConnection()
     addNew = request.json.get('data')
@@ -249,7 +249,7 @@ def addMember():
     connection.close()
     return ""
 
-@app.route('/groups', methods=["POST"])
+@app.route('/groups', methods=["POST"]) #Handle rejection of group invite
 def findGroup():
     connection = Database.GetConnection()
     user = (request.data).decode("utf-8")
@@ -279,7 +279,7 @@ def findName():
     connection.close()
     return results[0][0]
 
-@app.route('/invite', methods=["POST"])
+@app.route('/invite', methods=["POST"]) #Retrieve all groups a user has been invited to, but not yet responded
 def findInvite():
     connection = Database.GetConnection()
     user = (request.data).decode("utf-8")
@@ -296,7 +296,7 @@ def findInvite():
     groups.sort()
     return groups
 
-@app.route('/groupacc', methods=["POST"])
+@app.route('/groupacc', methods=["POST"]) #Handle acceptance of group invite
 def acceptInvite():
     connection = Database.GetConnection()
     accept = request.json.get('data')
@@ -307,7 +307,7 @@ def acceptInvite():
     connection.close()
     return ""
 
-@app.route('/grouprej', methods=["POST"])
+@app.route('/grouprej', methods=["POST"]) #Handle rejection of group invite
 def rejectInvite():
     connection = Database.GetConnection()
     reject = request.json.get('data')
@@ -318,7 +318,7 @@ def rejectInvite():
     connection.close()
     return ""
 
-@app.route('/memberid', methods=["POST"])
+@app.route('/memberid', methods=["POST"]) #Retrieve group members names and ids
 def findIds():
     connection = Database.GetConnection()
     data = request.json.get('data')
@@ -350,7 +350,7 @@ def findIds():
     toReturn = dict(zip(members, friends))
     return toReturn
 
-@app.route('/friendreq', methods=["POST"])
+@app.route('/friendreq', methods=["POST"]) #Send friend request
 def friendReq():
     connection = Database.GetConnection()
     data = request.json.get('data')
@@ -397,7 +397,7 @@ def sendInvite():
                 connection.close()
                 return "0"
 
-@app.route('/leave', methods=["POST"])
+@app.route('/leave', methods=["POST"]) #Leave the group
 def leave():
     connection = Database.GetConnection()
     data = request.json.get('data')
@@ -408,8 +408,7 @@ def leave():
     connection.close()
     return ""
 
-
-@app.route('/remuser', methods=["POST"])
+@app.route('/remuser', methods=["POST"]) #Remove a user from the group
 def remove():
     connection = Database.GetConnection()
     data = request.json.get('data')
@@ -428,6 +427,39 @@ def remove():
             #Else skip to this (replacing userID with the JSON entry)
             cursor.execute('DELETE FROM MGOLAN.GROUPMEMBERS WHERE (GROUPID = \'' + data["0"] + '\' AND USERID = \'' + str(userID[0][0]) + '\')')
             connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/currentmeeting', methods=["POST"]) #Return the meeting link and the person who made it
+def getMeet():
+    connection = Database.GetConnection()
+    data = (request.data).decode("utf-8")
+    cursor = connection.cursor()
+    cursor.execute('SELECT USERID, MEETINGLINK FROM BQUINTERO.ACTIVEMEETINGS WHERE (GROUPID = \'' + data + '\')')
+    meeting = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    return meeting
+
+@app.route('/startmeeting', methods=["POST"]) #Start the meeting
+def startMeet():
+    connection = Database.GetConnection()
+    data = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('INSERT INTO BQUINTERO.ACTIVEMEETINGS VALUES (:0,:1,:2)', data)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return ""
+
+@app.route('/deletemeeting', methods=["POST"]) #End the meeting
+def endMeet():
+    connection = Database.GetConnection()
+    data = request.json.get('data')
+    cursor = connection.cursor()
+    cursor.execute('DELETE FROM BQUINTERO.ACTIVEMEETINGS WHERE (USERID = :0 AND GROUPID = :1)', data)
+    connection.commit()
     cursor.close()
     connection.close()
     return ""
@@ -454,36 +486,6 @@ def info():
     except Exception as e:
         print("An unexpected error occurred:", e)
         return jsonify({"error": "Server error"}), 500
-
-#this commented out log works for logging in with unhashed passwords
-# @app.route('/log', methods=["POST"])
-# def findUser():
-#     connection = Database.GetConnection()
-#     verify = list(request.json.get('data').values())
-#     cursor = connection.cursor()
-#     cursor.execute('SELECT * FROM MGOLAN.USERTABLE WHERE (USERNAME = \''+ verify[0] +'\' AND HASHEDPASSWORD = \'' + verify[1] + '\')') #Had to be done slightly differently
-#     results = cursor.fetchall()
-#     if (len(results) == 1):
-#         data = {
-#             'id': results[0][0],
-#             'user': results[0][1],
-#             'mail': results[0][2],
-#             'pass': results[0][3],
-#             'first': results[0][4],
-#             'last': results[0][5],
-#             'bio': results[0][6],
-#             'admin': results[0][7]
-#         }
-#         token = jwt.encode(payload=data, key=secret, algorithm='HS256')
-#         print("Generated token:", token)  # Debugging: Ensure token is generated correctly
-#         cursor.close()
-#         connection.close()
-#         return Response(token, mimetype='text/plain')  # Return token as plain text response
-#     else:
-#         cursor.close()
-#         connection.close()
-#         return jsonify({"error": "Invalid credentials"}), 401
-
 
 @app.route('/log', methods=["POST"])
 def findUser():

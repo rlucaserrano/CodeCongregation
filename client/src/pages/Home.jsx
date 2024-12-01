@@ -17,7 +17,7 @@ function Home() {
         </Typography>
       </Typography>
     </Box>
-    {localStorage.getItem("token") == null ?
+    {localStorage.getItem("token") == null ? /*Have an easy to spot Log In button on the homepage if a user has not logged in yet.*/
     <Button style={{maxWidth: '200px', width: '200px', color: 'black', backgroundColor: 'white', border: '2px solid black'}} onClick={() => window.location.href = '/login'}>Log In Now!</Button>
     : <></>}
     </div>
