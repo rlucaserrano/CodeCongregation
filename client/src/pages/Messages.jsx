@@ -9,8 +9,25 @@ import Avatar from '@mui/material/Avatar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import { green, purple, red } from '@mui/material/colors';
 import '../components/Messages.css';
+
+/*Purpose: This file is used to generate the frontend components associated with communications between users in a group. Discord integration
+allows users to communicate group messages or direct messages via text. Quick access to Zoom allows for users to reach their accounts and
+create and easily share created video calls with other members of the group. A dedicated group member tab also allows user to view the other
+group members.*/
+
+/*Sources used to create Groups.jsx:
+1. https://mui.com/material-ui/
+2. https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Aligning_items_in_a_flex_container
+3. https://www.w3schools.com/css/css_align.asp
+4. https://www.freecodecamp.org/news/how-to-make-create-react-app-work-with-a-node-backend-api-7c5c48acb1b0/
+5. https://www.iana.org/assignments/media-types/media-types.xhtml#image
+6. https://medium.com/@anatoliiyatsenko/understanding-fetch-api-response-methods-and-the-content-type-header-6dcbe7b24ded
+7. https://dmitripavlutin.com/javascript-fetch-async-await/
+8. https://www.w3schools.com/sql/sql_ref_keywords.asp
+9. https://www.w3schools.com/jsref/prop_win_localstorage.asp
+10. https://www.geeksforgeeks.org/javascript-ternary-operator/
+*/
 
 function Messages() {
     const [safe, setSafe] = useState(false) //Safe to render
@@ -27,13 +44,17 @@ function Messages() {
 
     const [view, setView] = useState('Group Messages'); //Messages
 
+    const [meeting, setMeeting] = useState() //Link for the active meeting
+
+    const [meetOwn, setMeetOwn] = useState() //ID of the user who made (and can delete) meeting
+
     const [openDM, setOpenDM] = useState(false); //Open pop-up to DM a user in the group
 
     const handleClickOpenDM = () => setOpenDM(true);
 
     const handleCloseDM = () => setOpenDM(false);
 
-    async function handleMembers()
+    async function handleMembers() //Retrieve all the necessary user and group data
     {
         let token = localStorage.getItem('token')
         let group = localStorage.getItem('groupID')
@@ -47,16 +68,7 @@ function Messages() {
         })
         let info = await data.json();
         setUser(info.id)
-        let name = await fetch('http://localhost:8080/groupname', {
-            headers: {
-                'Accept': 'text/html',
-                'Content-Type': 'text/html'
-            },
-            method: 'POST',
-            body: group
-        })
-        let setting = await name.text();
-        setName(setting) //Appear only in messages or all pages? (LocalStorage)
+        setName(localStorage.getItem('groupName'))
         const formData = new FormData();
         formData.append("0", group)
         formData.append("1", info.id)
@@ -73,15 +85,70 @@ function Messages() {
         })
         let list = await mem.json()
         setMembers(list)
+        let meet = await fetch('http://localhost:8080/currentmeeting', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              },
+            method: 'POST',
+            body: group
+        })
+        let meetingTest = await meet.json()
+        if (meetingTest.length != 0)
+        {
+            setMeetOwn(meetingTest[0][0])
+            setMeeting(meetingTest[0][1])
+        }
         setSafe(true)
     }
 
-    const handleRequest = (id, col) => () =>
+    async function sendLink(e) //Send meeting link to all other group members
+    {
+        e.preventDefault()
+        const form = e.target;
+        const formData = new FormData();
+        formData.append("0", userID)
+        formData.append("1", localStorage.getItem('groupID'))
+        formData.append("2", form.Link.value)
+        const formJson = Object.fromEntries(formData);
+        await fetch('http://localhost:8080/startmeeting', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        window.location.reload()
+    }
+
+    async function endMeet() //Remove group meeting link
+    {
+        const formData = new FormData();
+        formData.append("0", userID)
+        formData.append("1", localStorage.getItem('groupID'))
+        const formJson = Object.fromEntries(formData);
+        await fetch('http://localhost:8080/deletemeeting', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+                },
+            method: 'POST',
+            body: JSON.stringify({
+                data: formJson
+            })
+        })
+        window.location.reload()
+    }
+
+    const handleRequest = (id, col) => () => //Process friend request
     {
         request(id, col)
     }
 
-    async function request(user, colab) 
+    async function request(user, colab) //Send friend request to the backend
     {
         const formData = new FormData();
         formData.append("0", userID)
@@ -106,7 +173,7 @@ function Messages() {
         console.log(name)
     }
 
-    useEffect(() => {
+    useEffect(() => { //Retrieve all necessary data before rendering the page
         handleMembers()
     }, [])
 
@@ -138,7 +205,21 @@ function Messages() {
                                     </ListItem>
                                 ))}
                             </List>
-                            <Button variant="outlined" className="video-call-button">Start a Video Call</Button>
+                            <Button variant="outlined" className="video-call-button" onClick={() => window.open("https://zoom.us/myhome", "_blank")/* startZoomMeeting*/}>Access Zoom Account</Button>
+                            <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center'}}>
+                            {meeting == null ?
+                            <form method='post' onSubmit={sendLink} style={{minWidth: 500, width: 500, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                                <TextField required id='Link' label="Enter your Zoom Link here to share with the group:" style={{minWidth: 500, width: 500}}></TextField>
+                                <Button variant='contained' style={{textTransform: 'none', minWidth: 125, maxWidth: 125}} type='submit'>Send Link</Button>
+                            </form>
+                            :<div style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                                <a href={meeting} target = "blank">Join the current meeting!</a>
+                                {meetOwn != userID ? <></>: //Meeting owner can delete
+                                    <Button variant='contained' style={{textTransform: 'none', minWidth: 125, maxWidth: 125, backgroundColor: 'red'}} onClick={endMeet}>End Meeting</Button>
+                                }
+                            </div>
+                            }
+                            </div>
                         </div>
                     )}
                     {view === 'Direct Messages' && (
@@ -151,7 +232,7 @@ function Messages() {
                                     </ListItem>
                                 ))}
                             </List>
-                            <Button variant="outlined" className="video-call-button">Start a Video Call</Button>
+                            <Button variant="outlined" className="video-call-button" onClick={() => window.open("https://zoom.us/myhome", "_blank")/* startZoomMeeting*/}>Access Zoom Account</Button>
                         </div>
                     )}
                     {view === 'Group Members' && (

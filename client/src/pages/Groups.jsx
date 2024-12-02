@@ -7,6 +7,25 @@ import List from '@mui/material/List';
 import '../components/Groups.css';
 import GroupsIcon from '@mui/icons-material/Groups';
 
+/*Purpose: This file is used to generate the frontend components associated with accessing users groups, both those currently they've enrolled
+in and those whom they've recieved invites for, but not yet accepted in appropriate lists. Enrolled study groups have the option to select
+as the currently active one or to leave it. If the user is the group manager, they will have the additional options of inviting other users
+to the group or removing them. All invites to join a group give users the option to accept or reject the request to join the group. All users
+also have the ability to create their own new groups, of which they will be made the group manager of by default.*/
+
+/*Sources used to create Groups.jsx:
+1. https://mui.com/material-ui/
+2. https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_flexible_box_layout/Aligning_items_in_a_flex_container
+3. https://www.w3schools.com/css/css_align.asp
+4. https://www.freecodecamp.org/news/how-to-make-create-react-app-work-with-a-node-backend-api-7c5c48acb1b0/
+5. https://www.iana.org/assignments/media-types/media-types.xhtml#image
+6. https://medium.com/@anatoliiyatsenko/understanding-fetch-api-response-methods-and-the-content-type-header-6dcbe7b24ded
+7. https://dmitripavlutin.com/javascript-fetch-async-await/
+8. https://www.w3schools.com/sql/sql_ref_keywords.asp
+9. https://www.w3schools.com/jsref/prop_win_localstorage.asp
+10. https://www.geeksforgeeks.org/javascript-ternary-operator/
+*/
+
 function Groups() {
     const [safe, setSafe] = useState(false) //Safe to render
 
@@ -38,7 +57,7 @@ function Groups() {
     
     const [error, setError] = useState(false) //Open pop-up display error when creating new groups
 
-    async function handleID()
+    async function handleID() //Retrieve all the necessary user and group data
     {
         let token = localStorage.getItem('token')
         let data = await fetch('http://localhost:8080/info', {
@@ -72,15 +91,15 @@ function Groups() {
         })
         let rsvp = await pending.json()
         setInvites(rsvp)
-        setSafe(true)
+        setSafe(true) //Safe to load now
     }
 
-    const handleView = (id) => () =>
+    const handleView = (id) => () => //Display more data about a group when it has been clicked
     {
         view(id)
     }
 
-    async function view(group) 
+    async function view(group) //Retrieve data for the clicked group
     {
         const formData = new FormData();
         formData.append("0", group)
@@ -101,19 +120,20 @@ function Groups() {
         setMembers(list)
     }
 
-    const handleChoose = (id) => () =>
+    const handleChoose = (name,id) => () => //Select the active group
     {
+        localStorage.setItem('groupName', name)
         localStorage.setItem('groupID', id)
         window.location.href = '/'
     }
 
-    const handleClickOpenNew = (id) => 
+    const handleClickOpenNew = (id) => //Open prompt to invite user to your group
     {
         setOpenGroup(id);
         setOpenNew(true);
     };
 
-    async function handleInvite(e)
+    async function handleInvite(e) //Process request to invite user to your group
     {
         e.preventDefault()
         const form = e.target;
@@ -133,7 +153,7 @@ function Groups() {
                 data: formJson
             })
         })
-        let response = await send.text()
+        let response = await send.text() //Set response message
         if (response == 0)
         {
             setMessage("Invite sent!")
@@ -151,32 +171,32 @@ function Groups() {
             setMessage("An invite has already been sent!")
         }
         setOpenGroup()
-        setOpenMessage(true)
+        setOpenMessage(true) //Open response message
     }
 
-    const handleCloseMessage = () => 
+    const handleCloseMessage = () => //Close response message
     {
         setMessage()
         setOpenMessage(false);
     }
     
-    const handleCloseNew = () => 
+    const handleCloseNew = () => //Close response message
     {
         setOpenGroup();
         setOpenNew(false);
     }
 
-    const handleClickOpenLeave = (id) => 
+    const handleClickOpenLeave = (id) => //Open prompt to leave the group
     {
         setOpenGroup(id);
         setOpenLeave(true);
     };
 
-    const handleLeave = () => {
+    const handleLeave = () => { //Leave the group
         leave();
     };
 
-    async function leave()
+    async function leave() //Process request to leave the group
     {
         const formData = new FormData();
         formData.append("0", openGroup)
@@ -199,28 +219,28 @@ function Groups() {
         window.location.reload()
     }
 
-    const handleCloseLeave = () => 
+    const handleCloseLeave = () => //Close prompt to leave the group
     {
         setOpenGroup();
         setOpenLeave(false);
     };
 
-    const handleClickOpenRem = (id) => 
+    const handleClickOpenRem = (id) => //Open prompt to remove user from your group
     {
         setOpenGroup(id);
         setOpenRem(true);
     }
 
-    const handleSelect = (id) => () =>
+    const handleSelect = (id) => () => //Select user to remove from your group
     {
         setToRemove(id)
     }
 
-    const handleRemove = () => {
+    const handleRemove = () => { //Remove user from your group
         remove();
     };
 
-    async function remove()
+    async function remove() //Process request to remove user from your group
     {
         const formData = new FormData();
         formData.append("0", openGroup)
@@ -242,18 +262,18 @@ function Groups() {
         setOpenGroup()
     }
 
-    const handleCloseRem = () => 
+    const handleCloseRem = () => //Close prompt to remove user from your group
     {
         setOpenGroup();
         setToRemove();
         setOpenRem(false);
     }
 
-    const handleOpenC = () => {
+    const handleOpenC = () => { //Open prompt to create a new group
         setOpenC(true);
     };
 
-    async function handleCreate(e)
+    async function handleCreate(e) //Process request to create a new group
     {
         e.preventDefault()
         try {
@@ -263,8 +283,8 @@ function Groups() {
             formData.append("0", id)
             formData.append("1", (form.Name.value).replaceAll("'","\'"))
             formData.append("2", id)
-            formData.append("3", 0) //What would be the default? Temporary or permanent?
-            formData.append("4", (form.Desc.value).replaceAll("'","\'")) //Very basic solution to the problem, should work for all other queries as well.
+            formData.append("3", 0)
+            formData.append("4", (form.Desc.value).replaceAll("'","\'"))
             const formJson = Object.fromEntries(formData);
             await fetch('http://localhost:8080/addgroup', {
                 headers: {
@@ -301,21 +321,21 @@ function Groups() {
         }
     }
 
-    const handleCloseError = () => 
+    const handleCloseError = () => //Close message if error occurred when creeating new group
     {
         setError(false);
     }
 
-    const handleCloseC = () => {
+    const handleCloseC = () => { //Close prompt to create a new group
         setOpenC(false);
     };
 
-    const handleAccept = (id) => () =>
+    const handleAccept = (id) => () => //Accept invite to join a group
     {
         accept(id)
     }
 
-    async function accept(group) 
+    async function accept(group) //Process request to join a group
     {
         const formData = new FormData();
         formData.append("0", group)
@@ -334,12 +354,12 @@ function Groups() {
         window.location.reload()
     }
 
-    const handleReject = (id) => () =>
+    const handleReject = (id) => () => //Reject invite to join a group
     {
         reject(id)
     }
 
-    async function reject(group) 
+    async function reject(group) //Process request to reject a group
     {
         const formData = new FormData();
         formData.append("0", group)
@@ -358,7 +378,7 @@ function Groups() {
         window.location.reload() //Reload the page
     }
 
-    useEffect(() => {
+    useEffect(() => { //Retrieve all necessary data before rendering the page
         handleID()
     }, [])
 
@@ -384,7 +404,7 @@ function Groups() {
                                     <p style = {members[member][3] == 1 ? {border: '2px solid black', borderRadius: '5px'} : {border: '2px solid black', borderRadius: '5px', backgroundColor: 'lightgoldenrodyellow'}}>{member}</p>)}
                                 </div>
                                 <div style={{display: 'flex', flexDirection: 'row', justifyContent: 'center', backgroundColor: 'lightgray', borderRadius: '12px', gap: '15px'}}>
-                                    <Button style={{backgroundColor: 'lightblue', color: 'black', border: '2px solid black'}} onClick={handleChoose(group[0][2])}>Select</Button>
+                                    <Button style={{backgroundColor: 'lightblue', color: 'black', border: '2px solid black'}} onClick={handleChoose(group[0][0],group[0][2])}>Select</Button>
                                     {group[1] == 1 ? <Button style={{backgroundColor: 'blue', border: '2px solid black'}} onClick={() => handleClickOpenNew(group[0][2])}>Invite</Button> : <></>}
                                     <Button style={{backgroundColor: 'crimson', border: '2px solid black'}} onClick={() => handleClickOpenLeave(group[0][2])}>Leave</Button>
                                     {group[1] == 1 ? <Button style={{backgroundColor: 'darkred', border: '2px solid black'}} onClick={() => handleClickOpenRem(group[0][2])}>Remove</Button> : <></>}

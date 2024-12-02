@@ -4,6 +4,11 @@ import random
 from database import Database
 from proc_and_sec import ProcAndSec
 
+''' 
+Handles database requests from the frontend. 
+Organizes frontend values, processes values, and calls appropriate database.py functions. 
+'''
+
 class GroupResources:
     def __init__(self, data=None):
 

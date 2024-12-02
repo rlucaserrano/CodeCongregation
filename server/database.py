@@ -3,6 +3,12 @@ import psycopg2
 from psycopg2 import sql
 from config import Config
 
+
+''' This file is used to establish connections with the database and to partially develop SQL queries.
+SQL queries components of universal applicability are created here. 
+Whereas unique or conflicting query components are first created in files associated with individual database tables 
+(ex. Group_resources.py for the GroupResources table) and then passed to database.py'''
+
 # Educational sources used to setup database.py 
 # 1. https://python-oracledb.readthedocs.io/en/latest/api_manual/cursor.html#
 # 2. https://python-oracledb.readthedocs.io/en/latest/user_guide/sql_execution.html

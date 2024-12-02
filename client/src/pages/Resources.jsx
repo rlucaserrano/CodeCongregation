@@ -28,7 +28,11 @@ import MenuItem from '@mui/material/MenuItem';
 import { DialogContentText, IconButton, TableBody } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 
-/* This page */
+/* Purpose: This file is used to generate the frontend components associated with accessing group and community resources. 
+Regarding group resources, users can view group resources, filter resources by category, and add, modify or delete resources. 
+As to community resources, users can access both frequently shared resources and recommended resources for the group you are currently logged into.  
+Frequently shared orders resources by number of shares for each category. 
+Recommended resources suggests resources shared by other groups, if the public sharing activity is similar to the user’s current group. */
 
 /* Sources used to create Resources.jsx
 1. https://mui.com/material-ui/
@@ -46,20 +50,51 @@ import InfoIcon from '@mui/icons-material/Info';
 13. https://www.geeksforgeeks.org/how-to-get-the-length-of-a-string-in-bytes-in-javascript/ 
 */
 
+/* Page Layout:
+1. Global variable assignment
+2. Global helper functions
+3. Hooks for initial database access 
+4. Pop up commonents - add, modify, delete resources
+5. Main feature subcomponents (Part 1) - Resource rows
+6. Main feature subcomponents (Part 2) - Selected resource details 
+7. Main feature displays - Handles guest message, group resources, and community resources displays
+8. Base component - handles overall display based on account attributes (guest/user) and navigation (group/community toggle)
+*/
 
-// Global resources. Will need to be updated for proper guest display and study group navigation.
+/*==== 1. Global variable assignment ====*/
+
+// Assigns specific global variables with data from current group.
+
+let groupID = localStorage.getItem('groupID');
+let groupName = localStorage.getItem('groupName');
 let guest = false;
-let user = true;
-let groupID = "1";
-let groupName = "Swamp Scripters"
+let user = false;
+if (groupID === null)
+{
+  guest = true;
+}
+else {
+  user = true
+}
+
+// Assigns remaining global variables with defualt values
+
+// Currently masked categories
 let maskedCat = new Set();
-let clickedRow = 0;
+
+// Clicked row for group resources, frequently shared community resources, and recommended resources; respectively
+let clickedRow = 0; 
 let clickedCRow = 0;
 let clickedRRow = 0;
+
+// Resets clicked row for group resources, frequently shared community resources, and recommended resources; respectively
 let resetClick = false;
 let resetCClick = false;
 let resetRClick = false;
 
+/*==== 2. Global helper functions ====*/
+
+// Displays description of resource type
 function DisplayVisDescription(vis) {
   
   if (vis === '0')
@@ -76,12 +111,117 @@ function DisplayVisDescription(vis) {
   }
 }
 
+// Displays resource type
+function PrivateStatus(pub)
+{
+  if (pub === 0)
+  {
+    return <>Group Resource</>
+  }
+  else{
+    return <>Community Resource</>
+  }
+}
 
+// Generates category buttons for subset displays
+function GenerateCategoryButtons(data, setcurrCat, currCat)
+{
+  let returnedLine = [];
+  for (let i = 0; i < data.length; i++)
+  {
+    if(currCat === data[i]) {
+      returnedLine.push(
+      <div key={i}>
+        <Button onClick={() => {resetCClick = true, setcurrCat(data[i])}} fullWidth sx={{border: '#ffffff solid 2px', borderRadius: 0, height: '3.62rem', backgroundColor: '#556cd6', fontWeight: 'bold', color: '#ffffff'}}>{data[i]}</Button>
+      </div>
+    )
+  }
+  else {
+    returnedLine.push(
+      <div key={i}>
+        <Button onClick={() => {resetCClick = true, setcurrCat(data[i])}} fullWidth sx={{border: '#ffffff solid 2px', borderRadius: 0, height: '3.62rem', backgroundColor: '#e8e8e8', color: '#1c1c1e'}}>{data[i]}</Button>
+      </div>
+    )
+  }
+  }
+  return returnedLine;
+}
+
+// Generates checkbox for filtering
+function GenerateGroupCheckboxs(data, UpdateRowMask){
+  let returnedLine = [];
+  for (let i = 0; i < data.length; i++)
+  {
+    returnedLine.push(
+      <div key={i}>
+        <label><input type="checkbox" defaultChecked onChange={() => UpdateRowMask(data[i][0])} />{data[i]}</label>
+        <br />
+        <br />
+      </div>
+    )
+  }
+  return returnedLine;
+}
+
+// Displays specific pages so users can share subsets of community resources
+function DisplayOtherPages({homePage, setLink}) {
+
+  const [safe, setSafe] = useState(false)
+  const [res, setRes] = useState([])
+
+  // Calls backend to access website table
+  async function handleResGet()
+  {
+    let data = await fetch('http://localhost:8080/webpages', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        body: JSON.stringify({ 
+          'HomePage': homePage,
+          'Action': 'GET'
+        }),
+        method: 'POST'
+    })
+    setRes(await data.json());
+    setSafe(true)  
+  }
+
+  useEffect(() => {
+    handleResGet();
+  }, []);
+
+
+  if (!safe) {
+    return (<CircularProgress />);
+  }
+
+  // Returns all pages associated with the website
+  if (res.length === 0) {
+    return (<> 
+    <FormControlLabel value={homePage} control={<Radio />} label={<a href={homePage} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{homePage}</a>} onClick={() => setLink(homePage)}/>
+    </>)
+  }
+  else {
+    let returnedLine = [];
+    returnedLine.push(<FormControlLabel value={homePage} control={<Radio />} label={<a href={homePage} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{homePage}</a>} onClick={() => setLink(homePage)}/>);
+    for (let i = 0; i < res.length; i++) {
+      returnedLine.push(<FormControlLabel value={res[i][1]} control={<Radio />} label={<a href={res[i][1]} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{res[i][1]}</a>} onClick={() => setLink(res[i][1])}/>);
+    }
+    return returnedLine;
+  }
+}
+
+/*==== 3. Hooks for initial database access ====*/
+
+// Sends initial request for group resources
 function useGroupResources(currGroupID) {
 
+  // Declares state variables 
   const [safe, setSafe] = useState(false)
   const [res, setRes] = useState()
 
+  // Sends request to backend when main feature is navigated to. 
   async function handleResGet()
   {
     let data = await fetch('http://localhost:8080/groupresources', {
@@ -106,11 +246,14 @@ function useGroupResources(currGroupID) {
   return [safe, res];
 }
 
+// Sends initial request for frequently shared resources
 function useCommunityResources() {
 
+  // Declares state variables 
   const [safe, setSafe] = useState(false)
   const [res, setRes] = useState()
 
+  // Sends request to backend when main feature is navigated to. 
   async function handleResGet()
   {
     let data = await fetch('http://localhost:8080/educationalresources', {
@@ -130,12 +273,14 @@ function useCommunityResources() {
 
   return [safe, res];
 }
-
+// Sends initial request for recommended resources
 function useRecResources(currGroupID) {
 
+  // Declares state variables 
   const [safe, setSafe] = useState(false)
   const [res, setRes] = useState()
 
+  // Sends request to backend when main feature is navigated to. 
   async function handleResGet()
   {
     let data = await fetch('http://localhost:8080/recommendations', {
@@ -159,8 +304,46 @@ function useRecResources(currGroupID) {
   return [safe, res];
 }
 
+// Sends initial request for group resource categories
+function useGroupResourceCategories(currGroupID) {
+
+  // Declares state variables 
+  const [safe, setSafe] = useState(false)
+  const [res, setRes] = useState()
+
+  // Sends request to backend when main feature is navigated to. 
+  async function handleResGet()
+  {
+    let data = await fetch('http://localhost:8080/groupresources', {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+        body: JSON.stringify({ 
+          'valGroupID': currGroupID,
+          'switch': 'GET',
+          'Distinct': 'true',
+          'colResourceCategory': 'true'
+        }),
+        method: 'POST'
+    })
+    setRes(await data.json());
+    setSafe(true)  
+  }
+
+  useEffect(() => {
+    handleResGet()
+  }, [])
+
+  return [safe, res];
+}
+
+/*==== 4. Pop up commonents - add, modify, delete resources ====*/
+
+// Allows users to delete group resources (but not community resources)
 function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, resourceName}) {
 
+  // Sends delete request and resource details after action is confirmed.
   const handleCreate = async (e) =>
     {
         e.preventDefault()  
@@ -179,6 +362,7 @@ function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, res
         window.location.reload();
     }
 
+    // Displays instructions, input fields, and buttons.
     return (
       <Dialog open={openD} onClose={handleCloseD}>
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
@@ -194,8 +378,10 @@ function DeleteResourcePopUp({openD, handleCloseD, groupID, groupResourceID, res
     );
 }
 
+// Updates group resources (and community resources if public visibility is selected)
 function AddResourcePopUp({openC, handleCloseC, groupID}) {
 
+  // Declares and assigns state variables.
   const [publicShare, setPublicShare] = useState("0");
   const [resourceName, setResourceName] = useState("");
   const [websiteURL, setWebsiteURL] = useState("");
@@ -206,6 +392,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
   const [invalidDescription, setInvalidDescription] = useState("");
   const [invalidCategory, setInvalidCategory] = useState("");
   
+  // Displays create button, disabled unless constraints are met. 
   function DisplayCreateButton() {
   
     if (resourceName != "" && websiteURL != "" && resourceCategory != "" && comCategory != "" && invalidURL == "" && invalidName == "" && invalidDescription == "" && invalidCategory == "")
@@ -218,6 +405,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
     }
   }
 
+  // Validates website url using regular expression.
   function CheckWebsiteURL(url) {
     
     if (!url.match((/^(https?:\/\/)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/))) {
@@ -231,11 +419,12 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
     }
   }
 
+  // Validates user input to ensure SQL friendly
   function CheckInput(input, size, setter) {
     if (new Blob([input]).size > size) {
       setter("Invalid input - please reduce length.");
     }
-    else if (!input.match((/^([a-zA-Z0-9_!? ]*)$/)))
+    else if (!input.match((/^([a-zA-Z0-9_!?., ]*)$/)))
     {
       setter("Invalid input - only letters, numbers, spaces, and special characters !?_ are allowed.");
     }
@@ -244,6 +433,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
     }
   }
 
+  // Calls database and passes inputted data
   const handleCreate = async (e) =>
     {
         e.preventDefault()
@@ -273,6 +463,7 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
 
     }
 
+    // Displays instructions, input fields, and buttons.
     return (
       <Dialog open={openC} onClose={handleCloseC}>
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
@@ -331,11 +522,14 @@ function AddResourcePopUp({openC, handleCloseC, groupID}) {
     );
 }
 
+// Requests feedback details and send to database.
 function FeedbackPopUp({openF, handleCloseF, resourceID}) {
 
+  // Declares and assigns state variables.
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   
+  // Displays submit button, button is  disabled unless constraints are met.
   function DisplaySubmitButton() {
   
     if (description != "" && category != "")
@@ -348,6 +542,7 @@ function FeedbackPopUp({openF, handleCloseF, resourceID}) {
     }
   }
 
+  // Calls database and passes feedback data.
   const handleCreate = async (e) =>
     {
         e.preventDefault()
@@ -369,6 +564,7 @@ function FeedbackPopUp({openF, handleCloseF, resourceID}) {
 
     }
 
+    // Displays instructions, input fields, and buttons.
     return (
       <Dialog open={openF} onClose={handleCloseF}>
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
@@ -389,17 +585,13 @@ function FeedbackPopUp({openF, handleCloseF, resourceID}) {
 
 }
 
+// Sends resource data to backend to share with current group.
 function RecSharePopUp({openRecS, handleCloseRecS, groupID, comResourceID, comResourceName, comWebsiteURL, prevResourceCategory, prevResourceDescription, comShares})
 {
+  // Updates the share count of the resource.
   let newShare = parseInt(comShares) + 1;
-
-  console.log(comResourceID)
-  console.log(comResourceName)
-  console.log(comWebsiteURL)
-  console.log(prevResourceCategory)
-  console.log(prevResourceDescription)
-  console.log(comShares)
   
+  // Calls database to update group data
   const handleCreate = async (e) =>
     {
       
@@ -436,6 +628,7 @@ function RecSharePopUp({openRecS, handleCloseRecS, groupID, comResourceID, comRe
       window.location.reload();
     }
 
+    // Displays instructions, input fields, and buttons.
     return (
       <Dialog open={openRecS} onClose={handleCloseRecS}>
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
@@ -451,11 +644,14 @@ function RecSharePopUp({openRecS, handleCloseRecS, groupID, comResourceID, comRe
     );
 }
 
+// Sends resource data to backend to share with current group.
 function CommunitySharePopUp({openS, handleCloseS, groupID, comResourceID, comResourceName, comWebsiteURL, prevResourceCategory, prevResourceDescription, comShares})
 {
+  // Declares and assigns state variables.
   const [link, setLink] =  useState(comWebsiteURL);
   let newShare = parseInt(comShares) + 1;
   
+  // Calls database to update group data.
   const handleCreate = async (e) =>
     {
       
@@ -492,6 +688,7 @@ function CommunitySharePopUp({openS, handleCloseS, groupID, comResourceID, comRe
       window.location.reload();
     }
 
+    // Displays instructions, input fields, and buttons.
     return (
       <Dialog open={openS} onClose={handleCloseS}>
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
@@ -524,8 +721,10 @@ function CommunitySharePopUp({openS, handleCloseS, groupID, comResourceID, comRe
     );
 }
 
+// Modify display for group resources
 function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, prevResourceName, prevWebsiteURL, prevResourceCategory, prevResourceDescription}) {
 
+  // Declares and assigns state variables.
   const [resourceName, setResourceName] = useState(prevResourceName);
   const [websiteURL, setWebsiteURL] = useState(prevWebsiteURL);
   const [resourceCategory, setResourceCategory] = useState(prevResourceCategory);
@@ -535,6 +734,7 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
   const [invalidDescription, setInvalidDescription] = useState("");
   const [invalidCategory, setInvalidCategory] = useState("");
 
+  // Displays modify button, disabled until constraints are met.
   function DisplayModifyButton() {
   
     if (resourceName != "" && websiteURL != "" && resourceCategory != "" && invalidURL == "" && invalidName == "" && invalidDescription == "" && invalidCategory == "")
@@ -547,6 +747,7 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
     }
   }
 
+  // Ensures valid website URL using regular expressions
   function CheckWebsiteURL(url) {
     
     if (!url.match((/^(https?:\/\/)[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)$/))) {
@@ -560,11 +761,12 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
     }
   }
 
+  // Ensures SQL friendly input.
   function CheckInput(input, size, setter) {
     if (new Blob([input]).size > size) {
       setter("Invalid input - please reduce length.");
     }
-    else if (!input.match((/^([a-zA-Z0-9_!? ]*)$/)))
+    else if (!input.match((/^([a-zA-Z0-9_!?., ]*)$/)))
     {
       setter("Invalid input - only letters, numbers, spaces, and special characters !?_ are allowed.");
     }
@@ -573,6 +775,7 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
     }
   }
 
+  // Calls database and passes modified values.
   const handleCreate = async (e) =>
     {
         e.preventDefault()
@@ -597,6 +800,7 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
 
     }
 
+    // Displays instructions, input fields, and buttons.
     return (
       <Dialog open={openM} onClose={handleCloseM}>
         <form method='post' onSubmit={handleCreate} style={{backgroundColor: '#ffffff', border: '2px solid #e8e8e8', minWidth: '30rem', maxWidth: '30rem', display: 'flex', flexDirection: 'column'}}>
@@ -620,46 +824,20 @@ function ModifyResourcePopUp({openM, handleCloseM, groupID, groupResourceID, pre
     );
 }
 
-function useGroupResourceCategories(currGroupID) {
+/*==== 5. Main feature subcomponents (Part 1) - Resource rows ====*/
 
-  const [safe, setSafe] = useState(false)
-  const [res, setRes] = useState()
-
-  async function handleResGet()
-  {
-    let data = await fetch('http://localhost:8080/groupresources', {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-        body: JSON.stringify({ 
-          'valGroupID': currGroupID,
-          'switch': 'GET',
-          'Distinct': 'true',
-          'colResourceCategory': 'true'
-        }),
-        method: 'POST'
-    })
-    setRes(await data.json());
-    setSafe(true)  
-  }
-
-  useEffect(() => {
-    handleResGet()
-  }, [])
-
-  return [safe, res];
-}
-
+// Generates group rows
 function GenerateGroupRows(data, UpdateGroupRowClick){
 
   // Iterates through array to generate and return rows of the table.
   if (resetClick === true)
   {
+    // Resets click if reset event has occurred. 
     clickedRow = 0;
     resetClick = false;
   }
   let returnedLine = [];
+  // Generates rows if not filtered out. Changes format for clicked vs not clicked rows. 
   for (let i = 0; i < data.length; i++) {
     if (!maskedCat.has(data[i][4])) {
       if (i == clickedRow) {
@@ -689,16 +867,19 @@ function GenerateGroupRows(data, UpdateGroupRowClick){
   return returnedLine;
 }
 
+// Generates community rows for recommended
 function GenerateRecRows(data, UpdateRecRowClick) 
 {
    // Iterates through array to generate and return rows of the table.
    
    if (resetRClick === true)
     {
+      // Resets click if reset event occured.
       clickedRRow = 0;
       resetRClick = false;
     }
 
+    // Returns error messages if group does not qualify. 
    if (data[0] === false)
    {
     return (
@@ -714,6 +895,7 @@ function GenerateRecRows(data, UpdateRecRowClick)
    else if (data[0] === true)
    {
     let returnedLine = [];
+    // Generates rows. Changes format for clicked vs not clicked resources.
     for (let i = 0; i < data[1].Result.length; i++) 
       {
         if (i ==clickedRRow)
@@ -743,15 +925,17 @@ function GenerateRecRows(data, UpdateRecRowClick)
    }
 }
 
-
+// Generates community rows for frequently shared
 function GenerateComRows(data, UpdateComRowClick, category){
 
   // Iterates through array to generate and return rows of the table.
   if (resetCClick === true)
   {
+    // Resets clicked row if reset event occurs
     clickedCRow = 0;
     resetCClick = false;
   }
+  // Generates rows, if of selected category. Changes format for clicked vs not clicked resources.
   let returnedLine = [];
   for (let i = 0; i < data.length; i++) {
     if (data[i][3] === category) {
@@ -784,105 +968,12 @@ function GenerateComRows(data, UpdateComRowClick, category){
   return returnedLine;
 }
 
-function PrivateStatus(pub)
-{
-  if (pub === 0)
-  {
-    return <>Group Resource</>
-  }
-  else{
-    return <>Community Resource</>
-  }
-}
+/*==== 6. Main feature subcomponents (Part 2) - Selected resource details ====*/
 
-function GenerateCategoryButtons(data, setcurrCat, currCat)
-{
-  let returnedLine = [];
-  for (let i = 0; i < data.length; i++)
-  {
-    if(currCat === data[i]) {
-      returnedLine.push(
-      <div key={i}>
-        <Button onClick={() => {resetCClick = true, setcurrCat(data[i])}} fullWidth sx={{border: '#ffffff solid 2px', borderRadius: 0, height: '3.62rem', backgroundColor: '#556cd6', fontWeight: 'bold', color: '#ffffff'}}>{data[i]}</Button>
-      </div>
-    )
-  }
-  else {
-    returnedLine.push(
-      <div key={i}>
-        <Button onClick={() => {resetCClick = true, setcurrCat(data[i])}} fullWidth sx={{border: '#ffffff solid 2px', borderRadius: 0, height: '3.62rem', backgroundColor: '#e8e8e8', color: '#1c1c1e'}}>{data[i]}</Button>
-      </div>
-    )
-  }
-  }
-  return returnedLine;
-}
-
-function GenerateGroupCheckboxs(data, UpdateRowMask){
-  let returnedLine = [];
-  for (let i = 0; i < data.length; i++)
-  {
-    returnedLine.push(
-      <div key={i}>
-        <label><input type="checkbox" defaultChecked onChange={() => UpdateRowMask(data[i][0])} />{data[i]}</label>
-        <br />
-        <br />
-      </div>
-    )
-  }
-  return returnedLine;
-}
-
-function DisplayOtherPages({homePage, setLink}) {
-
-  const [safe, setSafe] = useState(false)
-  const [res, setRes] = useState([])
-
-  async function handleResGet()
-  {
-    let data = await fetch('http://localhost:8080/webpages', {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-        body: JSON.stringify({ 
-          'HomePage': homePage,
-          'Action': 'GET'
-        }),
-        method: 'POST'
-    })
-    setRes(await data.json());
-    setSafe(true)  
-  }
-
-  useEffect(() => {
-    handleResGet();
-  }, []);
-
-
-  if (!safe) {
-    return (<CircularProgress />);
-  }
-
-  if (res.length === 0) {
-    console.log("Here1");
-    return (<> 
-    <FormControlLabel value={homePage} control={<Radio />} label={<a href={homePage} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{homePage}</a>} onClick={() => setLink(homePage)}/>
-    </>)
-  }
-  else {
-    let returnedLine = [];
-    returnedLine.push(<FormControlLabel value={homePage} control={<Radio />} label={<a href={homePage} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{homePage}</a>} onClick={() => setLink(homePage)}/>);
-    for (let i = 0; i < res.length; i++) {
-      returnedLine.push(<FormControlLabel value={res[i][1]} control={<Radio />} label={<a href={res[i][1]} target='_blank' style={{textAlign: 'center', overflow: 'hidden',textOverflow: 'ellipsis', fontWeight: 'bold'}}>{res[i][1]}</a>} onClick={() => setLink(res[i][1])}/>);
-    }
-    return returnedLine;
-  }
-}
-
+// Community recommended resources details
 function RecRowDetails(resources, setOpenRecS){
 
-  console.log(resources)
+  // Displays extra loading displays as recommendations are calculated. 
   if (!resources[1])
   {
     return (
@@ -891,6 +982,7 @@ function RecRowDetails(resources, setOpenRecS){
       </div>);
   }
 
+  // Displays error messages if user's current group is not eligible for recommendations
   if (resources[1].Result == "Error: Group does not have public resources")
   {
     return(
@@ -911,6 +1003,7 @@ function RecRowDetails(resources, setOpenRecS){
   }
   else
   {
+      // Displays recommendations.
       return(
         <TableRow>
           <div className="tb2-header">{"Description"}</div>
@@ -925,8 +1018,10 @@ function RecRowDetails(resources, setOpenRecS){
   }
 }
 
+// Community frequently shared resource details
 function ComRowDetails(resources, setOpenS, setOpenF){
 
+  // If community resources loaded, displays details for currently selected resource.
   if (resources[1] && resources[1].length > clickedCRow)
   {
      if (user) {
@@ -967,8 +1062,10 @@ function ComRowDetails(resources, setOpenS, setOpenF){
   }
 }
 
+// Group resource details
 function GroupRowDetails(resources, setOpenD, setOpenM){
 
+  // Generates resource details for currently selected row
   if (resources[1] && resources[1].length > clickedRow)
   {
     return(
@@ -989,6 +1086,7 @@ function GroupRowDetails(resources, setOpenD, setOpenM){
   }
   else 
   {
+    // If all resources filtered out, informs user. 
     return(
       <div className="table-body-2">
         <div className="tb2-empty">{"No Resource Selected"}</div>
@@ -998,15 +1096,20 @@ function GroupRowDetails(resources, setOpenD, setOpenM){
   }
 }
 
+/*==== 7. Main feature displays - Handles guest message, group resources, and community resources displays ====*/
+
+// Group resources display
 function GroupResources() {
 
- let resources = useGroupResources(groupID);
+ // Access data from backend and establishes state variables.
+  let resources = useGroupResources(groupID);
  let categories = useGroupResourceCategories(groupID);
  const [updateVersion, setUpdateVersion] = useState(0);
  const [openC, setOpenC] = React.useState(false);
  const [openD, setOpenD] = React.useState(false);
  const [openM, setOpenM] = React.useState(false);
 
+ // Local function to allow category filtering. 
  function UpdateRowMask(cat)
 {
   if (maskedCat.size === categories[1].length)
@@ -1026,12 +1129,14 @@ function GroupResources() {
   setUpdateVersion((current) => current +1);
 }
 
+// Local function to allow users to click on specific resources.
 function UpdateGroupRowClick(row)
 {
   clickedRow = row;
   setUpdateVersion((current) => current +1);
 }
 
+// Displays loading symbol until resources are returned from the backend.
 if (!resources[0] || !categories[0])
 {
   return (
@@ -1041,6 +1146,7 @@ if (!resources[0] || !categories[0])
   )
 }
 
+// Once resources are returned, displays group resources structure. 
 if (resources[0] && categories[0])
     {
       return (
@@ -1103,6 +1209,7 @@ if (resources[0] && categories[0])
 
 }
 
+// Guest message to explain purpose. 
 function GuestMessage() {
   return (
     <>
@@ -1122,9 +1229,11 @@ function GuestMessage() {
   )
 }
 
-
+// Community resources display
 function CommunityResources() 
 {
+  
+  // Gets data from backend and sets state variables.
   let resources = useCommunityResources();
   const [updateVersion, setUpdateVersion] = useState(0);
   const [openS, setOpenS] = React.useState(false);
@@ -1132,6 +1241,8 @@ function CommunityResources()
   const [currCat, setcurrCat] = React.useState("Practice Questions")
   const [clickedTab, setTab] = React.useState(0);
   const [displayFrequently, setDisplayFrequency] = useState(true);
+
+  // Local functions to handle user activity on the community resources display
 
   const handleChange = (click, newValue) => {
     setTab(newValue);
@@ -1144,6 +1255,7 @@ function CommunityResources()
     setUpdateVersion((current) => current +1);
   }
 
+  // Displays frequently shared resources, organized by category and ranked by share count.
   function DisplayFrequently({resources, UpdateComRowClick, currCat})
   {
     return(
@@ -1192,6 +1304,7 @@ function CommunityResources()
     );
   }
 
+  // Displays recommended resources based on group sharing activity. 
    function DisplayRecommended(UpdateComRowClick)
    {
     let resources = useRecResources(groupID)
@@ -1199,12 +1312,14 @@ function CommunityResources()
     const [openRecS, setOpenRecS] = React.useState(false);
 
 
+    // Local function to handle user activity in recommended resources
     function UpdateRecRowClick(row)
     {
       clickedRRow = row;
       setUpdateVersion((current) => current +1);
     }
     
+    // Displays description, instead of functionality, for guest users.
     if (guest === true)
         {
           return (
@@ -1217,7 +1332,7 @@ function CommunityResources()
         } 
     
 
-    
+    // Returns recommended resources.
     return (
       <>
       <div className="community-table">
@@ -1265,6 +1380,7 @@ function CommunityResources()
   );
    }
 
+// Displays loading sign while waiting for resources.
 if (!resources[0])
 {
   return (
@@ -1274,6 +1390,7 @@ if (!resources[0])
   )
 }
 
+// After resources returned from backend, displays community resources structure.
 if (resources[0])
     {
       return (
@@ -1297,14 +1414,19 @@ if (resources[0])
 
 }
 
+/*==== 8. Base component - handles overall display based on account attributes (guest/user) and navigation (group/community toggle) ====*/
+
 function Resources() {
 
   const [clickedButton, setClickedButton] = useState("group");
 
+  // Local function to display table of resources, toggle between group and community resources.
   function CurrentDisplay()
   {
+    
     if (clickedButton === "group")
     {
+      // Group resource display changes depending on account type
       return (
         <>
         {guest && <GuestMessage />}
@@ -1318,6 +1440,7 @@ function Resources() {
     }
   }
 
+  // Local function to handle group/community display button
   function ButtonStyle(button)
   {
     if (button === clickedButton)
