@@ -1,12 +1,4 @@
-
 import os
-from dotenv import load_dotenv
-
-# Educational sources used to setup config.py 
-# 1. https://docs.python.org/3.11/distutils/configfile.html
-# 2. https://www.geeksforgeeks.org/python-os-getenv-method/
-
-load_dotenv()
 
 class Config:
     
@@ -17,7 +9,7 @@ class Config:
     ORACLE_PORT = os.getenv("ORACLE_PORT")
     ORACLE_SID = os.getenv("ORACLE_SID")
 
-    #New DB
+    # New DB
     POSTGRES_USER = os.getenv("POSTGRES_USER")
     POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
     POSTGRES_HOST = os.getenv("POSTGRES_HOST")
@@ -31,4 +23,3 @@ class Config:
     # GMAIL
     EMAIL_ADDRESS = os.getenv("EMAIL_ADDRESS")
     EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-
