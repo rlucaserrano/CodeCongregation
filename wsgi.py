@@ -1,4 +1,4 @@
-from server.app import app
+from server.main import app
 import os
 
 
