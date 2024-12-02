@@ -6,7 +6,6 @@ from flask import Flask, request, jsonify, make_response
 from flask_cors import CORS, cross_origin
 from google.oauth2 import id_token
 from google.auth.transport import requests
-from dotenv import load_dotenv
 from database import Database
 from users import Users
 from group_resources import GroupResources
@@ -23,7 +22,7 @@ import bcrypt
 # 2. https://www.oxitsolutions.co.uk/blog/http-status-code-cheat-sheet-infographic
 
 # from .env file
-load_dotenv()
+
 
 
 # Flask instance
