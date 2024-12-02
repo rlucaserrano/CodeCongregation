@@ -33,14 +33,32 @@ class Database:
         #     raise
 
     # Conducts a selection query
-    @staticmethod 
-    def SelectQuery(userQuery):
+    # @staticmethod 
+    # def SelectQuery(userQuery):
+    #     # Open connection and establish cursor
+    #     connection = Database.GetConnection()
+    #     cursor = connection.cursor()
+
+    #     # Excutes user query
+    #     cursor.execute(userQuery)
+
+    #     # Collect all selected rows
+    #     selectedRows = cursor.fetchall()
+
+    #     # Close cursor and connection
+    #     cursor.close()
+    #     connection.close()
+
+    #     return selectedRows
+    @staticmethod
+    def SelectQuery(userQuery, params=None):
         # Open connection and establish cursor
         connection = Database.GetConnection()
         cursor = connection.cursor()
 
-        # Excutes user query
-        cursor.execute(userQuery)
+        # Execute user query with parameters
+        cursor.execute(userQuery, params)
+        connection.commit() 
 
         # Collect all selected rows
         selectedRows = cursor.fetchall()
@@ -51,74 +69,133 @@ class Database:
 
         return selectedRows
 
-    # Alters the database (insert, delete, or modify)
+
+    # # Alters the database (insert, delete, or modify)
+    # @staticmethod 
+    # def AlterQuery(userQuery):
+        
+    #     # Open connection and establish cursor
+    #     connection = Database.GetConnection()
+    #     cursor = connection.cursor()
+
+    #     # Makes changes to database and commits changes
+    #     print(userQuery)
+    #     cursor.execute(userQuery)
+    #     connection.commit()
+
+
+
+    #     # Close cursor and connection
+    #     cursor.close()
+    #     connection.close()
     @staticmethod 
     def AlterQuery(userQuery):
-        
-        # Open connection and establish cursor
         connection = Database.GetConnection()
         cursor = connection.cursor()
-
-        # Makes changes to database and commits changes
-        print(userQuery)
-        cursor.execute(userQuery)
-        connection.commit()
-
-
-
-        # Close cursor and connection
-        cursor.close()
-        connection.close()
-
+        try:
+            print(f"Attempting to execute query: {userQuery}")
+            cursor.execute(userQuery)  # Execute query
+            print("Query executed successfully, committing changes.")
+            connection.commit()  # Commit changes
+        except Exception as e:
+            print(f"Error during AlterQuery execution: {e}")
+            raise
+        finally:
+            print("Closing cursor and connection.")
+            cursor.close()
+            connection.close()
+            print("Cursor and connection closed.")
     #========== Called by main.py ==========#
 
     # Searches database
-    @staticmethod 
-    def SearchDatabase(table, columns=None, rows=None, order=None, distinct=None):
+    @staticmethod
+    def SearchDatabase(table, columns=None, rows=None, order=None, distinct=None, params=None):
+        # Generate columns to be searched
+        columnString = ", ".join(columns) if columns else "*"
         
-        # Generates columns to be searched.
-        columnString = ""
-        if columns:
-            for c in columns:
-                columnString = columnString + c + ", "
-            columnString = columnString[:-2]
-        else:
-            columnString = "*"
-        
-        # Generates rows to be searched,
-        if rows:
-            rowString = " WHERE " + rows
-        else:
-            rowString = ""
-        
-        distinctString = ""
-        if distinct is not None:
-            distinctString = "DISTINCT "
+        # Generate WHERE clause
+        rowString = f" WHERE {rows}" if rows else ""
 
-        orderString = ""
-        if order is not None:
-            orderString = f" ORDER BY {order[0]} {order[1]}"
-        # Returns result from internal function
-        print(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
-        return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
+        # Handle DISTINCT and ORDER BY
+        distinctString = "DISTINCT " if distinct else ""
+        orderString = f" ORDER BY {order[0]} {order[1]}" if order else ""
+
+        query = f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}"
+        print(f"Executing query: {query}, with params: {params}")
+
+        # Pass query and parameters to SelectQuery
+        return Database.SelectQuery(query, params)
+    # @staticmethod 
+    # def SearchDatabase(table, columns=None, rows=None, order=None, distinct=None):
+        
+    #     # Generates columns to be searched.
+    #     columnString = ""
+    #     if columns:
+    #         for c in columns:
+    #             columnString = columnString + c + ", "
+    #         columnString = columnString[:-2]
+    #     else:
+    #         columnString = "*"
+        
+    #     # Generates rows to be searched,
+    #     if rows:
+    #         rowString = " WHERE " + rows
+    #     else:
+    #         rowString = ""
+        
+    #     distinctString = ""
+    #     if distinct is not None:
+    #         distinctString = "DISTINCT "
+
+    #     orderString = ""
+    #     if order is not None:
+    #         orderString = f" ORDER BY {order[0]} {order[1]}"
+    #     # Returns result from internal function
+    #     print(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
+    #     return Database.SelectQuery(f"SELECT {distinctString}{columnString} FROM {table}{rowString}{orderString}")
 
     # Inserts entry into database table.
-    @staticmethod
-    def AddToDatabase(table, entry):
-        # Creates list of attributes for insert query.
-        attributeString = ""
-        for e in entry:
-            attributeString = attributeString + e + ", "
-        attributeString = attributeString[:-2]
+    # @staticmethod
+    # def AddToDatabase(table, entry):
+    #     # Creates list of attributes for insert query.
+    #     attributeString = ""
+    #     for e in entry:
+    #         attributeString = attributeString + e + ", "
+    #     attributeString = attributeString[:-2]
 
-        # Attempts to insert entry into table. Returns result.
+    #     # Attempts to insert entry into table. Returns result.
+    #     try:
+    #         Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
+    #         return(True)
+    #     except Exception as e:
+    #         errorMessage = str(e)
+    #         return(False)
+    @staticmethod
+    def AddToDatabase(query, params):
         try:
-            Database.AlterQuery(f"INSERT INTO {table} VALUES ({attributeString})")
-            return(True)
+            # Open connection and establish cursor
+            connection = Database.GetConnection()
+            cursor = connection.cursor()
+
+            # Debugging: Print query and parameters
+            print(f"Executing query: {query}")
+            print(f"With parameters: {params}")
+
+            # Execute the query with the provided parameters
+            cursor.execute(query, params)
+
+            # Commit the transaction to save changes
+            connection.commit()
+
+            # Close the cursor and connection
+            cursor.close()
+            connection.close()
+
+            return True
         except Exception as e:
-            errorMessage = str(e)
-            return(False)
-    
+            print(f"Error in AddToDatabase: {e}")
+            raise
+
     # Removes entry from database table.
     @staticmethod
     def RemoveFromDatabase(table, key1, value1, key2=None, value2=None):

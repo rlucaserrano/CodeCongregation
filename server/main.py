@@ -3,7 +3,7 @@ import jwt
 import json
 import requests as http_requests
 from flask import Flask, request, jsonify, make_response
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from dotenv import load_dotenv
@@ -13,7 +13,7 @@ from group_resources import GroupResources
 from proc_and_sec import ProcAndSec
 from educationalresources import EducationalResources
 from recommendations import Recommendations
-from calendars import Calendars
+from calendars import Calendars, Events
 from flask import Flask, request, jsonify, make_response, Response
 import bcrypt
 
@@ -502,57 +502,163 @@ def getRes():
     connection.close()
     return toReturn
 
-@app.route('/calendars', methods=['GET', 'POST'])
-def manage_calendars():
-    data = request.get_json()
-    calendars = Calendars(data)
+@app.route('/calendar', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"])
+def AccessCalendarTable():
+    try:
+        if request.method == 'GET':
+            calendar = Calendars(None)
+            return calendar.get_calendars()
+
+        elif request.method == "POST":
+            if not request.json:
+                return jsonify({"ERROR": "Request JSON body is required"}), 400
+
+            action = request.json.get("action")
+            calendar = Calendars(request.json)
+
+            if action == "share":
+                return calendar.share_calendar()
+            else:
+                calendar.Process()
+                return calendar.add_calendar()
+
+        elif request.method in ["DELETE", "PATCH"]:
+            if not request.json:
+                return jsonify({"ERROR": "Request JSON body is required"}), 400
+            calendar = Calendars(request.json)
+            calendar.Process()
+            return calendar.Methods(request.method)
+
+        elif request.method == 'OPTIONS':
+            response = make_response()
+            response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, HEAD, OPTIONS'
+            response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+            return response, 204
+
+        else:
+            return jsonify({"ERROR": "Unsupported HTTP method"}), 405
+    except Exception as e:
+        print(f"Error in /calendar route: {e}")
+        return jsonify({"ERROR": str(e)}), 500
+
+@app.route('/calendar/share', methods=["POST"])
+def ShareCalendar():
+    try:
+        if not request.json:
+            return jsonify({"ERROR": "Request JSON body is required"}), 400
+
+        calendar = Calendars(request.json)
+        print("Calendars object initialized with data:", calendar.data)
+        return calendar.share_calendar()
+    except Exception as e:
+        print(f"Error in /calendar/share route: {e}")
+        return jsonify({"ERROR": str(e)}), 500
+   
+
+
+@app.route('/calendar/<calendar_id>', methods=["PATCH", "DELETE"])
+def AccessSpecificCalendar(calendar_id):
+    try:
+        if request.method == 'PATCH':
+            data = request.json
+            calendar = Calendars({"valCalendarID": calendar_id, **data})
+            calendar.Process()
+            return calendar.Methods(request.method)
+
+        elif request.method == 'DELETE':
+            calendar = Calendars({"valCalendarID": calendar_id})
+            calendar.Process()
+            return calendar.Methods(request.method)
+
+    except Exception as e:
+        print(f"Error in /calendar/<id> route: {e}")
+        return jsonify({"ERROR": str(e)}), 500
+
+@app.route('/events', methods=["GET", "POST", "DELETE", "PATCH", "OPTIONS", "HEAD"])
+@cross_origin(origin='http://localhost:5173')  
+def AccessEventTable():
+    print("HTTP method:", request.method)
+
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, HEAD, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
+        response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+        return response, 204
+
+   
+    if request.method == 'GET':
+        calendar_id = request.args.get("calendarId")
+        print("Received calendarId:", calendar_id)
+
+     
+        if not calendar_id:
+            return jsonify({"ERROR": "Missing calendarId query parameter"}), 400
+
+        event = Events()
+        return event.get_events()
+
+   
+    request_data = request.json if request.is_json else {}
+    event = Events(request_data)
+    event.Process()
+
+   
+    method_response = event.Methods(request.method)
+
+   
+    if isinstance(method_response, tuple):
+        response = make_response(method_response[0], method_response[1])
+    else:
+        response = make_response(method_response)
+
     
-    if request.method == 'GET':
-        return calendars.get_calendars()
-    elif request.method == 'POST':
-        return calendars.add_calendar()
+    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    return response
 
-@app.route('/events', methods=['GET', 'POST', 'PATCH', 'DELETE'])
-def manage_events():
-    data = request.get_json()
-    events = Calendars(data)
+@app.route('/events/share', methods=["POST"])
+def ShareEvent():
+    try:
+        if not request.json:
+            return jsonify({"ERROR": "Request JSON body is required"}), 400
 
-    if request.method == 'GET':
-        return events.get_events()
-    elif request.method == 'POST':
-        return events.add_event()
-    elif request.method == 'PATCH':
-        return events.update_event()
-    elif request.method == 'DELETE':
-        return events.delete_event()
+      
+        event = Events(request.json)
+        print("Events object initialized with data:", event.data)
+
+      
+        return event.share_event()
+    except Exception as e:
+        print(f"Error in /events/share route: {e}")
+        return jsonify({"ERROR": str(e)}), 500
 
 
 @app.route('/api/auth/google', methods=['POST'])
 def google_login():
     token = request.json.get('token')
     try:
-        # verify token with Google's OAuth2 library
+   
         idinfo = id_token.verify_oauth2_token(token, requests.Request(), GOOGLE_CLIENT_ID)
 
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('Wrong issuer.')
 
-        # extract user info
+
         user_id = idinfo['sub']
         email = idinfo['email']
         name = idinfo.get('name')
 
-        # check if user in database
+    
         connection = Database.GetConnection()
         cursor = connection.cursor()
         cursor.execute('SELECT USERID FROM MGOLAN.USERTABLE WHERE EMAIL = :1', (email,))
         result = cursor.fetchone()
 
         if result:
-            # existing user
+         
             db_user_id = result[0]
         else:
-            # create a new user
+         
             cursor.execute(
                 '''INSERT INTO MGOLAN.USERTABLE (USERID, EMAIL, FIRSTNAME, LASTNAME)
                    VALUES (ALLIEMONTIAGUE.user_id_seq.NEXTVAL, :1, :2, :3) RETURNING USERID INTO :4''',
@@ -564,7 +670,7 @@ def google_login():
         cursor.close()
         connection.close()
 
-        # Create JWT token
+       
         data = {
             'id': db_user_id,
             'email': email,
@@ -572,7 +678,6 @@ def google_login():
         }
         token = jwt.encode(payload=data, key=secret, algorithm='HS256')
 
-        # Respond with token and user data
         return jsonify({
             'status': 'success',
             'token': token,
@@ -676,7 +781,8 @@ def test_db_connection():
 def set_cors_headers(response):
     response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
     response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
-    response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    # response.headers['Access-Control-Allow-Origin'] = 'http://localhost:5173'
+    response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'

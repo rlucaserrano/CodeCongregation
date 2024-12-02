@@ -38,59 +38,49 @@ const CreateButton = ({ calendars, onEventSubmit }) => {
     const closeEvent = () => setOpenEventDialog(false);
   
     const handleEventSubmit = async () => {
-  const { title, startDate, startTime, endDate, endTime, calendarId, description } = eventData;
-
-  if (!title || !startDate || !startTime || !endDate || !endTime || !calendarId) {
-    alert('All required fields must be filled out!');
-    return;
-  }
-
-  // prep payload
-  const payload = {
-    valCalendarID: String(calendarId),
-    valEventName: String(title),
-    valEventDescription: String(description) || '',
-    valStartDate: String(startDate),
-    valEndDate: String(endDate),
-    valStartTime: String(startTime),
-    valEndTime: String(endTime),
-    valStatus: String(1),
-    valFromGoogle: String(0),
-  };
-
-  console.log('Payload sent to backend:', payload); // debugging
-
-  try {
-    const response = await fetch('http://localhost:8080/events', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (response.ok) {
-      const savedEvent = await response.json();
-      onEventSubmit({
-        ...savedEvent,
-        title, // event details for frontend use
-        startDate,
-        startTime,
-        endDate,
-        endTime,
-        calendarId,
-        description,
-      });
-      alert(`Event created successfully with ID: ${savedEvent.eventID}`);
-    } else {
-      const error = await response.json();
-      console.error('Error from backend:', error);
-      alert(`Failed to create event: ${error.ERROR || 'Unknown error'}`);
-    }
-  } catch (error) {
-    console.error('Error creating event:', error);
-    alert('Error connecting to the server');
-  }
-
-  // reset form and close dialog
+      const { title, startDate, startTime, endDate, endTime, calendarId, description } = eventData;
+    
+      if (!title || !startDate || !startTime || !endDate || !endTime || !calendarId) {
+        alert('All required fields must be filled out!');
+        return;
+      }
+    
+      const payload = {
+        valCalendarID: String(calendarId),
+        valEventName: String(title),
+        valEventDescription: String(description) || '',
+        valStartDate: String(startDate),
+        valEndDate: String(endDate),
+        valStartTime: String(startTime),
+        valEndTime: String(endTime),
+        valStatus: String(1),
+        valFromGoogle: String(0),
+      };
+    
+      try {
+        const response = await fetch('http://127.0.0.1:8080/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+    
+        if (response.ok) {
+          const savedEvent = await response.json();
+          alert(`Event created successfully with ID: ${savedEvent.eventID}`);
+        } else {
+          const error = await response.json();
+          console.error('Error from backend:', error);
+          alert(`Failed to create event: ${error.ERROR || 'Unknown error'}`);
+        }
+      } catch (error) {
+        console.error('Error creating event:', error);
+        alert('Error connecting to the server');
+      };
+    //};
+    
+  // Reset form and close dialog
   setEventData({
     title: '',
     startDate: '',

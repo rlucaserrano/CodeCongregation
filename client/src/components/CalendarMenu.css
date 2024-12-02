@@ -1,0 +1,23 @@
+.drawer-content {
+    display: flex;
+    flex-direction: column; /* Ensure content is arranged in a column */
+    height: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  
+  .mini-calendar {
+    margin-bottom: 20px; /* Add spacing between the mini calendar and list */
+  }
+  
+  .drawer-content .MuiList-root {
+    display: flex;
+    flex-direction: column; /* Ensure list items are stacked vertically */
+    gap: 10px; /* Optional: Add spacing between list items */
+  }
+  
+  .MuiListItem-root {
+    display: flex;
+    align-items: center;
+  }
+  
