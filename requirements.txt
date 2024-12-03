@@ -22,5 +22,11 @@ pyasn1_modules==0.4.1
 pycparser==2.22
 requests==2.32.3
 rsa==4.9
+oracledb==2.4.1
+Flask==3.0.3
+Flask-Cors==5.0.0
+Flask-SQLAlchemy==3.1.1
+greenlet==3.1.0
+gunicorn==23.0.0
 urllib3==2.2.3
 Werkzeug==3.0.4
