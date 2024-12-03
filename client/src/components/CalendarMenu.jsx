@@ -25,7 +25,7 @@ import "react-calendar/dist/Calendar.css";
 import "../components/CalendarMenu.css"; // Ensure styling is applied for layout issues
 import { classifyCalendars } from "../components/calendarUtils";
 import { UserContext } from "../context/UserContext"; // Import UserContext for userId
-
+import { getPermissions } from "../components/CalAccessLevel";
 const CalendarMenu = ({
   myCalendars = [],
   sharedCalendars = [],
@@ -53,16 +53,24 @@ const CalendarMenu = ({
   const [usernameToShare, setUsernameToShare] = useState("");
   const [accessLevel, setAccessLevel] = useState("MANAGE");
 
-  // Toggles visibility of "My Calendars" section
+
   const toggleMyCalendars = () => setMyCalendarsOpen(!myCalendarsOpen);
 
-  // Toggles visibility of "Shared Calendars" section
+
   const toggleSharedCalendars = () =>
     setSharedCalendarsOpen(!sharedCalendarsOpen);
 
-  // Handles opening the menu for a specific calendar
+
   const handleMenuOpen = (event, calendarId) => {
-    console.log("Opening menu for calendarId:", calendarId); // Debug log
+    const calendar = [...myCalendars, ...sharedCalendars].find(
+      (cal) => cal.id === calendarId
+    );
+    const permissions = getPermissions(calendar?.accessLevel);
+  
+    if (!permissions.canShareCalendar) {
+      alert("You do not have permission to share this calendar.");
+      return;
+    }
     setMenuAnchorEl(event.currentTarget);
     setSelectedCalendarId(calendarId);
   };
@@ -101,7 +109,7 @@ const CalendarMenu = ({
       const calendarData = await response.json();
   
       // Log all calendars fetched from the API
-      console.log("Fetched Calendars from API:", calendarData.calendars);
+     
   
       // Deduplicate calendars based on their ID
       const uniqueCalendars = calendarData.calendars.filter(
@@ -109,24 +117,19 @@ const CalendarMenu = ({
           index === self.findIndex((cal) => cal.id === calendar.id)
       );
   
-      // Log the deduplicated calendars
-      console.log("Deduplicated Calendars:", uniqueCalendars);
+     
+     
   
       return uniqueCalendars;
     } catch (error) {
       console.error("Error fetching calendars:", error);
-      throw error; // Re-throw to handle it in the caller function.
+      throw error; 
     }
   };
   
 
   const handleShareCalendar = async () => {
-    console.log("[DEBUG] Starting share calendar process");
-  
-    // Log the selected calendar ID and input details
-    console.log("[DEBUG] Selected Calendar ID:", selectedCalendarId);
-    console.log("[DEBUG] Username to share with:", usernameToShare);
-    console.log("[DEBUG] Access Level:", accessLevel);
+    
   
     if (!selectedCalendarId) {
       console.error("[ERROR] Calendar ID is missing");
@@ -147,7 +150,7 @@ const CalendarMenu = ({
         accessLevel,
       };
   
-      console.log("[DEBUG] Sending payload to backend:", payload);
+    
   
       const response = await fetch("http://127.0.0.1:8080/calendar/share", {
         method: "POST",
@@ -164,7 +167,6 @@ const CalendarMenu = ({
       }
   
       const success = await response.json();
-      console.log("[SUCCESS] Calendar shared successfully:", success);
   
       alert("Calendar shared successfully!");
       setShareDialogOpen(false);
@@ -204,16 +206,16 @@ const CalendarMenu = ({
     };
 
     loadCalendars();
-  }, [userId]); // Dependency ensures it runs when userId changes
+  }, [userId]); 
 
   useEffect(() => {
     if (selectedCalendarId !== null) {
-      console.log("[DEBUG] selectedCalendarId has been set:", selectedCalendarId);
+    
     }
   }, [selectedCalendarId]);
 
   useEffect(() => {
-    console.log("[DEBUG] sharedCalendars:", sharedCalendars);
+  
   }, [sharedCalendars]);
   
 
@@ -257,7 +259,7 @@ const CalendarMenu = ({
                 />
                 <ListItemText primary={calendar.name} />
                 <IconButton onClick={(event) =>{
-                  console.log("Clicked calendar ID:", calendar.id); // Debug
+                 
                   handleMenuOpen(event, calendar.id)}}>
                   <Settings />
                 </IconButton>
@@ -275,32 +277,30 @@ const CalendarMenu = ({
 
     {/* Shared Calendars */}
     <Collapse
-      in={sharedCalendarsOpen}
-      timeout="auto"
-      unmountOnExit
-      style={{ display: sharedCalendars.length > 0 ? "block" : "none" }}
-    >
-      {sharedCalendars.map((calendar, index) => (
-        <ListItem key={calendar.id || `shared-calendar-${index}`} button>
-          {/* <Checkbox checked={calendar.isVisible} disabled /> */}
-          <Checkbox
-  checked={calendar.isVisible}
-  onChange={() =>
-    setSharedCalendars((prev) =>
-      prev.map((cal) =>
-        cal.id === calendar.id
-          ? { ...cal, isVisible: !cal.isVisible }
-          : cal
-      )
-    )
-  }
-/>
-          <ListItemText
-            primary={`${calendar.name} (${calendar.accessLevel})`}
-          />
-        </ListItem>
-      ))}
-    </Collapse>
+  in={sharedCalendarsOpen}
+  timeout="auto"
+  unmountOnExit
+  style={{ display: sharedCalendars.length > 0 ? "block" : "none" }}
+>
+  {sharedCalendars.map((calendar, index) => (
+    <ListItem key={calendar.id || `shared-calendar-${index}`} button>
+      <Checkbox
+        checked={calendar.isVisible}
+        onChange={() =>
+          setSharedCalendars((prev) =>
+            prev.map((cal) =>
+              cal.id === calendar.id
+                ? { ...cal, isVisible: !cal.isVisible }
+                : cal
+            )
+          )
+        }
+      />
+      <ListItemText primary={calendar.name} /> {/* Only the name is displayed */}
+    </ListItem>
+  ))}
+</Collapse>
+
   </List>
 
           {/* Add New Calendar Button */}
@@ -325,10 +325,18 @@ const CalendarMenu = ({
       >
         <MenuItem
           onClick={() => {
-            if (!selectedCalendarId) {
-              console.warn("[WARN] selectedCalendarId was null. Resetting it.");
-              setSelectedCalendarId(/* some default or last known calendar ID */);
+            const calendar = [...myCalendars, ...sharedCalendars].find(
+              (cal) => cal.id === selectedCalendarId
+            );
+
+            const { accessLevel } = calendar || {};
+            const permissions = getPermissions(accessLevel);
+
+            if (!permissions.canShareCalendar) {
+              alert("You do not have permission to share this calendar.");
+              return;
             }
+
             setShareDialogOpen(true);
             handleMenuClose();
           }}
@@ -337,18 +345,19 @@ const CalendarMenu = ({
         </MenuItem>
         <MenuItem
           onClick={() => {
-            const newName = prompt("Enter a new name for the calendar:");
-            if (newName) renameCalendar(selectedCalendarId, newName);
-            handleMenuClose();
-          }}
-        >
-          Rename
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            if (
-              window.confirm("Are you sure you want to delete this calendar?")
-            ) {
+            const calendar = [...myCalendars, ...sharedCalendars].find(
+              (cal) => cal.id === selectedCalendarId
+            );
+
+            const { accessLevel } = calendar || {};
+            const permissions = getPermissions(accessLevel);
+
+            if (!permissions.canDeleteCalendar) {
+              alert("You do not have permission to delete this calendar.");
+              return;
+            }
+
+            if (window.confirm("Are you sure you want to delete this calendar?")) {
               deleteCalendar(selectedCalendarId);
               handleMenuClose();
             }
@@ -356,8 +365,7 @@ const CalendarMenu = ({
         >
           Delete
         </MenuItem>
-      </Menu>
-
+        </Menu>
       {/* Dialog for Sharing a Calendar */}
       <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
         <DialogTitle>Share Calendar</DialogTitle>

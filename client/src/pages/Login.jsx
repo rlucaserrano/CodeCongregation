@@ -20,7 +20,7 @@ const Login = () => {
 
     const handleGoogleSignIn = async () => {
         try {
-            //  Google API client is loaded
+            // Ensure gapi is loaded
             if (typeof gapi === 'undefined') {
                 await new Promise(resolve => {
                     const script = document.createElement("script");
@@ -29,53 +29,37 @@ const Login = () => {
                     document.body.appendChild(script);
                 });
             }
-
-            // Google Calendar API
-            gapi.load('client', async () => {
-                await gapi.client.init({
-                    apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
-                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
-                });
-            });
-
+    
+            // Sign in with Google using Firebase
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-
+    
             if (user) {
-                const idToken = await user.getIdToken(); 
-                localStorage.setItem("token", idToken);  
-                localStorage.setItem("uid", user.uid);
-                localStorage.setItem("email", user.email);
-                localStorage.setItem("displayName", user.displayName);
-
-                // google Calendar token client
-                const tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID,
-                    scope: SCOPES,
-                    callback: (response) => {
-                        if (response.error) {
-                            throw response;
-                        }
-
-                        // save access token and expiry in local storage
-                        const expiresIn = response.expires_in * 1000; 
-                        const expiryTime = new Date().getTime() + expiresIn;
-                        localStorage.setItem("google_access_token", response.access_token);
-                        localStorage.setItem("google_token_expiry", expiryTime.toString());
+                const idToken = await user.getIdToken(); // Get Google ID token
+                localStorage.setItem("google_id_token", idToken);
+    
+                // Send the token to your backend for verification
+                const response = await fetch('http://localhost:8080/api/auth/google', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({ token: idToken }),
                 });
-
-                const tokenExpiry = localStorage.getItem("google_token_expiry");
-                if (!tokenExpiry || new Date().getTime() > Number(tokenExpiry)) {
-                    tokenClient.requestAccessToken();
-                }
-
-                // check if user already has an account associated
-                const userExists = await checkUserExists(user.uid);
-                if (userExists) {
+    
+                if (response.ok) {
+                    const { token, user } = await response.json();
+    
+                    // Store JWT and user info in localStorage or Context
+                    localStorage.setItem("token", token); // Your app's token
+                    localStorage.setItem("userId", user.id); // User ID from your backend
+    
+                    // Redirect user to the appropriate page
                     navigate('/groups');
                 } else {
-                    navigate('/complete-profile');
+                    const error = await response.json();
+                    console.error("Backend authentication error:", error.message);
+                    alert(error.message || "Failed to authenticate with Google.");
                 }
             }
         } catch (error) {
