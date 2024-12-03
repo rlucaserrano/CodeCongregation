@@ -57,42 +57,106 @@ function Groups() {
     
     const [error, setError] = useState(false) //Open pop-up display error when creating new groups
 
-    async function handleID() //Retrieve all the necessary user and group data
-    {
-        let token = localStorage.getItem('token')
-        let data = await fetch('http://localhost:8080/info', {
-            headers: {
-                'Accept': 'text/html',
-                'Content-Type': 'text/html'
-            },
-            method: 'POST',
-            body: token
-        })
-        let info = await data.json();
+    async function handleID() {
+        let token = localStorage.getItem('token');
+    
+        // Check if the login is with Google
+        const isGoogleLogin = localStorage.getItem('uid') !== null; // check for Google UID in localStorage
+        const endpoint = isGoogleLogin ? 'http://localhost:8080/google_update' : 'http://localhost:8080/info';
+    
+        console.log(`Starting handleID...`);
+        console.log(`Token: ${token}`);
+        console.log(`Is Google Login: ${isGoogleLogin}`);
+        console.log(`Endpoint: ${endpoint}`);
+    
+        let response, info;
+    
+        try {
+            if (isGoogleLogin) {
+                // Google login fetch
+                response = await fetch(endpoint, {
+                    headers: {
+                        'Accept': 'application/json', // Expect JSON response
+                        'Content-Type': 'application/json', // Sending JSON request
+                        'Authorization': `Bearer ${token}`, // Pass token in Authorization header
+                    },
+                    method: 'POST',
+                });
+    
+                if (!response.ok) {
+                    console.error(`Failed to fetch user info from ${endpoint}. Status: ${response.status}`);
+                    return; // Exit function if fetch fails
+                }
+    
+                // Parse JSON response directly
+                let jsonResponse = await response.json();
+                console.log("Raw response for Google login:", jsonResponse);
+    
+                // Use JSON object directly instead of decoding a JWT
+                if (jsonResponse && jsonResponse.id) {
+                    info = { id: jsonResponse.id }; // Extract ID
+                    localStorage.setItem('userId', jsonResponse.id);
+                    setUser(jsonResponse.id);
+                } else {
+                    throw new Error("User ID not found in response.");
+                }
+            } else {
+                // Non-Google login fetch
+                response = await fetch(endpoint, {
+                    headers: {
+                        'Accept': 'text/html',
+                        'Content-Type': 'text/html'
+                    },
+                    method: 'POST',
+                    body: token
+                });
+    
+                if (!response.ok) {
+                    console.error(`Failed to fetch user info from ${endpoint}. Status: ${response.status}`);
+                    return; // Exit function if fetch fails
+                }
+    
+                info = await response.json();
+                console.log("Parsed JSON response for non-Google login:", info);
+            }
+    
+            setUser(info.id); // Set user ID
+        } catch (error) {
+            console.error("Error during fetch or parsing:", error);
+            return; // Exit on error
+        }
         setUser(info.id)
-        setGroupID(localStorage.getItem('groupID'))
-        let tuples = await fetch('http://localhost:8080/groups', {
-            headers: {
-                'Accept': 'text/html',
-                'Content-Type': 'text/html'
-            },
-            method: 'POST',
-            body: info.id
-        })
-        let list = await tuples.json()
-        setGroups(list)
-        let pending = await fetch('http://localhost:8080/invite', {
-            headers: {
-                'Accept': 'text/html',
-                'Content-Type': 'text/html'
-            },
-            method: 'POST',
-            body: info.id
-        })
-        let rsvp = await pending.json()
-        setInvites(rsvp)
-        setSafe(true) //Safe to load now
+        setGroupID(localStorage.getItem('groupID'));
+    
+        try {
+            let tuples = await fetch('http://localhost:8080/groups', {
+                headers: {
+                    'Accept': 'text/html',
+                    'Content-Type': 'text/html'
+                },
+                method: 'POST',
+                body: info.id
+            });
+            let list = await tuples.json();
+            setGroups(list);
+    
+            let pending = await fetch('http://localhost:8080/invite', {
+                headers: {
+                    'Accept': 'text/html',
+                    'Content-Type': 'text/html'
+                },
+                method: 'POST',
+                body: info.id
+            });
+            let rsvp = await pending.json();
+            setInvites(rsvp);
+    
+            setSafe(true); // Safe to render UI
+        } catch (error) {
+            console.error("Error during fetching groups or invites:", error);
+        }
     }
+    
 
     const handleView = (id) => () => //Display more data about a group when it has been clicked
     {

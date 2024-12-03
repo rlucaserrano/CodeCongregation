@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Avatar, TextField, Button, Box, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import '../components/Account.css';
+import { useUser2 } from '../context/UserContext_2';
+
 
 function Account() {
     const [safe, setSafe] = useState(false);
@@ -11,38 +13,96 @@ function Account() {
     const [view, setView] = useState('Settings');
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
+    const { logIn } = useUser2();
+
     async function handleInfGet() {
         const token = localStorage.getItem('token');
+    
+        // Check if the login is with Google
+        const isGoogleLogin = localStorage.getItem('uid') !== null;
+        const endpoint = isGoogleLogin ? 'http://localhost:8080/google_update' : 'http://localhost:8080/info';
+    
+        console.log(`Starting handleInfGet...`);
+        console.log(`Token: ${token}`);
+        console.log(`Is Google Login: ${isGoogleLogin}`);
+        console.log(`Endpoint: ${endpoint}`);
+    
+        let response, info;
+    
         try {
-            const response = await fetch('http://localhost:8080/info', {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain' },
-                body: token,
-            });
-            if (response.ok) {
-                const info = await response.json();
-                // Exclude 'pass' from the data to prevent displaying the current password
-                setData({
-                    id: info.id,
-                    user: info.user,
-                    mail: info.mail,
-                    first: info.first,
-                    last: info.last,
-                    bio: info.bio,
-                    pass: '', // Ensure pass is empty
+            if (isGoogleLogin) {
+                // Fetch for Google login
+                response = await fetch(endpoint, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    method: 'POST',
                 });
-                setSafe(true);
+    
+                if (!response.ok) {
+                    console.error(`Failed to fetch user info from ${endpoint}. Status: ${response.status}`);
+                    return; // Exit if fetch fails
+                }
+    
+                // Parse JSON response directly
+                const jsonResponse = await response.json();
+                console.log("Parsed JSON response for Google login:", jsonResponse);
+    
+                if (jsonResponse && jsonResponse.id) {
+                    info = {
+                        id: jsonResponse.id,
+                        user: jsonResponse.user,
+                        mail: jsonResponse.mail,
+                        first: jsonResponse.first,
+                        last: jsonResponse.last,
+                        bio: jsonResponse.bio || '',
+                    }; // Extracted info structure
+                } else {
+                    throw new Error("User ID not found in response.");
+                }
             } else {
-                console.error('Error fetching user info. Status:', response.status);
+                // Fetch for non-Google login
+                response = await fetch(endpoint, {
+                    headers: {
+                        'Accept': 'text/html',
+                        'Content-Type': 'text/html',
+                    },
+                    method: 'POST',
+                    body: token,
+                });
+    
+                if (!response.ok) {
+                    console.error(`Failed to fetch user info from ${endpoint}. Status: ${response.status}`);
+                    return; // Exit if fetch fails
+                }
+    
+                info = await response.json();
+                console.log("Parsed JSON response for non-Google login:", info);
             }
+    
+            // Update user data
+            setData({
+                id: info.id,
+                user: info.user,
+                mail: info.mail,
+                first: info.first,
+                last: info.last,
+                bio: info.bio || '',
+                pass: '', // Ensure password field remains empty
+            });
+            logIn(info); // Update context
+            setSafe(true); // Allow rendering
         } catch (error) {
-            console.error('Error fetching user info:', error);
+            console.error("Error during fetch or parsing in handleInfGet:", error);
         }
     }
-
+    
     useEffect(() => {
         handleInfGet();
     }, []);
+    
 
     function handleInputChange(e) {
         const { name, value } = e.target;

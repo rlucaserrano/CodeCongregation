@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
@@ -18,9 +17,10 @@ const Login = () => {
     const [showExtraOptions, setShowExtraOptions] = useState(false);
     const navigate = useNavigate();
 
+  
     const handleGoogleSignIn = async () => {
         try {
-            // Ensure gapi is loaded
+            // Ensure Google API client is loaded
             if (typeof gapi === 'undefined') {
                 await new Promise(resolve => {
                     const script = document.createElement("script");
@@ -29,37 +29,53 @@ const Login = () => {
                     document.body.appendChild(script);
                 });
             }
-    
-            // Sign in with Google using Firebase
+
+            // Load Google Calendar API
+            gapi.load('client', async () => {
+                await gapi.client.init({
+                    apiKey: import.meta.env.VITE_GOOGLE_API_KEY,
+                    discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest"],
+                });
+            });
+
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-    
+
             if (user) {
-                const idToken = await user.getIdToken(); // Get Google ID token
-                localStorage.setItem("google_id_token", idToken);
-    
-                // Send the token to your backend for verification
-                const response = await fetch('http://localhost:8080/api/auth/google', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
+                const idToken = await user.getIdToken(); 
+                localStorage.setItem("token", idToken);  
+                localStorage.setItem("uid", user.uid);
+                localStorage.setItem("email", user.email);
+                localStorage.setItem("displayName", user.displayName);
+
+                // Initialize Google Calendar token client
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: (response) => {
+                        if (response.error) {
+                            throw response;
+                        }
+
+                        // Save access token and expiry in local storage
+                        const expiresIn = response.expires_in * 1000; 
+                        const expiryTime = new Date().getTime() + expiresIn;
+                        localStorage.setItem("google_access_token", response.access_token);
+                        localStorage.setItem("google_token_expiry", expiryTime.toString());
                     },
-                    body: JSON.stringify({ token: idToken }),
                 });
-    
-                if (response.ok) {
-                    const { token, user } = await response.json();
-    
-                    // Store JWT and user info in localStorage or Context
-                    localStorage.setItem("token", token); // Your app's token
-                    localStorage.setItem("userId", user.id); // User ID from your backend
-    
-                    // Redirect user to the appropriate page
+
+                const tokenExpiry = localStorage.getItem("google_token_expiry");
+                if (!tokenExpiry || new Date().getTime() > Number(tokenExpiry)) {
+                    tokenClient.requestAccessToken();
+                }
+
+                // Check if user already has an account associated
+                const userExists = await checkUserExists(user.uid);
+                if (userExists) {
                     navigate('/groups');
                 } else {
-                    const error = await response.json();
-                    console.error("Backend authentication error:", error.message);
-                    alert(error.message || "Failed to authenticate with Google.");
+                    navigate('/complete-profile');
                 }
             }
         } catch (error) {
@@ -67,28 +83,19 @@ const Login = () => {
         }
     };
 
-    // check if  user already exists in your backend
-    const checkUserExists = async (userId) => {
+    // Check if a user already exists in your backend
+    const checkUserExists = async (uid) => {
         try {
-            const response = await fetch(`http://localhost:8080/users`, {
-                method: 'HEAD',
+            const response = await fetch('http://localhost:8080/check_user', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem("token")}`,
                 },
-                body: JSON.stringify({ valUserID: userId }), //  `valUserID` HEAD method
+                body: JSON.stringify({ uid }),
             });
-    
-            if (response.ok) {
-                const data = await response.json();
-                return data.Result === "Valid UserID"; // backend returns Valid UserID on success
-            } else if (response.status === 404) {
-                console.error("User not found.");
-                return false;
-            } else {
-                console.error("Error checking user existence:", response.status);
-                return false;
-            }
+            const data = await response.json();
+            return data.exists;  // Assuming your backend returns { exists: true } or { exists: false }
         } catch (error) {
             console.error("Error checking user existence:", error);
             return false;
@@ -98,11 +105,11 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setFormError('');  
-    
+
         const form = e.target;
         const username = form.Username.value;
         const password = form.Password.value;
-    
+
         try {
             const response = await fetch('http://localhost:8080/log', {
                 method: 'POST',
@@ -111,19 +118,11 @@ const Login = () => {
                 },
                 body: JSON.stringify({ data: { Username: username, Password: password } }),
             });
-    
+
             if (response.ok) {
-                const token = await response.text(); // JWT token returned from the backend
+                const token = await response.text();
                 if (token) {
                     localStorage.setItem('token', token);  
-    
-                    
-                    const payload = JSON.parse(atob(token.split('.')[1])); 
-                    const userId = payload.id; //  token includes `id` for userId
-    
-                    localStorage.setItem('userId', userId); // save userId to localStorage
-                    console.log(`User ID set to localStorage: ${userId}`);
-    
                     window.location.href = '/groups';    
                 } else {
                     setFormError("Token is empty. Please try again.");
@@ -137,7 +136,6 @@ const Login = () => {
             console.error('Error during login:', error);
         }
     };
-    
 
     const handleGuest = () => {
         window.location.href = '/';
@@ -146,39 +144,52 @@ const Login = () => {
     const handleNew = () => {
         window.location.href = '/create';
     };
-
-    useEffect(() => {
+        useEffect(() => {
         const handleInfGet = async () => {
             const token = localStorage.getItem("token");
             if (!token) {
                 console.error("Token is empty");
                 return;
             }
-
+    
+            // Determine which endpoint to use
+            const isGoogleLogin = localStorage.getItem("uid") !== null; // Check if Google UID exists
+            const endpoint = isGoogleLogin ? 'http://localhost:8080/google_info' : 'http://localhost:8080/info';
+    
             try {
-                const response = await fetch('http://localhost:8080/info', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({ somePayloadData: "example" })
+                    }
                 });
-
+    
                 if (!response.ok) {
                     console.error(`Error fetching user info. Status: ${response.status}`);
+                    if (response.status === 401) {
+                        console.error("Authentication failed. Please log in again.");
+                    }
                     return;
                 }
-
+    
                 const data = await response.json();
-                console.log("User Info:", data);
+                console.log("User Info retrieved:", data);
+    
+                // Save user info to localStorage or state
+                if (isGoogleLogin) {
+                    localStorage.setItem("user", JSON.stringify(data.user));
+                } else {
+                    localStorage.setItem("user", JSON.stringify(data));
+                }
             } catch (error) {
-                console.error("Error during fetch:", error);
+                console.error("Error fetching user info:", error);
             }
         };
-
+    
         handleInfGet();
     }, []);
+ 
 
     return (
         <Box className="login-container">

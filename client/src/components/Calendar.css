@@ -17,15 +17,40 @@
 }
 .calendar-content {
     flex-grow: 1;
-    padding: 20px; /* padding around the calendar */
-    overflow: auto; /* prev content from being cut off */
+    padding: 20px; 
+    overflow: auto; 
 }
-.react-big-calendar {
-    height: calc(100% - 40px); /* adjust height to fit within the page */
-    margin: 0 auto; 
-    max-width: 100%; 
-    overflow: hidden; 
+
+
+.rbc-day-bg {
+    transition: background-color 0.2s ease-in-out; 
 }
+
+.rbc-day-bg:hover {
+    background-color: #f0f3fa;
+    cursor: pointer; 
+}
+
+/* "today" tile */
+.rbc-today {
+    background-color: #e4e7f8; 
+    color: rgba(0, 0, 0, 0.87); 
+    border-radius: 6px; 
+    border: none; 
+}
+
+.rbc-today:hover {
+    background-color: #d6daf0; 
+    color: rgba(0, 0, 0, 0.87); 
+    cursor: pointer; 
+}
+.rbc-off-range-bg {
+    background-color: #f5f7fc; /* Slightly lighter than the "today" tile */
+    color: rgba(0, 0, 0, 0.6); /* Muted text color for distinction */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition for hover */
+}
+
+
 .MuiDrawer-paper {
     width: 250px; /*fixed width*/
     max-width: 80%; 
@@ -99,7 +124,7 @@
 }
 
 .mini-calendar .react-calendar__navigation button:enabled:hover {
-    background: rgba(255, 255, 255, 0.2); /*  hover effect for buttons */
+    background: rgba(255, 255, 255, 0.2); 
 }
 
 .mini-calendar .react-calendar__navigation button:disabled {

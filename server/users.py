@@ -213,7 +213,10 @@ class Users:
                 return jsonify({"ERROR": "Email already in use"}), 409
             changes.append(("Email", f"'{self.valEmail}'"))
         if self.valHashedPassword is not None:
-            changes.append(("HashedPassword", f"'{self.valHashedPassword}'"))
+            hashed_password = ProcAndSec.HashAndSalt(self.valHashedPassword)
+            print(f"Raw password received: {self.valHashedPassword}")
+            print(f"Hashed password generated: {hashed_password}")
+            changes.append(("HashedPassword", f"'{hashed_password}'"))
         if self.valAdmin is not None:
             changes.append(("Admin", f"'{self.valAdmin}'"))
         if self.valFirstName is not None:
@@ -231,6 +234,7 @@ class Users:
         result = Database.ModifyDatabase(table="UserTable", key="UserID", value=self.valUserID, changes=changes)
         if result:
             return jsonify({"SUCCESS": "User modified"}), 200
+            
         else:
             return jsonify({"ERROR": "Program encountered an unknown issue"}), 406
        
