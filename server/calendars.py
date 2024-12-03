@@ -161,17 +161,25 @@ class Calendars:
     def share_calendar(self):
         try:
             calendar_id = self.data.get("calendarId")
-            user_id = self.data.get("userId")
+            username = self.data.get("username")
             access_level = self.data.get("accessLevel")
 
-            if not (calendar_id and user_id and access_level):
+            print(f"Incoming Data: calendarId={calendar_id}, username={username}, accessLevel={access_level}")
+
+            if not (calendar_id and username and access_level):
+                print("[ERROR] Missing required fields")
                 return jsonify({"ERROR": "Missing required fields"}), 400
 
-            
             if access_level not in ["READ", "WRITE", "MANAGE"]:
                 return jsonify({"ERROR": "Invalid access level"}), 400
 
-          
+            # Resolve username to userId
+            user_query = "SELECT USERID FROM MGOLAN.USERTABLE WHERE USERNAME = :1"
+            user_result = Database.SelectQuery(user_query, [username])
+            if not user_result:
+                return jsonify({"ERROR": "Username not found"}), 404
+            user_id = user_result[0][0]
+
             query = """
                 INSERT INTO ALLIEMONTIAGUE.CALENDAR_PERMISSIONS (CALENDARID, USERID, ACCESS_LEVEL)
                 VALUES (:1, :2, :3)
@@ -182,7 +190,34 @@ class Calendars:
             return jsonify({"SUCCESS": "Permission added"}), 201
         except Exception as e:
             print(f"Error sharing calendar: {e}")
-            return jsonify({"ERROR": str(e)}), 500        
+            return jsonify({"ERROR": str(e)}), 500
+
+
+    # def share_calendar(self):
+    #     try:
+    #         calendar_id = self.data.get("calendarId")
+    #         user_id = self.data.get("userId")
+    #         access_level = self.data.get("accessLevel")
+
+    #         if not (calendar_id and user_id and access_level):
+    #             return jsonify({"ERROR": "Missing required fields"}), 400
+
+            
+    #         if access_level not in ["READ", "WRITE", "MANAGE"]:
+    #             return jsonify({"ERROR": "Invalid access level"}), 400
+
+          
+    #         query = """
+    #             INSERT INTO ALLIEMONTIAGUE.CALENDAR_PERMISSIONS (CALENDARID, USERID, ACCESS_LEVEL)
+    #             VALUES (:1, :2, :3)
+    #         """
+    #         params = [calendar_id, user_id, access_level]
+    #         Database.AddToDatabase(query, params)
+
+    #         return jsonify({"SUCCESS": "Permission added"}), 201
+    #     except Exception as e:
+    #         print(f"Error sharing calendar: {e}")
+    #         return jsonify({"ERROR": str(e)}), 500        
 
 
 class Events:

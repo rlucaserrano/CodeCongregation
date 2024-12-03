@@ -1,6 +1,4 @@
-
-
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import {
   Drawer,
   Box,
@@ -18,11 +16,15 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Select,
+  MenuItem as DropdownItem,
 } from "@mui/material";
 import { ExpandLess, ExpandMore, Settings } from "@mui/icons-material";
 import { Calendar as MiniCalendar } from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import "../components/CalendarMenu.css"; // Ensure styling is applied for layout issues
+import { classifyCalendars } from "../components/calendarUtils";
+import { UserContext } from "../context/UserContext"; // Import UserContext for userId
 
 const CalendarMenu = ({
   myCalendars = [],
@@ -38,12 +40,18 @@ const CalendarMenu = ({
   setCalendars, // To handle myCalendars updates
   setSharedCalendars, // To handle sharedCalendars updates
 }) => {
+  const { user } = useContext(UserContext); // Get user from UserContext
+  const userId = user?.userId; // Retrieve userId from user
+
   const [myCalendarsOpen, setMyCalendarsOpen] = useState(true);
   const [sharedCalendarsOpen, setSharedCalendarsOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [newCalendarName, setNewCalendarName] = useState("");
   const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [selectedCalendarId, setSelectedCalendarId] = useState(null);
+  const [usernameToShare, setUsernameToShare] = useState("");
+  const [accessLevel, setAccessLevel] = useState("MANAGE");
 
   // Toggles visibility of "My Calendars" section
   const toggleMyCalendars = () => setMyCalendarsOpen(!myCalendarsOpen);
@@ -54,20 +62,21 @@ const CalendarMenu = ({
 
   // Handles opening the menu for a specific calendar
   const handleMenuOpen = (event, calendarId) => {
+    console.log("Opening menu for calendarId:", calendarId); // Debug log
     setMenuAnchorEl(event.currentTarget);
     setSelectedCalendarId(calendarId);
   };
 
-  // Handles closing the menu
+  
   const handleMenuClose = () => {
     setMenuAnchorEl(null);
-    setSelectedCalendarId(null);
+    //setSelectedCalendarId(null);
   };
 
-  // Handles date changes in the Mini Calendar
+ 
   const handleMiniCalendarChange = (date) => setCurrentDate(date);
 
-  // Handles creating a new calendar
+ 
   const handleCreateCalendar = () => {
     if (!newCalendarName.trim()) {
       alert("Calendar name cannot be empty.");
@@ -77,35 +86,138 @@ const CalendarMenu = ({
     setNewCalendarName("");
     setCreateDialogOpen(false);
   };
-
-  // Handles sharing a calendar with another user
-  const handleShareCalendar = (calendarId) => {
-    const userToShareWith = prompt("Enter the User ID to share with:");
-    const accessLevel = prompt(
-      "Enter access level (READ, WRITE, MANAGE):",
-      "READ"
-    );
-    if (userToShareWith && accessLevel) {
-      shareCalendar(calendarId, userToShareWith, accessLevel);
-      setSharedCalendars((prev) => [
-        ...prev,
-        { id: calendarId, name: "New Shared Calendar", accessLevel },
-      ]);
+  const fetchCalendars = async (userId) => {
+    if (!userId) {
+      console.error("User ID is required to fetch calendars.");
+      throw new Error("User ID is missing.");
     }
-    handleMenuClose();
+  
+    try {
+      const response = await fetch(`http://127.0.0.1:8080/calendar?userId=${userId}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.ERROR || "Failed to fetch calendars.");
+      }
+      const calendarData = await response.json();
+  
+      // Log all calendars fetched from the API
+      console.log("Fetched Calendars from API:", calendarData.calendars);
+  
+      // Deduplicate calendars based on their ID
+      const uniqueCalendars = calendarData.calendars.filter(
+        (calendar, index, self) =>
+          index === self.findIndex((cal) => cal.id === calendar.id)
+      );
+  
+      // Log the deduplicated calendars
+      console.log("Deduplicated Calendars:", uniqueCalendars);
+  
+      return uniqueCalendars;
+    } catch (error) {
+      console.error("Error fetching calendars:", error);
+      throw error; // Re-throw to handle it in the caller function.
+    }
   };
+  
 
-  // Handles toggling calendar visibility
-  const toggleCalendarVisibility = (calendarId) => {
-    setCalendars((prevCalendars) =>
-      prevCalendars.map((calendar) =>
-        calendar.id === calendarId
-          ? { ...calendar, isVisible: !calendar.isVisible }
-          : calendar
-      )
-    );
+  const handleShareCalendar = async () => {
+    console.log("[DEBUG] Starting share calendar process");
+  
+    // Log the selected calendar ID and input details
+    console.log("[DEBUG] Selected Calendar ID:", selectedCalendarId);
+    console.log("[DEBUG] Username to share with:", usernameToShare);
+    console.log("[DEBUG] Access Level:", accessLevel);
+  
+    if (!selectedCalendarId) {
+      console.error("[ERROR] Calendar ID is missing");
+      alert("Calendar ID is missing. Please try again.");
+      return;
+    }
+  
+    if (!usernameToShare.trim()) {
+      console.error("[ERROR] Username is required");
+      alert("Username is required.");
+      return;
+    }
+  
+    try {
+      const payload = {
+        calendarId: selectedCalendarId, 
+        username: usernameToShare,
+        accessLevel,
+      };
+  
+      console.log("[DEBUG] Sending payload to backend:", payload);
+  
+      const response = await fetch("http://127.0.0.1:8080/calendar/share", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("[ERROR] Backend returned error:", error);
+        throw new Error(error.ERROR || "Failed to share calendar.");
+      }
+  
+      const success = await response.json();
+      console.log("[SUCCESS] Calendar shared successfully:", success);
+  
+      alert("Calendar shared successfully!");
+      setShareDialogOpen(false);
+      setUsernameToShare("");
+      setAccessLevel("MANAGE");
+    } catch (error) {
+      console.error("[ERROR] Error sharing calendar:", error.message);
+      alert(error.message);
+    }
   };
+  
 
+  useEffect(() => {
+    
+    const loadCalendars = async () => {
+      try {
+        if (!userId) {
+          console.error("User ID is required to load calendars.");
+          return;
+        }
+
+        const fetchedCalendars = await fetchCalendars(userId);
+
+        const uniqueMyCalendars = fetchedCalendars.filter(
+          (cal) => cal.accessLevel === "OWNER" || cal.accessLevel === "MANAGE"
+        );
+        const uniqueSharedCalendars = fetchedCalendars.filter(
+          (cal) => cal.accessLevel !== "OWNER" && cal.accessLevel !== "MANAGE"
+        );
+        
+
+        setCalendars(uniqueMyCalendars);
+        setSharedCalendars(uniqueSharedCalendars);
+      } catch (error) {
+        console.error("Error loading calendars:", error.message);
+      }
+    };
+
+    loadCalendars();
+  }, [userId]); // Dependency ensures it runs when userId changes
+
+  useEffect(() => {
+    if (selectedCalendarId !== null) {
+      console.log("[DEBUG] selectedCalendarId has been set:", selectedCalendarId);
+    }
+  }, [selectedCalendarId]);
+
+  useEffect(() => {
+    console.log("[DEBUG] sharedCalendars:", sharedCalendars);
+  }, [sharedCalendars]);
+  
+
+  
   return (
     <Drawer anchor="left" open={drawerOpen} onClose={toggleDrawer}>
       <Box className="drawer-content">
@@ -122,45 +234,74 @@ const CalendarMenu = ({
 
         {/* My Calendars Section */}
         <List>
-          <ListItem button onClick={toggleMyCalendars}>
-            <ListItemText primary="My Calendars" />
-            {myCalendarsOpen ? <ExpandLess /> : <ExpandMore />}
+      
+          <ListItem button={true.toString()} onClick={toggleMyCalendars}>
+           <ListItemText primary="My Calendars" />
+           {sharedCalendarsOpen ? <ExpandLess /> : <ExpandMore />}
           </ListItem>
+
           <Collapse in={myCalendarsOpen} timeout="auto" unmountOnExit>
-            {myCalendars.map((calendar) => (
-              <ListItem key={calendar.id} button>
+            {myCalendars.map((calendar, index) => (
+              <ListItem key={calendar.id || `my-calendar-${index}`} button>
                 <Checkbox
                   checked={calendar.isVisible}
-                  onChange={() => toggleCalendarVisibility(calendar.id)}
+                  onChange={() =>
+                    setCalendars((prev) =>
+                      prev.map((cal) =>
+                        cal.id === calendar.id
+                          ? { ...cal, isVisible: !cal.isVisible }
+                          : cal
+                      )
+                    )
+                  }
                 />
                 <ListItemText primary={calendar.name} />
-                <IconButton
-                  onClick={(event) => handleMenuOpen(event, calendar.id)}
-                >
+                <IconButton onClick={(event) =>{
+                  console.log("Clicked calendar ID:", calendar.id); // Debug
+                  handleMenuOpen(event, calendar.id)}}>
                   <Settings />
                 </IconButton>
               </ListItem>
             ))}
           </Collapse>
 
-          {/* Shared Calendars Section */}
-          <ListItem button onClick={toggleSharedCalendars}>
-            <ListItemText primary="Shared Calendars" />
-            {sharedCalendarsOpen ? <ExpandLess /> : <ExpandMore />}
-          </ListItem>
-          <Collapse in={sharedCalendarsOpen} timeout="auto" unmountOnExit>
-            {sharedCalendars.map((calendar) => (
-              <ListItem key={calendar.id} button>
-                <Checkbox
-                  checked={calendar.isVisible}
-                  disabled={calendar.accessLevel === "READ"} // Disable toggle for READ-only calendars
-                />
-                <ListItemText
-                  primary={`${calendar.name} (${calendar.accessLevel})`}
-                />
-              </ListItem>
-            ))}
-          </Collapse>
+          <List>
+        {/* Toggle Button for Shared Calendars */}
+        <ListItem button={true.toString()} onClick={toggleSharedCalendars}>
+  <ListItemText primary="Shared Calendars" />
+  {sharedCalendarsOpen ? <ExpandLess /> : <ExpandMore />}
+</ListItem>
+
+
+    {/* Shared Calendars */}
+    <Collapse
+      in={sharedCalendarsOpen}
+      timeout="auto"
+      unmountOnExit
+      style={{ display: sharedCalendars.length > 0 ? "block" : "none" }}
+    >
+      {sharedCalendars.map((calendar, index) => (
+        <ListItem key={calendar.id || `shared-calendar-${index}`} button>
+          {/* <Checkbox checked={calendar.isVisible} disabled /> */}
+          <Checkbox
+  checked={calendar.isVisible}
+  onChange={() =>
+    setSharedCalendars((prev) =>
+      prev.map((cal) =>
+        cal.id === calendar.id
+          ? { ...cal, isVisible: !cal.isVisible }
+          : cal
+      )
+    )
+  }
+/>
+          <ListItemText
+            primary={`${calendar.name} (${calendar.accessLevel})`}
+          />
+        </ListItem>
+      ))}
+    </Collapse>
+  </List>
 
           {/* Add New Calendar Button */}
           <ListItem>
@@ -184,14 +325,22 @@ const CalendarMenu = ({
       >
         <MenuItem
           onClick={() => {
+            if (!selectedCalendarId) {
+              console.warn("[WARN] selectedCalendarId was null. Resetting it.");
+              setSelectedCalendarId(/* some default or last known calendar ID */);
+            }
+            setShareDialogOpen(true);
+            handleMenuClose();
+          }}
+        >
+          Share
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
             const newName = prompt("Enter a new name for the calendar:");
             if (newName) renameCalendar(selectedCalendarId, newName);
             handleMenuClose();
           }}
-          disabled={sharedCalendars.some(
-            (cal) =>
-              cal.id === selectedCalendarId && cal.accessLevel !== "MANAGE"
-          )}
         >
           Rename
         </MenuItem>
@@ -204,23 +353,39 @@ const CalendarMenu = ({
               handleMenuClose();
             }
           }}
-          disabled={sharedCalendars.some(
-            (cal) =>
-              cal.id === selectedCalendarId && cal.accessLevel !== "MANAGE"
-          )}
         >
           Delete
         </MenuItem>
-        <MenuItem
-          onClick={() => handleShareCalendar(selectedCalendarId)}
-          disabled={sharedCalendars.some(
-            (cal) =>
-              cal.id === selectedCalendarId && cal.accessLevel !== "MANAGE"
-          )}
-        >
-          Share
-        </MenuItem>
       </Menu>
+
+      {/* Dialog for Sharing a Calendar */}
+      <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
+        <DialogTitle>Share Calendar</DialogTitle>
+        <DialogContent>
+          <TextField
+            label="Username"
+            fullWidth
+            value={usernameToShare}
+            onChange={(e) => setUsernameToShare(e.target.value)}
+            margin="normal"
+          />
+          <Select
+            value={accessLevel}
+            onChange={(e) => setAccessLevel(e.target.value)}
+            fullWidth
+          >
+            <DropdownItem value="MANAGE">Access to Manage</DropdownItem>
+            <DropdownItem value="WRITE">Access to Edit</DropdownItem>
+            <DropdownItem value="READ">Access to View</DropdownItem>
+          </Select>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShareDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleShareCalendar} color="primary">
+            Share
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Dialog for Creating a New Calendar */}
       <Dialog

@@ -4,6 +4,8 @@ import { Calendar as BigCalendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import CreateButton from "../components/CreateButton";
 import CalendarMenu from "../components/CalendarMenu";
+import { getPermissions } from "../components/CalAccessLevel";
+
 import {
   Box,
   Grid,
@@ -19,6 +21,9 @@ import {
 import { Menu as MenuIcon } from "@mui/icons-material";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "../components/Calendar.css";
+import { Snackbar, Alert } from "@mui/material";
+
+
 
 const localizer = momentLocalizer(moment);
 
@@ -27,7 +32,6 @@ const CalendarPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Event dialog states
   const [eventDialogOpen, setEventDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [eventTitle, setEventTitle] = useState("");
@@ -42,75 +46,107 @@ const CalendarPage = () => {
 
   const toggleDrawer = () => setDrawerOpen(!drawerOpen);
 
-  // Fetch calendars and events
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success"); 
+
   useEffect(() => {
     const fetchCalendarsWithEvents = async () => {
       if (!userId) {
-        console.error("User ID is not available. Unable to fetch calendars.");
+       
         return;
       }
-
+  
       try {
         const calendarResponse = await fetch(
           `http://127.0.0.1:8080/calendar?userId=${userId}`
         );
-        if (!calendarResponse.ok) {
-          throw new Error(`Failed to fetch calendars: ${calendarResponse.status}`);
-        }
-
-        const calendarData = await calendarResponse.json();
-
-        // Separate owned and shared calendars
-        const ownedCalendars = calendarData.calendars.filter(
+        if (!calendarResponse.ok) throw new Error("Failed to fetch calendars");
+  
+        const { calendars } = await calendarResponse.json();
+        const ownedCalendars = calendars.filter(
           (cal) => cal.accessLevel === "OWNER" || cal.accessLevel === "MANAGE"
         );
-        const shared = calendarData.calendars.filter(
+        const shared = calendars.filter(
           (cal) => cal.accessLevel !== "OWNER" && cal.accessLevel !== "MANAGE"
         );
-
-        // Fetch events for owned calendars
+  
+        // Ensure all owned calendars are visible by default
         const formattedOwnedCalendars = await Promise.all(
           ownedCalendars.map(async (calendar) => {
-            const { id, name, ownerId } = calendar;
-
+            const { id, name } = calendar;
             const eventResponse = await fetch(
               `http://127.0.0.1:8080/events?calendarId=${id}`
             );
-            let events = [];
-            if (eventResponse.ok) {
-              const eventData = await eventResponse.json();
-              if (eventData.events && Array.isArray(eventData.events)) {
-                events = eventData.events.map((event) => ({
-                  id: event.id,
-                  title: event.title,
-                  start: new Date(event.start),
-                  end: new Date(event.end),
-                  description: event.description,
-                  calendarId: id,
-                }));
-              }
-            }
-
+            const { events = [] } = eventResponse.ok
+              ? await eventResponse.json()
+              : {};
             return {
               id,
               name,
-              ownerId,
-              isVisible: true,
-              events,
+              isVisible: true, // Default to visible
+              events: events.map((event) => ({
+                id: event.id,
+                title: event.title,
+                start: new Date(event.start),
+                end: new Date(event.end),
+                description: event.description,
+                calendarId: id,
+              })),
+            };
+          })
+        );
+        const formattedSharedCalendars = await Promise.all(
+          shared.map(async (calendar) => {
+            const { id, name, accessLevel } = calendar;
+            const eventResponse = await fetch(
+              `http://127.0.0.1:8080/events?calendarId=${id}`
+            );
+            const { events = [] } = eventResponse.ok
+              ? await eventResponse.json()
+              : {};
+        
+            return {
+              id,
+              name,
+              accessLevel,
+              isVisible: true, // Default to visible
+              events: events.map((event) => ({
+                id: event.id,
+                title: event.title,
+                start: new Date(event.start),
+                end: new Date(event.end),
+                description: event.description,
+                calendarId: id,
+              })),
             };
           })
         );
 
-        setCalendars(formattedOwnedCalendars);
-        setSharedCalendars(shared);
-      } catch (error) {
-        console.error("Error fetching calendars and events:", error);
-        alert("Failed to load calendars and events. Please try again later.");
-      }
-    };
-
+      setCalendars(formattedOwnedCalendars);
+      setSharedCalendars(formattedSharedCalendars);
+  
+    } catch (error) {
+      
+      showSnackbar("Failed to load calendars. Try again later.");
+    }
+  };
+  
     fetchCalendarsWithEvents();
   }, [userId]);
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setSnackbarOpen(true);
+  };
+  
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
   const shareCalendar = async (calendarId, userToShareWith, accessLevel) => {
     try {
       const payload = { calendarId, userId: userToShareWith, accessLevel };
@@ -121,27 +157,49 @@ const CalendarPage = () => {
       });
 
       if (response.ok) {
-        alert("Calendar shared successfully!");
+        showSnackbar("Calendar shared successfully!");
       } else {
         const error = await response.json();
-        alert(`Failed to share calendar: ${error.ERROR || "Unknown error"}`);
+        showSnackbar(`Failed to share calendar: ${error.ERROR || "Unknown error"}`);
       }
     } catch (error) {
-      console.error("Error sharing calendar:", error);
-      alert("Error connecting to the server. Please try again later.");
+   
+      showSnackbar("Error connecting to the server. Please try again later.");
     }
   };
 
   const handleSelectEvent = (event) => {
+    const calendar = [...calendars, ...sharedCalendars].find(
+      (cal) => cal.id === event.calendarId
+    );
+    const permissions = getPermissions(calendar?.accessLevel);
+  
+    if (!permissions.canViewEvents) {
+      showSnackbar("You do not have permission to view this event.");
+      return;
+    }
+  
     setSelectedEvent(event);
     setEventTitle(event.title);
     setEventDescription(event.description);
     setEventStart(event.start);
     setEventEnd(event.end);
-    setEventDialogOpen(true);
+  
+    if (permissions.canEditEvents) {
+      setEventDialogOpen(true); // Only open dialog if the user can edit
+    }
   };
-
   const handleSaveEvent = async () => {
+    const calendar = [...calendars, ...sharedCalendars].find(
+      (cal) => cal.id === selectedEvent.calendarId
+    );
+    const permissions = getPermissions(calendar?.accessLevel);
+  
+    if (!permissions.canEditEvents) {
+      showSnackbar("You do not have permission to edit this event.");
+      return;
+    }
+  
     try {
       const payload = {
         valEventID: selectedEvent.id,
@@ -152,13 +210,13 @@ const CalendarPage = () => {
         valEndDate: eventEnd.toISOString().split("T")[0],
         valEndTime: eventEnd.toISOString().split("T")[1].slice(0, 5),
       };
-
+  
       const response = await fetch("http://127.0.0.1:8080/events", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-
+  
       if (response.ok) {
         const updatedEvent = {
           ...selectedEvent,
@@ -167,7 +225,7 @@ const CalendarPage = () => {
           start: eventStart,
           end: eventEnd,
         };
-
+  
         setCalendars((prevCalendars) =>
           prevCalendars.map((calendar) =>
             calendar.id === updatedEvent.calendarId
@@ -182,44 +240,56 @@ const CalendarPage = () => {
         );
         setEventDialogOpen(false);
       } else {
-        alert("Failed to update event.");
+        showSnackbar("Failed to update event.");
       }
     } catch (error) {
-      console.error("Error updating event:", error);
-      alert("Error updating event. Please try again later.");
+  
+      showSnackbar("Error updating event. Please try again later.");
     }
   };
 
-  const handleDeleteEvent = async () => {
-    try {
-      const response = await fetch(`http://127.0.0.1:8080/events`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ valEventID: selectedEvent.id }),
-      });
 
-      if (response.ok) {
-        setCalendars((prevCalendars) =>
-          prevCalendars.map((calendar) =>
-            calendar.id === selectedEvent.calendarId
-              ? {
-                  ...calendar,
-                  events: calendar.events.filter(
-                    (ev) => ev.id !== selectedEvent.id
-                  ),
-                }
-              : calendar
-          )
-        );
-        setEventDialogOpen(false);
-      } else {
-        alert("Failed to delete event.");
-      }
-    } catch (error) {
-      console.error("Error deleting event:", error);
-      alert("Error deleting event. Please try again later.");
+const handleDeleteEvent = async () => {
+  const calendar = [...calendars, ...sharedCalendars].find(
+    (cal) => cal.id === selectedEvent.calendarId
+  );
+  const permissions = getPermissions(calendar?.accessLevel);
+
+  if (!permissions.canDeleteEvents) {
+    showSnackbar("You do not have permission to delete this event.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`http://127.0.0.1:8080/events`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ valEventID: selectedEvent.id }),
+    });
+
+    if (response.ok) {
+      setCalendars((prevCalendars) =>
+        prevCalendars.map((calendar) =>
+          calendar.id === selectedEvent.calendarId
+            ? {
+                ...calendar,
+                events: calendar.events.filter(
+                  (ev) => ev.id !== selectedEvent.id
+                ),
+              }
+            : calendar
+        )
+      );
+      setEventDialogOpen(false);
+    } else {
+      showSnackbar("Failed to delete event.");
     }
-  };
+  } catch (error) {
+  
+    showSnackbar("Error deleting event. Please try again later.");
+  }
+};
+
 
   const addEvent = (newEvent) => {
     setCalendars((prevCalendars) =>
@@ -244,18 +314,18 @@ const CalendarPage = () => {
         setCalendars((prevCalendars) =>
           prevCalendars.filter((cal) => cal.id !== calendarId)
         );
-        alert("Calendar deleted successfully.");
+        showSnackbar("Calendar deleted successfully.");
       } else {
         const error = await response.json();
-        alert(`Failed to delete calendar: ${error.ERROR || "Unknown error"}`);
+        showSnackbar(`Failed to delete calendar: ${error.ERROR || "Unknown error"}`);
       }
     } catch (error) {
-      alert("Error deleting calendar. Please try again later.");
+      showSnackbar("Error deleting calendar. Please try again later.");
     }
   };
   const renameCalendar = async (calendarId, newName) => {
     if (!newName.trim()) {
-      alert("New calendar name cannot be empty.");
+      showSnackbar("New calendar name cannot be empty.");
       return;
     }
     try {
@@ -274,19 +344,19 @@ const CalendarPage = () => {
             cal.id === calendarId ? { ...cal, name: newName } : cal
           )
         );
-        alert("Calendar renamed successfully.");
+        showSnackbar("Calendar renamed successfully.");
       } else {
         const error = await response.json();
-        alert(`Failed to rename calendar: ${error.ERROR || "Unknown error"}`);
+        showSnackbar(`Failed to rename calendar: ${error.ERROR || "Unknown error"}`);
       }
     } catch (error) {
-      alert("Error renaming calendar. Please try again later.");
+      showSnackbar("Error renaming calendar. Please try again later.");
     }
   };
 
   const addCalendar = async (newCalendarName) => {
     if (!newCalendarName.trim()) {
-      alert("Calendar name cannot be empty.");
+      showSnackbar("Calendar name cannot be empty.");
       return;
     }
 
@@ -310,15 +380,15 @@ const CalendarPage = () => {
             events: [],
           },
         ]);
-        alert(`Calendar "${newCalendarName}" created successfully!`);
+        showSnackbar(`Calendar "${newCalendarName}" created successfully!`);
       } else {
         const error = await response.json();
-        console.error("Error creating calendar:", error);
-        alert(`Failed to create calendar: ${error.ERROR || "Unknown error"}`);
+       
+        showSnackbar(`Failed to create calendar: ${error.ERROR || "Unknown error"}`);
       }
     } catch (error) {
-      console.error("Error creating calendar:", error);
-      alert("Error connecting to the server. Please try again later.");
+      
+      showSnackbar("Error connecting to the server. Please try again later.");
     }
   };
 
@@ -330,17 +400,17 @@ const CalendarPage = () => {
       const shared = data.calendars.filter((cal) => cal.accessLevel !== "OWNER");
       setSharedCalendars(shared);
     } catch (error) {
-      console.error("Error fetching shared calendars:", error);
+     
     }
   };
 
-  useEffect(() => {
-    if (userId) fetchSharedCalendars();
-  }, [userId]);
+  const visibleEvents = [...calendars, ...sharedCalendars]
+  .filter((calendar) => {
+  
+    return calendar.isVisible;
+  })
+  .flatMap((calendar) => calendar.events);
 
-  const visibleEvents = calendars
-    .filter((calendar) => calendar.isVisible)
-    .flatMap((calendar) => calendar.events);
 
   return (
     <Box className="calendar-container">
@@ -362,6 +432,7 @@ const CalendarPage = () => {
         myCalendars={calendars}
         sharedCalendars={sharedCalendars}
         setCalendars={setCalendars}
+        setSharedCalendars={setSharedCalendars}
         currentDate={currentDate}
         setCurrentDate={setCurrentDate}
         drawerOpen={drawerOpen}
@@ -428,7 +499,19 @@ const CalendarPage = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={snackbarOpen}
+          autoHideDuration={6000} // 6 seconds
+          onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: "100%" }}>
+       {snackbarMessage}
+        </Alert>
+    </Snackbar>
+
     </Box>
+    
   );
 };
 
