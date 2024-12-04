@@ -1,9 +1,9 @@
-# CoderCongregation
-UF Fall 2024 Senior Project
-Test
+
 
 # CoderCongregation
-UF Fall 2024 Senior Project
+UF Fall 2024 Senior Project:
+The primary aim of our project is to facilitate computer science learning through the development of an educational website. To this aim, CoderCongregation allows users to join study groups to share resources, communicate with others, and plan study activities. Regarding resource sharing, users can access, modify, and organize shared websites for each study group they join. Additionally, users can explore community resources ranked by popularity to discover helpful educational websites. Furthermore, the sharing activity of each group is analyzed and resource recommendations are generated based on whether similar groups found the website helpful. 
+As to user communication, CoderCongregation features integrated Discord and Zoom functionality to allow users to message and video conference with members of each of their study groups. Specifically, users can send messages to entire study groups or individual members. Also, users can access their Zoom accounts and join group meetings with the click of a button. Regarding activity planning, CoderCongregation facilitates structured learning through the implementation of calendar features and logged activity for each user. Specifically, users can create calendars for each study group they join to share availability and coordinate group activities.
 
 # Technologies Used
 Reactjs: 
